@@ -8,7 +8,7 @@ As etapas do projeto, incluindo o kickoff e as sprints, seguirão o cronograma e
 <span id="sumario">
  
 <div align=center>
-<a href ="#projeto"> Projeto </a> | <a href ="#backlog&userstories"> Backlog do Produto </a> | <a href ="#dor-dod"> DoR e DoD </a> | <a href ="#sprints"> Sprints </a> | <a href ="#tecnologias"> Tecnologias </a> | <a href ="#instalacao"> Guia de Instalação </a> | <a href ="#equipe"> Equipe </a>
+<a href ="#projeto"> Projeto </a> | <a href ="#backlog&userstories"> Backlog do Produto </a> | <a href ="#dor-dod"> DoR e DoD </a> | <a href ="#sprints"> Sprints </a> | <a href ="#tecnologias"> Tecnologias </a> | <a href ="#equipe"> Equipe </a>
 </div>
  
 <br>
@@ -33,7 +33,7 @@ O sistema deve contemplar:
  
 ## 🎯 Backlog do Produto & User Stories
 **:link: Clique no link abaixo para visualizar o backlog do produto:**  
-> [Backlog do Produto](https://fatecspgov-my.sharepoint.com/:x:/r/personal/ana_brito14_fatec_sp_gov_br/Documents/Product%20Backlog.xlsx?d=w5444c61fb44c49dd9bfaae5f7fd53697&csf=1&web=1&e=FguBmg)
+> [Backlog do Produto](https://docs.google.com/spreadsheets/d/1lDef7xZBw5c1LweuTreKMSCpVR_5_p5y0JLV3UVk-rM/edit?gid=1702710253#gid=1702710253)
  
 <br>
  
