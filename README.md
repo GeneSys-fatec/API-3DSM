@@ -37,17 +37,17 @@ O sistema deve contemplar:
  
 <br>
  
-ID |          Prioridade           |                     User Story                      |
-:---: | :-------------------: | :----------------------------------------------------------: |
-US01 | Alta |Como usuário, quero criar, editar e excluir tarefas, para organizar de forma eficiente minhas atividades diárias.
-US02 | Alta |Como usuário, quero visualizar tarefas em aberto, em andamento e concluídas, para acompanhar o progresso das minhas atividades e/ou da minha equipe. |
-US03 | Alta |Como usuário, quero me cadastrar informando nome, e-mail válido e senha, para garantir a segurança do meu acesso e facilitar meu ingresso no sistema. |
-US04 | Alta |Como usuário, quero iniciar sessão informando meu e-mail e senha cadastrados, para acessar e utilizar todas as funcionalidades do sistema. |
-US05 | Alta |Como usuário, quero anexar arquivos nos formatos PDF, Word, Excel e imagens de diferentes extensões, para comprovar a realização das tarefas. |
-US06 | Média |Como usuário, quero criar equipes e gerenciar seus membros, para que todos colaborem e participem ativamente das atividades. | 
-US07 | Média |Como membro de uma equipe, quero atribuir tarefas a outros participantes, para promover a colaboração, a divisão de responsabilidades e o acompanhamento coletivo. | 
-US08 | Média |Como usuário, quero adicionar comentários em qualquer tarefa, para registrar o andamento das atividades e fornecer feedback a outros colaboradores.  |
-US09 | Média |Como usuário, quero receber notificações sobre tarefas atribuídas e comentários adicionados, para acompanhar em tempo real as atualizações relacionadas às minhas atividades. |
+ID |          Prioridade           |                     User Story                      | Sprint |
+:---: | :-------------------: | :----------------------------------------------------------: | :-----------:
+US01 | Alta |Como usuário, quero criar, editar e excluir tarefas, para organizar de forma eficiente minhas atividades diárias. | 1
+US02 | Alta |Como usuário, quero visualizar tarefas em aberto, em andamento e concluídas, para acompanhar o progresso das minhas atividades e/ou da minha equipe. | 1 |
+US03 | Alta |Como usuário, quero me cadastrar informando nome, e-mail válido e senha, para garantir a segurança do meu acesso e facilitar meu ingresso no sistema. | 1 |
+US04 | Alta |Como usuário, quero iniciar sessão informando meu e-mail e senha cadastrados, para acessar e utilizar todas as funcionalidades do sistema. | 1 |  
+US05 | Alta |Como usuário, quero anexar arquivos nos formatos PDF, Word, Excel e imagens de diferentes extensões, para comprovar a realização das tarefas. | 1 |
+US06 | Média |Como usuário, quero criar equipes e gerenciar seus membros, para que todos colaborem e participem ativamente das atividades. | 2 |
+US07 | Média |Como membro de uma equipe, quero atribuir tarefas a outros participantes, para promover a colaboração, a divisão de responsabilidades e o acompanhamento coletivo. | 2 |
+US08 | Média |Como usuário, quero adicionar comentários em qualquer tarefa, para registrar o andamento das atividades e fornecer feedback a outros colaboradores.  | 2| 
+US09 | Média |Como usuário, quero receber notificações sobre tarefas atribuídas e comentários adicionados, para acompanhar em tempo real as atualizações relacionadas às minhas atividades. | 2 | 
  
 <br>
  
@@ -61,11 +61,12 @@ US09 | Média |Como usuário, quero receber notificações sobre tarefas atribu�
  
 Tópicos utilizados para definir o DoR das Sprints:
 * Resumo - Empresa GSW;
+* Desafio Proposto;
+* Requisitos do Projeto;
+* Possíveis Usuários;
 * User stories detalhadas e bem definidas;
 * Critérios de Aceitação;
 * Cenários de Testes;
-* Requisitos do Projeto;
-* Possíveis Usuários;
 * Mockup específico para a história;
 * Dicionário de dados específico para a história;
  
