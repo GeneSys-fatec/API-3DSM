@@ -6,7 +6,7 @@ export default class FormularioCadastro extends React.Component {
     render() {
         return (
             <div className="flex justify-center items-center h-[calc(100vh-6rem)]">
-                <div className="w-120 h-120 flex flex-col items-center justify-center bg-blue-950 shadow-md rounded-s-sm">
+                <div className="w-120 h-120 flex flex-col items-center justify-center bg-indigo-950 shadow-md rounded-s-sm">
                     <h1 className="font-medium text-2xl text-white pt-8">Bem-vindo!</h1>
                     <p className="text-center text-white text-sm">Plataforma de Gerenciamento de Tarefas <br></br>(To Do/Task Manager)</p>
                     <img src="./Cadastro.png" className="w-110 img-fluid pt-3"></img>

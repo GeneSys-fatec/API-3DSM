@@ -21,7 +21,7 @@ export default class FormularioLogin extends React.Component {
                     </form>
                     <Link to="/" className="underline decoration-solid p-2 text-sm hover:text-blue-900">Não tem uma conta? Cadastre-se</Link>
                 </div>
-                <div className="w-120 h-120 flex flex-col items-center justify-center bg-blue-950 shadow-md rounded-e-sm">
+                <div className="w-120 h-120 flex flex-col items-center justify-center bg-indigo-950 shadow-md rounded-e-sm">
                     <h1 className="font-medium text-2xl text-white pt-8">Bem-vindo de volta!</h1>
                     <p className="text-center text-white text-sm">Para se manter conectado com a gente,<br></br>por favor digite suas informações pessoais.</p>
                     <img src="./Login.png" className="w-110 img-fluid pt-3"></img>
