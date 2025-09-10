@@ -13,7 +13,9 @@ export default class Home extends React.Component {
                 <div className="flex">
                     <BarraLateral></BarraLateral>
                     <BarraLateralProjetos></BarraLateralProjetos>
-                    <NavbarProjetos></NavbarProjetos>
+                    <div className="p-2 w-full">
+                        <NavbarProjetos></NavbarProjetos>
+                    </div>
                 </div>
             </div>
         )
