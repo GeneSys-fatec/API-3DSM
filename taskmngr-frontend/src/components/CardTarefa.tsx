@@ -24,7 +24,7 @@ export default class CardTarefa extends React.Component<CardTarefaProps> {
         }[prioridade]
 
         return (
-            <div className="flex justify-between p-2 bg-white rounded-md">
+            <div className="flex justify-between p-2 bg-white rounded-md shadow-md">
                 <div>
                     <h1 className="text-xl font-medium">{titulo}</h1>
                     <div className="flex gap-2">
@@ -36,7 +36,7 @@ export default class CardTarefa extends React.Component<CardTarefaProps> {
                         </div>
                     </div>
                 </div>
-                <div className="flex flex-col items-center gap-2 pt-1">
+                <div className="flex flex-col items-center justify-between gap-2 pt-1">
                     <i className="fa-solid fa-ellipsis-vertical cursor-pointer w-8 text-center"></i>
                     <i className="fa-solid fa-user text-2xl cursor-pointer hover:text-indigo-200 w-8 text-center"></i>
                 </div>
