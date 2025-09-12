@@ -7,6 +7,7 @@ export interface Projeto {
 
 interface BarraLateralProjetosProps {
     projetos: Projeto[]
+    onOpenModal: () => void;
 }
 
 export default class BarraLateralProjetos extends React.Component<BarraLateralProjetosProps> {
@@ -22,7 +23,7 @@ export default class BarraLateralProjetos extends React.Component<BarraLateralPr
                 </div>
                 <div className="text-black flex justify-between py-4 font-semibold">
                     <h1 className="leading-none">Workspaces</h1>
-                    <div className="flex text-blue-400 cursor-pointer">
+                    <div className="flex text-blue-400 cursor-pointer" onClick={this.props.onOpenModal}>
                         <i className="fa-solid fa-plus"></i>
                         <p className="leading-none">Add</p>
                     </div>
