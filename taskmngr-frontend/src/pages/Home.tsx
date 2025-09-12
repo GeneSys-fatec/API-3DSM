@@ -1,9 +1,29 @@
 import React from "react";
 import NavbarPrincipal from "../components/headers/NavbarPrincipal";
 import BarraLateral from "../components/BarraLateral";
-import BarraLateralProjetos from "../components/BarraLateralProjetos";
+import BarraLateralProjetos  from "../components/BarraLateralProjetos";
+import type { Projeto } from "../components/BarraLateralProjetos";
 import NavbarProjetos from "../components/NavbarProjetos";
 import CardTarefa from "../components/CardTarefa";
+
+const projetosMock: Projeto[] = [
+    { 
+        id: 1,
+        nome: "API-3sem" 
+    },
+    { 
+        id: 2, 
+        nome: "Faculdade" 
+    },
+    { 
+        id: 3, 
+        nome: "Projeto Pessoal 1" 
+    },
+    { 
+        id: 4, 
+        nome: "Projeto Pessoal 2" 
+    },
+];
 
 const tarefas = [
     {
@@ -84,24 +104,29 @@ const tarefas = [
 ];
 
 export default class Home extends React.Component {
+
+    state = {
+        projetos: projetosMock
+    }
+
     render() {
         return (
             <div>
                 <NavbarPrincipal></NavbarPrincipal>
                 <div className="flex">
                     <BarraLateral></BarraLateral>
-                    <BarraLateralProjetos></BarraLateralProjetos>
+                    <BarraLateralProjetos projetos={this.state.projetos}></BarraLateralProjetos>
                     <div className="p-2 w-full">
                         <NavbarProjetos></NavbarProjetos>
                         <div className="flex justify-between gap-4 pt-4">
 
 
-                            <div className="w-1/3 m-4 rounded-md shadow-md border border-gray-300 bg-indigo-300/30">
-                                <div className="flex justify-center py-2 text-white text-2xl font-medium border-b border-gray-300 bg-indigo-400 rounded-t-sm">
+                            <div className="w-1/3 m-4 rounded-md shadow-md border border-gray-300 bg-indigo-300/30 flex flex-col h-[73vh]">
+                                <div className="flex justify-center py-2 text-white text-2xl font-medium border-b border-gray-300 bg-orange-400 rounded-t-sm">
                                     <h1>Pendente</h1>
                                 </div>
 
-                                <div className="p-4 flex flex-col gap-4">
+                                <div className="p-4 flex flex-col gap-4 overflow-y-auto">
                                     {tarefas
                                         .filter((t) => t.status === "Pendente")
                                         .map((t) => (
@@ -122,8 +147,9 @@ export default class Home extends React.Component {
                             </div>
 
 
-                            <div className="w-1/3 m-4 rounded-md shadow-md border border-gray-300 bg-indigo-300/30">
-                                <div className="flex justify-center py-2 text-white text-2xl font-medium border-b border-gray-300 bg-indigo-400 rounded-t-sm">
+
+                            <div className="w-1/3 m-4 rounded-md shadow-md border border-gray-300 bg-indigo-300/30 flex flex-col h-[73vh]">
+                                <div className="flex justify-center py-2 text-white text-2xl font-medium border-b border-gray-300 bg-blue-400 rounded-t-sm">
                                     <h1>Em desenvolvimento</h1>
                                 </div>
 
@@ -148,8 +174,8 @@ export default class Home extends React.Component {
                             </div>
 
 
-                            <div className="w-1/3 m-4 rounded-md shadow-md border border-gray-300 bg-indigo-300/30">
-                                <div className="flex justify-center text-white py-2 text-2xl font-medium border-b border-gray-300 bg-indigo-400 rounded-t-sm">
+                            <div className="w-1/3 m-4 rounded-md shadow-md border border-gray-300 bg-indigo-300/30 flex flex-col h-[73vh]">
+                                <div className="flex justify-center text-white py-2 text-2xl font-medium border-b border-gray-300 bg-green-400 rounded-t-sm">
                                     <h1>Feito</h1>
                                 </div>
 
