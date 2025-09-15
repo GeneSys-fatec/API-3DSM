@@ -4,6 +4,7 @@ import Login from './pages/Login'
 import Home from './pages/Home'
 import Equipes from './pages/Equipes'
 import Calendario from './pages/Calendario'
+import Tarefas from './pages/Tarefas'
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path='/home' element={<Home />}/>
         <Route path='/equipes' element={<Equipes />}/>
         <Route path='/calendario' element={<Calendario />}/>
+        <Route path='/tarefas' element={<Tarefas />}/>
       </Routes>
     </Router>
   )
