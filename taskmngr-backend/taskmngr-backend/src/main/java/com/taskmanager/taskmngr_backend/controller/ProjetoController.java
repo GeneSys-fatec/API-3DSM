@@ -7,6 +7,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/projeto")
 public class ProjetoController {
-    @Autowired
-    private ProjetoService projetoService;
+   // @Autowired
+    // private ProjetoService projetoService;
 }
