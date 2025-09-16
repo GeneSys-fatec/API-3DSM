@@ -1,14 +1,32 @@
 import React from "react";
-import ModalCriarTarefas from "./ModalCriarTarefas"; 
+import ModalCriarTarefas from "./ModalCriarTarefas";
 import ModalEditarTarefa from "./ModalEditarTarefas";
 
-export default class ListaTarefas extends React.Component {
-    state = {
+export type Tarefa = {
+    id: number;
+    titulo: string;
+    status: string;
+    responsavel: string;
+    entrega: string;
+    prioridade: string;
+    descricao: string;
+    anexo: any;
+};
+
+type ListaTarefasState = {
+    tarefas: Tarefa[];
+    isModalCriarOpen: boolean;
+    isModalEditarOpen: boolean;
+    tarefaParaEditar: Tarefa | null;
+};
+
+export default class ListaTarefas extends React.Component<{}, ListaTarefasState> {
+    state: ListaTarefasState = {
         tarefas: [
             {
                 id: 1,
                 titulo: "Fazer relatório",
-                status: "Em andamento",
+                status: "Pendente",
                 responsavel: "Gabriel Medeiros",
                 entrega: "2025-09-20",
                 prioridade: "Alta",
@@ -18,7 +36,7 @@ export default class ListaTarefas extends React.Component {
             {
                 id: 2,
                 titulo: "Revisar código",
-                status: "Em andamento",
+                status: "Pendente",
                 responsavel: "Gabriel Medeiros",
                 entrega: "2025-09-20",
                 prioridade: "Alta",
@@ -26,9 +44,9 @@ export default class ListaTarefas extends React.Component {
                 anexo: null,
             }
         ],
-        isModalCriarOpen: false, 
-        isModalEditarOpen: false, 
-        tarefaParaEditar: null, 
+        isModalCriarOpen: false,
+        isModalEditarOpen: false,
+        tarefaParaEditar: null,
     };
 
     openModalCriar = () => {
@@ -46,66 +64,95 @@ export default class ListaTarefas extends React.Component {
         });
     };
 
+    adicionarTarefa = (novaTarefa: Omit<Tarefa, 'id'>) => {
+    this.setState((prevState) => {
+        const ultimoId = prevState.tarefas.reduce((maxId, tarefa) => {
+            return tarefa.id > maxId ? tarefa.id : maxId;
+        }, 0);
 
-    render() {
-        return (
-            <div>
-                <div className="flex justify-between items-center mb-6 px-4">
-                </div>
-                <div className="relative overflow-x-auto sm:rounded-lg">
-                    <table className="w-full text-sm text-left rtl:text-right">
-                        <thead className="text-xs uppercase bg-white text-gray-400">
-                            <tr>
-                                <th scope="col" className="py-3">Id</th>
-                                <th scope="col" className="py-3">Título</th>
-                                <th scope="col" className="pl-20 py-3">Status</th>
-                                <th scope="col" className="py-3">Responsável</th>
-                                <th scope="col" className="py-3">Data de entrega</th>
-                                <th scope="col" className="py-3">Prioridade</th>
-                                <th scope="col" className="py-3">Editar</th>
-                                <th scope="col" className="py-3">Deletar</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {this.state.tarefas.map((tarefa) => (
-                                <tr key={tarefa.id} className="bg-white hover:bg-gray-50 transition-colors duration-200">
-                                    <td className="py-3">{tarefa.id}</td>
-                                    <td className="py-3">{tarefa.titulo}</td>
-                                    <td className="pl-20 py-3">{tarefa.status}</td>
-                                    <td className="py-3">{tarefa.responsavel}</td>
-                                    <td className="py-3">{tarefa.entrega}</td>
-                                    <td className="py-3">{tarefa.prioridade}</td>
-                                    <td className="py-3">
-                                        <button
-                                            // onClick={() => this.openModalEditar(tarefa)}  // tem que criar a lógica pra fazer funcionar a cada task
-                                            className="font-medium text-white bg-gray-400 p-1 rounded hover:bg-indigo-950 transition-colors"
-                                        >
-                                            Editar
-                                        </button>
-                                    </td>
-                                    <td className="py-3">
-                                        <a href="#" className="font-medium text-white bg-gray-400 p-1 rounded hover:bg-indigo-950 transition-colors">Excluir</a>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                    <button
-                        onClick={this.openModalCriar}
-                        className="text-sm"
-                    >
-                        <i className="fa-solid fa-plus"></i>Adicionar Nova Tarefa
-                    </button>
+        const novoId = ultimoId + 1;
+
+        const tarefaCompleta: Tarefa = {
+            ...novaTarefa,
+            id: novoId,
+        };
+
+        return {
+            tarefas: [...prevState.tarefas, tarefaCompleta],
+            isModalCriarOpen: false,
+        };
+    });
+};
+
+    excluirTarefa = (idParaExcluir: number) => {
+        this.setState(prevState => ({
+            // Usamos .filter() para criar um novo array sem o item com o id correspondente
+            tarefas: prevState.tarefas.filter(tarefa => tarefa.id !== idParaExcluir),
+        }));
+    };
+    
+
+
+render() {
+    return (
+        <>
+            <div className="bg-white p-4 rounded-lg shadow-md overflow-x-auto gap-4 ">
+            
+                <div className="grid grid-cols-9 gap-4 py-3 px-2 text-xs font-semibold text-gray-500 border-b">
+                    <div className="col-span-1">ID</div>
+                    <div className="col-span-2"><i className="fa-solid fa-bars-staggered mr-2" />Título</div>
+                    <div className="col-span-1"><i className="fa-solid fa-arrow-right mr-2" />Status</div>
+                    <div className="col-span-1"><i className="fa-solid fa-user mr-2" />Responsável</div>
+                    <div className="col-span-1"><i className="fa-solid fa-tag mr-2" />Entrega</div>
+                    <div className="col-span-1"><i className="fa-solid fa-arrow-up mr-2" />Prioridade</div>
+                    <div className="col-span-1 text-center"><i className="fa-solid fa-pencil mr-2" />Editar</div>
+                    <div className="col-span-1 text-center"><i className="fa-solid fa-trash mr-2" />Excluir</div>
                 </div>
 
+                <div>
+                    {this.state.tarefas.map((tarefa) => (
+                        <div key={tarefa.id} className="grid grid-cols-9 gap-4 p-3 items-center hover:bg-gray-50 transition-colors duration-150">
+                            <div className="col-span-1 text-sm font-medium text-gray-800">{tarefa.id}</div>
+                            <div className="col-span-2 text-sm text-gray-800">{tarefa.titulo}</div>
+                            <div className="col-span-1">
+                                <span className="px-2 py-1 text-xs font-bold rounded-md uppercase bg-red-100 text-red-700">{tarefa.status}</span>
+                            </div>
+                            <div className="col-span-1 text-sm text-gray-800">{tarefa.responsavel}</div>
+                            <div className="col-span-1 text-sm text-gray-600">{tarefa.entrega}</div>
+                            <div className="col-span-1">
+                                <span className="px-2 py-1 text-xs font-bold rounded-md uppercase bg-red-100 text-red-700">{tarefa.prioridade}</span>
+                            </div>
+                            <div className="col-span-1 flex justify-center">
+                                <button className="text-xs font-semibold bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300 transition-colors">
+                                    Editar
+                                </button>
+                            </div>
+                            <div className="col-span-1 flex justify-center">
+                                <button className="text-xs font-semibold bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300 transition-colors"
+                                 onClick={() => this.excluirTarefa(tarefa.id)}
+                                >
+                                    Excluir
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
 
-                <ModalCriarTarefas isOpen={this.state.isModalCriarOpen} onClose={this.closeModalCriar} />
-
-                {/* Tem que criar a lógica para fazer abrir o modal de editar pra cada task */}
-                {/* this.state.isModalEditarOpen && (
-                    <ModalEditarTarefa isOpen={this.state.isModalEditarOpen} onClose={this.closeModalEditar}/>
-                 ) */}
+                <button
+                    onClick={this.openModalCriar}
+                    className="text-sm font-semibold text-blue-600 hover:text-blue-800 pt-4"
+                >
+                    <i className="fa-solid fa-plus mr-2"></i>Adicionar Nova Tarefa
+                </button>
             </div>
-        );
-    }
+
+            <ModalCriarTarefas isOpen={this.state.isModalCriarOpen} onClose={this.closeModalCriar} onAdicionarTarefa={this.adicionarTarefa} />
+
+            {/* Lógica do Modal de Edição */}
+            {/* this.state.isModalEditarOpen && (
+                <ModalEditarTarefa isOpen={this.state.isModalEditarOpen} onClose={this.closeModalEditar}/>
+            ) */}
+        </>
+    );
+}
 }
