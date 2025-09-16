@@ -58,7 +58,7 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
 
     return (
       <div className="fixed inset-0 bg-gray-600/60 flex items-center justify-center z-50 p-4 font-sans">
-        <div className="bg-white rounded-lg shadow-2xl w-full max-w-3xl p-6 flex flex-col gap-4">
+        <div className="bg-white rounded-lg shadow-2xl w-full max-w-3xl p-8 flex flex-col gap-4">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-800">Add Project</h2>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-3xl transition-colors duration-200">
@@ -72,8 +72,8 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
               <label htmlFor="Nome do Projeto" className="block text-sm font-medium text-gray-700 mb-1">Nome do Projeto</label>
               <input
                 type="text"
-                id="Nome do Projeto"
-                name="Nome do Projeto"
+                id="projectName"
+                name="projectName"
                 placeholder="Nome do Projeto"
                 value={this.state.projectName}
                 onChange={this.handleChange}

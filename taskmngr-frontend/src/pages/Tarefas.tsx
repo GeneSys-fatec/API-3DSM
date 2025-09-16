@@ -1,12 +1,11 @@
 import React from "react";
-import NavbarLogin from "../components/headers/NavbarLogin";
 import ListaTarefas from "../components/ListaTarefas";
 import NavbarProjetos from "../components/NavbarProjetos";
 import BarraLateralProjetos from "../components/BarraLateralProjetos";
 import BarraLateral from "../components/BarraLateral";
 import type { Projeto } from "../components/BarraLateralProjetos";
 import ModalProjetos from "../components/ModalProjetos";
-import ModalEditarTarefas from "../components/ModalEditarTarefas";
+import NavbarPrincipal from "../components/headers/NavbarPrincipal";
 
 const projetosMock: Projeto[] = [
     {
@@ -64,18 +63,20 @@ export default class Tarefas extends React.Component<object, HomeState> {
     render() {
         return (
             <div>
-                <NavbarLogin></NavbarLogin>
+                <NavbarPrincipal></NavbarPrincipal>
                 <div className="flex">
                     <BarraLateral></BarraLateral>
                     <BarraLateralProjetos projetos={this.state.projetos} onOpenModal={this.handleOpenModal}></BarraLateralProjetos>
-                    <div className="p-2 w-full">
+                    <div className="flex-col p-2 w-full">
                         <NavbarProjetos></NavbarProjetos>
                         <ModalProjetos
                             isOpen={this.state.isModalOpen}
                             onClose={this.handleCloseModal}
                             onAddProject={this.handleAddProject}
                         />
-                        <ListaTarefas></ListaTarefas>
+                        <div className="flex justify-center pt-5">
+                            <ListaTarefas></ListaTarefas>
+                        </div>
                     </div>
                 </div>
             </div>
