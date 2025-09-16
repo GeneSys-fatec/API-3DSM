@@ -3,8 +3,14 @@ import { Link } from "react-router-dom";
 export default class FormularioLogin extends React.Component {
     render() {
         return (
-            <div className="flex flex-col md:flex-row justify-center bg-gray-300 items-center min-h-screen p-4 gap-6">        
-                <div className="w-full md:w-120 h-auto md:h-120 flex flex-col items-center justify-center bg-gray-100 shadow-md rounded-s-sm p-6 z-0">
+            <div className="flex flex-col md:flex-row justify-center bg-gray-100 items-center min-h-screen p-4">
+                <div className="absolute top-0 left-0 w-full md:hidden">
+                   <img src="./BgTop.png" className="img-fluid"></img>
+                </div>
+                <div className="absolute bottom-0 left-0 w-full md:hidden">
+                   <img src="./BgBottom.png" className="img-fluid"></img>
+                </div>        
+                <div className="w-full md:w-120 h-auto md:h-120 flex flex-col items-center justify-center md:bg-gray-200 md:shadow-md md:rounded-s-sm p-6 z-0">
                     <h1 className="font-medium text-xl md:text-2xl pb-8">Login</h1>
                     <form className="w-full flex flex-col items-center gap-6 md:gap-4">
                         <div className="relative w-full max-w-xs">
