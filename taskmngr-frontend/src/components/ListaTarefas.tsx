@@ -1,6 +1,6 @@
 import React from "react";
 import ModalCriarTarefas from "./ModalCriarTarefas";
-import ModalEditarTarefa from "./ModalEditarTarefas";
+// import ModalEditarTarefa from "./ModalEditarTarefas";
 
 export type Tarefa = {
     id: number;
@@ -100,13 +100,13 @@ render() {
             
                 <div className="grid grid-cols-9 gap-4 py-3 px-2 text-xs font-semibold text-gray-500 border-b">
                     <div className="col-span-1">ID</div>
-                    <div className="col-span-2"><i className="fa-solid fa-bars-staggered mr-2" />Título</div>
-                    <div className="col-span-1"><i className="fa-solid fa-arrow-right mr-2" />Status</div>
-                    <div className="col-span-1"><i className="fa-solid fa-user mr-2" />Responsável</div>
-                    <div className="col-span-1"><i className="fa-solid fa-tag mr-2" />Entrega</div>
-                    <div className="col-span-1"><i className="fa-solid fa-arrow-up mr-2" />Prioridade</div>
-                    <div className="col-span-1 text-center"><i className="fa-solid fa-pencil mr-2" />Editar</div>
-                    <div className="col-span-1 text-center"><i className="fa-solid fa-trash mr-2" />Excluir</div>
+                    <div className="col-span-2"><i className="fa-solid fa-bars-staggered pr-4" />Título</div>
+                    <div className="col-span-1"><i className="fa-solid fa-arrow-right pr-4" />Status</div>
+                    <div className="col-span-1"><i className="fa-solid fa-user pr-4" />Responsável</div>
+                    <div className="col-span-1"><i className="fa-solid fa-tag pr-4" />Entrega</div>
+                    <div className="col-span-1"><i className="fa-solid fa-arrow-up pr-4" />Prioridade</div>
+                    <div className="col-span-1 text-center"><i className="fa-solid fa-pencil pr-4" />Editar</div>
+                    <div className="col-span-1 text-center"><i className="fa-solid fa-trash pr-4" />Excluir</div>
                 </div>
 
                 <div>
@@ -140,7 +140,7 @@ render() {
 
                 <button
                     onClick={this.openModalCriar}
-                    className="text-sm font-semibold text-blue-600 hover:text-blue-800 pt-4"
+                    className="text-sm font-semibold text-blue-600 hover:text-blue-800 pt-4 cursor-pointer"
                 >
                     <i className="fa-solid fa-plus mr-2"></i>Adicionar Nova Tarefa
                 </button>
