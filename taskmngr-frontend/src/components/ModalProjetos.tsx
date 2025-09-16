@@ -20,7 +20,7 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
   state: ModalState = {
     projectName: '',
     description: '',
-    team: 'Select Team',
+    team: 'Selecione a equipe',
   };
 
   handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -45,7 +45,7 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
     this.setState({
       projectName: '',
       description: '',
-      team: 'Select Team',
+      team: 'Selecione a equipe',
     });
   };
 
@@ -60,7 +60,7 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
       <div className="fixed inset-0 bg-gray-600/60 flex items-center justify-center z-50 p-4 font-sans">
         <div className="bg-white rounded-lg shadow-2xl w-full max-w-3xl p-8 flex flex-col gap-4">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-800">Add Project</h2>
+            <h2 className="text-xl font-bold text-gray-800">Adicionar Novo Projeto</h2>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-3xl transition-colors duration-200">
               &times;
             </button>
@@ -87,7 +87,7 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
                 id="description"
                 name="description"
                 rows={3}
-                placeholder="Description"
+                placeholder=""
                 value={this.state.description}
                 onChange={this.handleChange}
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
@@ -111,7 +111,7 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
             </div>
 
             <div>
-              <label htmlFor="team" className="block text-sm font-medium text-gray-700 mb-1">Team</label>
+              <label htmlFor="team" className="block text-sm font-medium text-gray-700 mb-1">Equipe</label>
               <select
                 id="team"
                 name="team"
@@ -119,7 +119,7 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
                 onChange={this.handleChange}
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
               >
-                <option>Selecione o Time</option>
+                <option>Selecione a equipe</option>
                 <option>GSW</option>
                 <option>GeneSys</option>
                 <option>Fatec</option>

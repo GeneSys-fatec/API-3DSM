@@ -1,13 +1,14 @@
 import React from "react";
+import { NavLink } from "react-router-dom";
 
 export default class NavbarProjetos extends React.Component {
     render() {
         return (
             <div className="flex flex-row h-14 w-full rounded-md shadow-md border border-gray-300 px-4 justify-between items-center">
                 <div className="flex gap-8">
-                    <p>Visão Geral</p>
-                    <p>Tarefas</p>
-                    <p>Estatísticas</p>
+                    <NavLink to="/home" className={({ isActive }) => `relative pb-1 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[1px] after:bg-black after:w-full after:scale-x-0 after:transition-transform after:duration-300 after:ease-in-out ${isActive ? "after:scale-x-100" : "hover:after:scale-x-100"}`}>Visão Geral</NavLink>
+                    <NavLink to="/tarefas" className={({ isActive }) => `relative pb-1 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[1px] after:bg-black after:w-full after:scale-x-0 after:transition-transform after:duration-300 after:ease-in-out ${isActive ? "after:scale-x-100" : "hover:after:scale-x-100"}`}>Tarefas</NavLink>
+                    <NavLink to="/dashboard" className={({ isActive }) => `relative pb-1 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[1px] after:bg-black after:w-full after:scale-x-0 after:transition-transform after:duration-300 after:ease-in-out ${isActive ? "after:scale-x-100" : "hover:after:scale-x-100"}`}>Estatísticas</NavLink>
                 </div>
                 <div className="flex justify-between items-center gap-2">
                     <div className="relative">

@@ -26,7 +26,7 @@ export default class CardTarefa extends React.Component<CardTarefaProps> {
         return (
             <div className="flex justify-between p-2 bg-white rounded-md shadow-md">
                 <div>
-                    <h1 className="text-xl font-medium">{titulo}</h1>
+                    <h1 className="text-lg font-medium">{titulo}</h1>
                     <div className="flex gap-2">
                         <div className={`rounded-xl ${prioridadeCor} px-2 py-1 text-white text-xs`}>
                             <h1>{prioridade}</h1>

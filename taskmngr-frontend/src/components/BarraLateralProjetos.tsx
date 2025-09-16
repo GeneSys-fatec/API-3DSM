@@ -17,7 +17,7 @@ export default class BarraLateralProjetos extends React.Component<BarraLateralPr
 
         return (
             <div className="h-[calc(100vh-4.28rem)] bg-indigo-300/30 text-white px-4 pt-4">
-                <div className="flex bg-indigo-950 w-60 rounded-md shadow-md gap-2 p-2 text-xl">
+                <div className="flex bg-indigo-400 w-60 rounded-md shadow-md gap-2 p-2 text-xl">
                     <i className="fa-solid fa-folder-open"></i>
                     <h2 className="leading-none">Projetos</h2>
                 </div>
