@@ -9,8 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*; //importa todas as annotations do spring de 1 vez
 
 import com.taskmanager.taskmngr_backend.model.AdicionadorLinkTarefa;
-import com.taskmanager.taskmngr_backend.model.TarefaDTO;
 import com.taskmanager.taskmngr_backend.model.TarefaModel;
+import com.taskmanager.taskmngr_backend.model.dto.TarefaDTO;
 import com.taskmanager.taskmngr_backend.service.TarefaService;
 
 
@@ -34,7 +34,7 @@ public class TarefaController {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-    } // nao sei se vai precisar pegar por id mas caso precise ja fiz o get
+    } //caso precise buscar por id
 
     @GetMapping("/listar")
     public ResponseEntity<List<TarefaDTO>> listarTarefa() {
@@ -47,7 +47,7 @@ public class TarefaController {
     }
 
     @PostMapping("/cadastrar")
-    public ResponseEntity<String> cadastrarTarefa(@RequestBody TarefaDTO dto) { //aqui tbm request body pede os atributos acgo
+    public ResponseEntity<String> cadastrarTarefa(@RequestBody TarefaDTO dto) { //aqui tbm request body pede os atributos
         TarefaModel tarefa = converterDtoParaModel(dto);
         tarefaService.salvar(tarefa);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -56,7 +56,7 @@ public class TarefaController {
 
 
     @PutMapping("/atualizar/{tar_id}")
-    public ResponseEntity<String> atualizarTarefa(@PathVariable String tar_id, @RequestBody TarefaDTO dto) { //??????
+    public ResponseEntity<String> atualizarTarefa(@PathVariable String tar_id, @RequestBody TarefaDTO dto) {
         Optional<TarefaModel> tarefaExistente = tarefaService.buscarPorId(tar_id);
         //busca no banco uma tarefa pelo id que vai ser opcional (pode ou nao existir)
         if (tarefaExistente.isPresent()) {
