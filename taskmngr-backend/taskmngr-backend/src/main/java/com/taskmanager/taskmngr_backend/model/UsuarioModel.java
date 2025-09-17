@@ -1,5 +1,7 @@
 package com.taskmanager.taskmngr_backend.model;
 
+
+
 import org.springframework.data.annotation.Id;
 
 public class UsuarioModel {
@@ -9,7 +11,7 @@ public class UsuarioModel {
     private String usu_email;
     private String usu_caminhoFoto;
     private String usu_senha;
-    private String usu_dataCriacao; 
+    private String usu_dataCriacao;
     private String usu_dataAtualizacao;
     // private List<ProjetoModel> projetos;
     // private List<EquipeModel> equipes;
@@ -43,7 +45,7 @@ public class UsuarioModel {
     }
 
     // public List<ProjetoModel> getProjetos() {
-    //     return projetos; 
+    //     return projetos;
     // }
 
     
