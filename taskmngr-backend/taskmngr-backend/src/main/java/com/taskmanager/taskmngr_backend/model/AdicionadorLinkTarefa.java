@@ -7,7 +7,6 @@ import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.stereotype.Component;
 
 import com.taskmanager.taskmngr_backend.controller.TarefaController;
-import com.taskmanager.taskmngr_backend.model.TarefaModel;
 
 @Component
 public class AdicionadorLinkTarefa implements AdicionadorLink<TarefaModel> {
