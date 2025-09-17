@@ -2,62 +2,63 @@ package com.taskmanager.taskmngr_backend.model;
 
 import org.springframework.data.annotation.Id;
 
-//isso aq seria pro hateoas mas n ta funcionando import org.springframework.hateoas.RepresentationModel;
-public class TarefaModel {
+import org.springframework.hateoas.RepresentationModel;
+
+public class TarefaModel extends RepresentationModel<TarefaModel> {
     @Id
-    private String id;
-    private String titulo;
-    private String descricao;
-    private String prazo;
-    private String status;
-    private String prioridade;
-    private String anexo;
-    private String dataCriacao;
-    private String dataAtualizacao;
-    private String usuId;
-    private String usuNome;
-    private String projId;
-    private String projNome;
+    private String tar_id;
+    private String tar_titulo;
+    private String tar_descricao;
+    private String tar_prazo;
+    private String tar_status;
+    private String tar_prioridade;
+    private String tar_anexo;
+    private String tar_dataCriacao;
+    private String tar_dataAtualizacao;
+    private String usu_id;
+    private String usu_nome;
+    private String proj_id;
+    private String proj_nome;
 
     //getters e setters pra manipular os atributos
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public String getTar_id() { return tar_id; } //aq tinha opcao do get e do set gettar_id q ficava igual
+    public void setTar_id(String tar_id) { this.tar_id = tar_id; } // ou getTar_id ai coloquei assim pq> cml cs
 
-    public String getTitulo() { return titulo; }
-    public void setTitulo(String titulo) { this.titulo = titulo; }
+    public String getTar_titulo() { return tar_titulo; }
+    public void setTar_titulo(String tar_titulo) { this.tar_titulo = tar_titulo; }
 
-    public String getDescricao() { return descricao; }
-    public void setDescricao(String descricao) { this.descricao = descricao; }
+    public String getTar_descricao() { return tar_descricao; }
+    public void setTar_descricao(String tar_descricao) { this.tar_descricao = tar_descricao; }
 
-    public String getPrazo() { return prazo; }
-    public void setPrazo(String prazo) { this.prazo = prazo; }
+    public String getTar_prazo() { return tar_prazo; }
+    public void setTar_prazo(String tar_prazo) { this.tar_prazo = tar_prazo; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public String getTar_status() { return tar_status; }
+    public void setTar_status(String tar_status) { this.tar_status = tar_status; }
 
-    public String getPrioridade() { return prioridade; }
-    public void setPrioridade(String prioridade) { this.prioridade = prioridade; }
+    public String getTar_prioridade() { return tar_prioridade; }
+    public void setTar_prioridade(String tar_prioridade) { this.tar_prioridade = tar_prioridade; }
 
-    public String getAnexo() { return anexo; }
-    public void setAnexo(String anexo) { this.anexo = anexo; }
+    public String getTar_anexo() { return tar_anexo; }
+    public void setTar_anexo(String tar_anexo) { this.tar_anexo = tar_anexo; }
 
-    public String getDataCriacao() { return dataCriacao; }
-    public void setDataCriacao(String dataCriacao) { this.dataCriacao = dataCriacao; }
+    public String getTar_dataCriacao() { return tar_dataCriacao; }
+    public void setTar_dataCriacao(String tar_dataCriacao) { this.tar_dataCriacao = tar_dataCriacao; }
 
-    public String getDataAtualizacao() { return dataAtualizacao; }
-    public void setDataAtualizacao(String dataAtualizacao) { this.dataAtualizacao = dataAtualizacao; }
+    public String getTar_dataAtualizacao() { return tar_dataAtualizacao; }
+    public void setTar_dataAtualizacao(String tar_dataAtualizacao) { this.tar_dataAtualizacao = tar_dataAtualizacao; }
 
-    public String getUsuId() { return usuId; }
-    public void setUsuId(String usuId) { this.usuId = usuId; }
+    public String getUsu_id() { return usu_id; }
+    public void setUsu_id(String usu_id) { this.usu_id = usu_id; }
 
-    public String getUsuNome() { return usuNome; }
-    public void setUsuNome(String usuNome) { this.usuNome = usuNome; }
+    public String getUsu_nome() { return usu_nome; }
+    public void setUsu_nome(String usu_nome) { this.usu_nome = usu_nome; }
 
-    public String getProjId() { return projId; }
-    public void setProjId(String projId) { this.projId = projId; }
+    public String getProj_id() { return proj_id; }
+    public void setProj_id(String proj_id) { this.proj_id = proj_id; }
 
-    public String getProjNome() { return projNome; }
-    public void setProjNome(String projNome) { this.projNome = projNome; }
+    public String getProj_nome() { return proj_nome; }
+    public void setProj_nome(String proj_nome) { this.proj_nome = proj_nome; }
 
 
 }

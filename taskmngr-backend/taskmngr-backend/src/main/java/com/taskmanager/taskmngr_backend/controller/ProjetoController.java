@@ -6,6 +6,10 @@ import java.util.List;
 
 import com.taskmanager.taskmngr_backend.model.ProjetoModel;
 import com.taskmanager.taskmngr_backend.service.ProjetoService;
+// import java.util.Optional;
+// import org.springframework.beans.factory.annotation.Autowired;
+// import org.springframework.http.HttpStatus; // pra retornar erro/sucesso
+// import org.springframework.http.ResponseEntity;
 
 @RestController
 @RequestMapping("/projeto")
