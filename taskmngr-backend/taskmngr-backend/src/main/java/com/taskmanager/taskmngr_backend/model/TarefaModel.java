@@ -1,10 +1,10 @@
 package com.taskmanager.taskmngr_backend.model;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import org.springframework.hateoas.RepresentationModel;
-
-public class TarefaModel extends RepresentationModel<TarefaModel> {
+@Document(collection= "tarefas")
+public class TarefaModel {
     @Id
     private String tar_id;
     private String tar_titulo;
