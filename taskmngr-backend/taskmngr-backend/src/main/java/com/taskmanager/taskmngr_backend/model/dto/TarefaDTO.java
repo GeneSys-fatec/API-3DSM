@@ -1,8 +1,8 @@
-package com.taskmanager.taskmngr_backend.model;
+package com.taskmanager.taskmngr_backend.model.dto;
 
-import lombok.*; //precisa disso?
+import lombok.*;
 import org.springframework.data.annotation.Id;
-import org.springframework.hateoas.RepresentationModel; //isso vai aqui?
+import org.springframework.hateoas.RepresentationModel;
 
 @Data
 public class TarefaDTO extends RepresentationModel<TarefaDTO>{

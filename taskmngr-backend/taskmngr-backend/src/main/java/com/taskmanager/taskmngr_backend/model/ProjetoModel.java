@@ -14,7 +14,6 @@ public class ProjetoModel {
     private String proj_dataAtualizacao;
     private String equ_id;
     private String equ_nome;
-    private List<UsuarioModel> usuarios;
 
     public String getProj_id() {return proj_id;}
     public void setProj_id(String proj_id) {this.proj_id = proj_id;}
@@ -39,8 +38,5 @@ public class ProjetoModel {
 
     public String getEqu_nome() {return equ_nome;}
     public void setEqu_nome(String equ_nome) {this.equ_nome = equ_nome;}
-
-    public List<UsuarioModel> getUsuarios() {return usuarios;}
-    public void setUsuarios(List<UsuarioModel> usuarios) {this.usuarios = usuarios;}
 
 }

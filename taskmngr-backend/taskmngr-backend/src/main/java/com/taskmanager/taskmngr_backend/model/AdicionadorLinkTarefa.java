@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 import com.taskmanager.taskmngr_backend.controller.TarefaController;
+import com.taskmanager.taskmngr_backend.model.dto.TarefaDTO;
 
 @Component
 public class AdicionadorLinkTarefa {
