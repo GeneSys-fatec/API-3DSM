@@ -2,6 +2,11 @@ import React from "react";
 import ModalCriarTarefas from "./ModalCriarTarefas";
 // import ModalEditarTarefa from "./ModalEditarTarefas";
 
+export type Responsavel = {
+  nome: string;
+  fotoURL?: string;
+};
+
 export type Tarefa = {
     id: number;
     titulo: string;
@@ -10,17 +15,17 @@ export type Tarefa = {
     entrega: string;
     prioridade: string;
     descricao: string;
-    anexo: any;
+    anexo: File | null;
 };
 
-type ListaTarefasState = {
+export type ListaTarefasState = {
     tarefas: Tarefa[];
     isModalCriarOpen: boolean;
     isModalEditarOpen: boolean;
     tarefaParaEditar: Tarefa | null;
 };
 
-export default class ListaTarefas extends React.Component<{}, ListaTarefasState> {
+export default class ListaTarefas extends React.Component<object, ListaTarefasState> {
     state: ListaTarefasState = {
         tarefas: [
             {
