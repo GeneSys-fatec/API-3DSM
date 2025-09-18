@@ -1,16 +1,11 @@
-import React from "react"
-import NavbarPrincipal from "../components/headers/NavbarPrincipal"
-import BarraLateral from "../components/BarraLateral"
+import React from "react";
 
 export default class Calendario extends React.Component {
     render() {
         return (
-            <div>
-                <NavbarPrincipal></NavbarPrincipal>
-                <div className="flex">
-                    <BarraLateral></BarraLateral>
-                </div>
-            </div>
+            <>
+            
+            </>
         )
     }
 }
