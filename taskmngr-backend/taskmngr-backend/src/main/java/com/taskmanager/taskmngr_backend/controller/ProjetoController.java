@@ -24,6 +24,7 @@ import com.taskmanager.taskmngr_backend.service.ProjetoService;
 @RestController
 @RequestMapping("/projeto")
 public class ProjetoController {
+
     @Autowired
     private ProjetoService projetoService;
     @Autowired
@@ -84,5 +85,4 @@ public class ProjetoController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Tarefa não encontrada");
         }
     }
-
 }

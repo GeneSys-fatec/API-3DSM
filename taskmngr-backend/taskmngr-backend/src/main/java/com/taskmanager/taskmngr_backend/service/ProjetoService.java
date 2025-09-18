@@ -25,6 +25,10 @@ public class ProjetoService {
         return projetoRepository.save(tarefa);
     }
 
+    public ProjetoModel atualizar(ProjetoModel tarefa) {
+        return projetoRepository.save(tarefa);
+    }
+
     public void deletar(String id) {
         projetoRepository.deleteById(id);
     }

@@ -25,6 +25,10 @@ public class TarefaService {
         return tarefaRepository.save(tarefa);
     }
 
+    public TarefaModel atualizar(TarefaModel tarefa) {
+        return tarefaRepository.save(tarefa);
+    }
+
     public void deletar(String id) {
         tarefaRepository.deleteById(id);
     }

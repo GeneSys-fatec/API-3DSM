@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*; //importa todas as annotations
 import com.taskmanager.taskmngr_backend.model.AdicionadorLinkTarefa;
 import com.taskmanager.taskmngr_backend.model.TarefaModel;
 import com.taskmanager.taskmngr_backend.model.dto.TarefaDTO;
+import com.taskmanager.taskmngr_backend.service.TarefaConverterService;
 import com.taskmanager.taskmngr_backend.service.TarefaService;
 
 
@@ -22,13 +23,15 @@ public class TarefaController {
     private TarefaService tarefaService;
     @Autowired
     private AdicionadorLinkTarefa adicionadorLink;
+    @Autowired
+    private TarefaConverterService tarefaConverterService;
 
 
     @GetMapping("/{tar_id}")
     public ResponseEntity<TarefaDTO> buscarPorId(@PathVariable String tar_id) {
         Optional<TarefaModel> tarefaOpt = tarefaService.buscarPorId(tar_id);
         if (tarefaOpt.isPresent()) {
-            TarefaDTO dto = converterModelParaDto(tarefaOpt.get());
+            TarefaDTO dto = tarefaConverterService.modelParaDto(tarefaOpt.get());
             adicionadorLink.adicionarLink(dto);
             return ResponseEntity.ok(dto);
         } else {
@@ -40,7 +43,7 @@ public class TarefaController {
     public ResponseEntity<List<TarefaDTO>> listarTarefa() {
         List<TarefaModel> tarefas = tarefaService.listarTodas();
         List<TarefaDTO> dtos = tarefas.stream()
-            .map(this::converterModelParaDto)
+            .map(tarefaConverterService::modelParaDto)
             .toList();
         adicionadorLink.adicionarLink(dtos);
         return ResponseEntity.ok(dtos);
@@ -48,12 +51,11 @@ public class TarefaController {
 
     @PostMapping("/cadastrar")
     public ResponseEntity<String> cadastrarTarefa(@RequestBody TarefaDTO dto) { //aqui tbm request body pede os atributos
-        TarefaModel tarefa = converterDtoParaModel(dto);
+        TarefaModel tarefa = tarefaConverterService.dtoParaModel(dto);
         tarefaService.salvar(tarefa);
         return ResponseEntity.status(HttpStatus.CREATED)
             .body("Tarefa cadastrada com sucesso!");
     }
-
 
     @PutMapping("/atualizar/{tar_id}")
     public ResponseEntity<String> atualizarTarefa(@PathVariable String tar_id, @RequestBody TarefaDTO dto) {
@@ -92,41 +94,5 @@ public class TarefaController {
             .body("Tarefa não encontrada");
 
         }
-
-    }
-
-    
-    private TarefaModel converterDtoParaModel(TarefaDTO dto) {
-        TarefaModel model = new TarefaModel();
-        model.setTar_titulo(dto.getTar_titulo());
-        model.setTar_descricao(dto.getTar_descricao());
-        model.setTar_status(dto.getTar_status());
-        model.setTar_prioridade(dto.getTar_prioridade());
-        model.setTar_anexo(dto.getTar_anexo());
-        model.setTar_dataCriacao(dto.getTar_dataCriacao());
-        model.setTar_dataAtualizacao(dto.getTar_dataAtualizacao());
-        model.setUsu_id(dto.getUsu_id());
-        model.setUsu_nome(dto.getUsu_nome());
-        model.setProj_id(dto.getProj_id());
-        model.setProj_nome(dto.getProj_nome());
-        return model;
-    }
-
-    private TarefaDTO converterModelParaDto(TarefaModel model) {
-        TarefaDTO dto = new TarefaDTO();
-        dto.setTar_id(model.getTar_id());
-        dto.setTar_titulo(model.getTar_titulo());
-        dto.setTar_descricao(model.getTar_descricao());
-        dto.setTar_prazo(model.getTar_prazo());
-        dto.setTar_status(model.getTar_status());
-        dto.setTar_prioridade(model.getTar_prioridade());
-        dto.setTar_anexo(model.getTar_anexo());
-        dto.setTar_dataCriacao(model.getTar_dataCriacao());
-        dto.setTar_dataAtualizacao(model.getTar_dataAtualizacao());
-        dto.setUsu_id(model.getUsu_id());
-        dto.setUsu_nome(model.getUsu_nome());
-        dto.setProj_id(model.getProj_id());
-        dto.setProj_nome(model.getProj_nome());
-        return dto;
     }
 }
