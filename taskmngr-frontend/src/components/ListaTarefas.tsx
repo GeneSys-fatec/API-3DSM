@@ -41,7 +41,17 @@ export default class ListaTarefas extends React.Component<object, ListaTarefasSt
             {
                 id: 2,
                 titulo: "Revisar código",
-                status: "Pendente",
+                status: "Em Desenvolvimento",
+                responsavel: "Gabriel Medeiros",
+                entrega: "2025-09-20",
+                prioridade: "Alta",
+                descricao: "Revisão do código da nova feature.",
+                anexo: null,
+            },
+                        {
+                id: 3,
+                titulo: "Revisar código 2",
+                status: "Concluído",
                 responsavel: "Gabriel Medeiros",
                 entrega: "2025-09-20",
                 prioridade: "Alta",
@@ -96,6 +106,18 @@ export default class ListaTarefas extends React.Component<object, ListaTarefasSt
         }));
     };
     
+    getStatusClass = (status: string) => {
+        switch (status.toLowerCase()) {
+            case 'pendente':
+                return 'bg-orange-100 text-orange-400';
+            case 'em desenvolvimento':
+                return 'bg-blue-100 text-blue-400';
+            case 'concluído':
+                return 'bg-green-100 text-green-500';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    };
 
 
 render() {
@@ -120,7 +142,7 @@ render() {
                             <div className="col-span-1 text-sm font-medium text-gray-800">{tarefa.id}</div>
                             <div className="col-span-2 text-sm text-gray-800">{tarefa.titulo}</div>
                             <div className="col-span-1">
-                                <span className="px-2 py-1 text-xs font-bold rounded-md uppercase bg-red-100 text-red-700">{tarefa.status}</span>
+                                <span className={`px-2 py-1 text-xs font-bold rounded-md uppercase whitespace-nowrap w-12 ${this.getStatusClass(tarefa.status)}`}>{tarefa.status}</span>
                             </div>
                             <div className="col-span-1 text-sm text-gray-800">{tarefa.responsavel}</div>
                             <div className="col-span-1 text-sm text-gray-600">{tarefa.entrega}</div>

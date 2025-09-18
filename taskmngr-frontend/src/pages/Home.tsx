@@ -1,10 +1,5 @@
 import React from "react";
-import NavbarPrincipal from "../components/headers/NavbarPrincipal";
-import BarraLateral from "../components/BarraLateral";
-import BarraLateralProjetos from "../components/BarraLateralProjetos";
 import type { Projeto } from "../components/BarraLateralProjetos";
-import NavbarProjetos from "../components/NavbarProjetos";
-import ModalProjetos from "../components/ModalProjetos";
 import ColunaKanban from "../components/ColunaKanban";
 
 const projetosMock: Projeto[] = [
@@ -60,35 +55,21 @@ export default class Home extends React.Component<object, HomeState> {
 
   render() {
     return (
-      <div className="bg-slate-50 h-screen flex flex-col">
-        <NavbarPrincipal />
-        <div className="flex flex-1 overflow-hidden">
-          <div className="hidden lg:block">
-            <BarraLateral />
-          </div>
-          <div className="hidden lg:block">
-            <BarraLateralProjetos projetos={this.state.projetos} onOpenModal={this.handleOpenModal} />
-          </div>
-          
-          <div className="p-2 md:p-4 flex-1 flex flex-col min-w-0 h-full">
-            <NavbarProjetos />
-            <div className="flex flex-col h-full lg:flex-row items-center lg:items-start gap-6 pt-5 pb-4 lg:pr-4 flex-1 overflow-y-auto lg:overflow-x-auto lg:overflow-y-hidden">
-              {this.state.colunas.map((coluna) => (
-                <ColunaKanban key={coluna.status} titulo={coluna.titulo} corClasse={coluna.corClasse} corFundo={coluna.corFundo}
-                  tarefas={tarefas.filter((t) => t.status === coluna.status)
-                    .map((t) => ({ id: t.id, titulo: t.titulo, status: t.status, entrega: t.entrega, prioridade: t.prioridade as "Alta" | "Média" | "Baixa", responsavel: t.responsavel, descricao: t.descricao ?? "", anexo: null }))}
-                />
-              ))}
-              <div className="w-full lg:w-80 flex-shrink-0 mt-auto lg:mt-0">
-                <button onClick={this.handleAddColumn} className="w-full rounded-lg bg-gray-200/70 p-3 text-center transition-colors hover:bg-gray-300 lg:h-full flex items-center justify-center" >
-                  <h2 className="text-xl font-bold tracking-wider text-gray-600"> + Adicionar Card </h2>
-                </button>
-              </div>
+      <>
+        <div className="flex flex-col h-full lg:flex-row items-center lg:items-start gap-6 pt-5 pb-4 lg:pr-4 flex-1 overflow-y-auto lg:overflow-x-auto lg:overflow-y-hidden">
+            {this.state.colunas.map((coluna) => (
+              <ColunaKanban key={coluna.status} titulo={coluna.titulo} corClasse={coluna.corClasse} corFundo={coluna.corFundo}
+                tarefas={tarefas.filter((t) => t.status === coluna.status)
+                  .map((t) => ({ id: t.id, titulo: t.titulo, status: t.status, entrega: t.entrega, prioridade: t.prioridade as "Alta" | "Média" | "Baixa", responsavel: t.responsavel, descricao: t.descricao ?? "", anexo: null }))}
+              />
+            ))}
+            <div className="w-full lg:w-80 flex-shrink-0 mt-auto lg:mt-0">
+              <button onClick={this.handleAddColumn} className="w-full rounded-lg bg-gray-200/70 p-3 text-center transition-colors hover:bg-gray-300 lg:h-full flex items-center justify-center" >
+                <h2 className="text-xl font-bold tracking-wider text-gray-600"> + Adicionar Card </h2>
+              </button>
             </div>
           </div>
-        </div>
-        <ModalProjetos isOpen={this.state.isModalOpen} onClose={this.handleCloseModal} onAddProject={this.handleAddProject} />
-      </div>
+    </>
     );
   }
 }
