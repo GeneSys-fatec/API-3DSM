@@ -9,3 +9,9 @@
 body {
     overflow: hidden;
 }
+
+.hamburguer{
+    @media (width >= 64rem /* 1024px */) {
+        display: none;
+    }
+}

@@ -17,11 +17,45 @@ type ModalState = {
 };
 
 export default class ModalProjetos extends React.Component<ModalProps, ModalState> {
+  private modalRef = React.createRef<HTMLDivElement>();
   state: ModalState = {
     projectName: '',
     description: '',
     team: 'Selecione a equipe',
   };
+
+   
+  componentDidMount() {
+    if (this.props.isOpen) {
+      document.addEventListener('mousedown', this.handleOutsideClick);
+    }
+  }
+
+  
+  componentDidUpdate(prevProps: ModalProps) {
+    
+    if (this.props.isOpen && !prevProps.isOpen) {
+      document.addEventListener('mousedown', this.handleOutsideClick);
+    } 
+    
+    else if (!this.props.isOpen && prevProps.isOpen) {
+      document.removeEventListener('mousedown', this.handleOutsideClick);
+    }
+  }
+
+  
+  componentWillUnmount() {
+    document.removeEventListener('mousedown', this.handleOutsideClick);
+  }
+
+  
+  private handleOutsideClick = (event: MouseEvent) => {
+    
+    if (this.modalRef.current && !this.modalRef.current.contains(event.target as Node)) {
+      this.props.onClose();
+    }
+  };
+
 
   handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = event.target;
@@ -58,7 +92,7 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
 
     return (
       <div className="fixed inset-0 bg-gray-600/60 flex items-center justify-center z-50 p-4 font-sans">
-        <div className="bg-white rounded-lg shadow-2xl w-full max-w-3xl p-8 flex flex-col gap-4">
+        <div ref={this.modalRef} className="bg-white rounded-lg shadow-2xl w-full max-w-3xl p-8 flex flex-col gap-4">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-800">Adicionar Novo Projeto</h2>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-3xl transition-colors duration-200">
@@ -66,7 +100,6 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
             </button>
           </div>
 
-          {/* Adicionado o manipulador de envio ao formulário */}
           <form onSubmit={this.handleSubmit} className='flex flex-col gap-y-5'>
             <div>
               <label htmlFor="Nome do Projeto" className="block text-sm font-medium text-gray-700 mb-1">Nome do Projeto</label>
