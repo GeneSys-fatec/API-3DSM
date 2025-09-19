@@ -2,9 +2,14 @@ package com.taskmanager.taskmngr_backend.model;
 
 
 
-import org.springframework.data.annotation.Id;
+import java.util.Collection;
+import java.util.Collections;
 
-public class UsuarioModel {
+import org.springframework.data.annotation.Id;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+public class UsuarioModel implements UserDetails {
     @Id
     private String usu_id;
     private String usu_nome;
@@ -76,5 +81,31 @@ public class UsuarioModel {
     //     return projetos;
     // }
 
-    
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.emptyList(); 
+    }
+
+    public String getPassword() {
+        return usu_senha;
+    }
+
+    public String getUsername() {
+        return usu_email; 
+    }
+
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    public boolean isEnabled() {
+        return true;
+    }
 }

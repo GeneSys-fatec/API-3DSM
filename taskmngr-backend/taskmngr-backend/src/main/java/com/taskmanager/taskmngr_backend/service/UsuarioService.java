@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.taskmanager.taskmngr_backend.model.UsuarioModel;
@@ -13,6 +14,8 @@ import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
 public class UsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;
+    @Autowired
+    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     public List<UsuarioModel> listarTodas() {
         return usuarioRepository.findAll();
@@ -23,6 +26,7 @@ public class UsuarioService {
     }
 
     public UsuarioModel salvar(UsuarioModel usuario) {
+        usuario.setUsu_senha(encoder.encode(usuario.getUsu_senha()));
         return usuarioRepository.save(usuario);
     }
 
