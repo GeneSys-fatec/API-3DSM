@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 type Tarefa = {
     id: string;
     titulo: string;
-    status: 'Pendente' | 'Em Desenvolvimento' | 'Concluída';
-    descricao: string;
+    status: string;
     responsavel: string;
-    prioridade: 'Alta' | 'Média' | 'Baixa';
-    dataEntrega: string;
-    anexo: string | null;
+    entrega: string;
+    prioridade: string;
+    descricao: string;
+    anexo: File | null;
 };
 
 type ModalProps = {
@@ -18,183 +18,228 @@ type ModalProps = {
     onSave: (tarefaAtualizada: Tarefa) => void;
 };
 
-export default function ModalEditarTarefas({ isOpen, onClose, tarefa, onSave }: ModalProps) {
-    const [tarefaEmEdicao, setTarefaEmEdicao] = useState<Tarefa>(tarefa);
-    const [campoEditando, setCampoEditando] = useState<string | null>(null);
+type ModalState = {
+    tarefaEmEdicao: Tarefa;
+    novoComentario: string;
+};
 
-    useEffect(() => {
-        setTarefaEmEdicao(tarefa);
-    }, [tarefa]);
+export default class ModalEditarTarefas extends React.Component<ModalProps, ModalState> {
+    constructor(props: ModalProps) {
+        super(props);
 
-    if (!isOpen) {
-        return null;
+        this.state = {
+            tarefaEmEdicao: { ...props.tarefa },
+            novoComentario: '',
+        };
     }
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    componentDidUpdate(prevProps: ModalProps) {
+        if (this.props.tarefa.id !== prevProps.tarefa.id) {
+            this.setState({ tarefaEmEdicao: { ...this.props.tarefa } });
+        }
+    }
+
+    handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setTarefaEmEdicao(prev => ({ ...prev, [name]: value }));
+        this.setState(prevState => ({
+            tarefaEmEdicao: {
+                ...prevState.tarefaEmEdicao,
+                [name]: value,
+            },
+        }));
     };
 
-    const handleSave = () => {
-        onSave(tarefaEmEdicao);
-        setCampoEditando(null);
-    };
-
-    const renderInput = (fieldName: keyof Tarefa, type: string = 'text') => {
-        if (campoEditando === fieldName) {
-            return (
-                <input
-                    type={type}
-                    name={fieldName}
-                    value={tarefaEmEdicao[fieldName] || ''}
-                    onChange={handleChange}
-                    onBlur={() => setCampoEditando(null)}
-                    autoFocus
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
-                />
-            );
+    handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            this.setState(prevState => ({
+                tarefaEmEdicao: {
+                    ...prevState.tarefaEmEdicao,
+                    anexo: file,
+                },
+            }));
         }
-        return (
-            <span
-                onClick={() => setCampoEditando(fieldName)}
-                className="p-2 border border-transparent rounded-md hover:bg-gray-100 cursor-pointer transition-colors duration-200"
-            >
-                {tarefaEmEdicao[fieldName] || 'Clique para adicionar...'}
-            </span>
-        );
     };
 
-    const renderTextarea = (fieldName: keyof Tarefa) => {
-        if (campoEditando === fieldName) {
-            return (
-                <textarea
-                    name={fieldName}
-                    value={tarefaEmEdicao[fieldName] || ''}
-                    onChange={handleChange}
-                    onBlur={() => setCampoEditando(null)}
-                    autoFocus
-                    rows={3}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 min-h-24 p-2"
-                />
-            );
+    handleSave = (e: React.FormEvent) => {
+        e.preventDefault();
+        this.props.onSave(this.state.tarefaEmEdicao);
+        this.props.onClose();
+    };
+
+    handleCommentSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        console.log("Novo comentário enviado:", this.state.novoComentario);
+        this.setState({ novoComentario: '' });
+    };
+
+    render() {
+        if (!this.props.isOpen) {
+            return null;
         }
+
+        const { tarefaEmEdicao, novoComentario } = this.state;
+
         return (
-            <span
-                onClick={() => setCampoEditando(fieldName)}
-                className="p-2 block border border-transparent rounded-md hover:bg-gray-100 cursor-pointer transition-colors duration-200 whitespace-pre-wrap"
-            >
-                {tarefaEmEdicao[fieldName] || 'Clique para adicionar uma descrição...'}
-            </span>
-        );
-    };
+            <div className="fixed inset-0 bg-gray-600/60 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
 
-    const renderSelect = (fieldName: keyof Tarefa, options: string[]) => {
-        if (campoEditando === fieldName) {
-            return (
-                <select
-                    name={fieldName}
-                    value={tarefaEmEdicao[fieldName] ?? ''}
-                    onChange={handleChange}
-                    onBlur={() => setCampoEditando(null)}
-                    autoFocus
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
-                >
-                    {options.map(option => (
-                        <option key={option} value={option}>{option}</option>
-                    ))}
-                </select>
-            );
-        }
-        return (
-            <span
-                onClick={() => setCampoEditando(fieldName)}
-                className="p-2 border border-transparent rounded-md hover:bg-gray-100 cursor-pointer transition-colors duration-200"
-            >
-                {tarefaEmEdicao[fieldName]}
-            </span>
-        );
-    };
-
-    return (
-        <div className="fixed inset-0 bg-gray-600/60 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-2xl w-full max-w-xl p-8 flex flex-col gap-4 **max-h-[90vh] overflow-y-auto**">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold text-gray-800">Editar Tarefa</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-3xl transition-colors duration-200">
-                        &times;
-                    </button>
-                </div>
-
-                <div className='flex flex-col gap-y-6'>
-                    <div>
-                        <label className="py-2 block text-sm font-medium text-gray-700">Título da Tarefa</label>
-                        {renderInput('titulo')}
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Status</label>
-                            {renderSelect('status', ['Pendente', 'Em Desenvolvimento', 'Concluída'])}
-                        </div>
-                        {/* ... outros campos como 'Anexo' */}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Descrição</label>
-                        {renderTextarea('descricao')}
-                    </div>
-
-                    <div className="bg-white border mt-2 flex flex-col gap-6 p-4">
-                        <h3 className="text-lg font-semibold text-gray-800">Detalhes</h3>
-                        <hr />
-                        <div className="grid grid-cols-1 gap-6">
-                            <div className="flex flex-col gap-2">
-                                <label className="block text-sm font-medium text-gray-700">Responsável</label>
-                                {renderSelect('responsavel', ['Selecione um membro', 'Matheus', 'Ana Júlia'])}
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <label className="block text-sm font-medium text-gray-700">Prioridade</label>
-                                {renderSelect('prioridade', ['Alta', 'Média', 'Baixa'])}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Data de entrega</label>
-                                {renderInput('dataEntrega', 'date')}
-                            </div>
+                    {/* Cabeçalho do Modal */}
+                    <div className="p-8 pb-4 flex-shrink-0">
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-2xl font-bold text-gray-800">Editar Tarefa</h2>
+                            <button onClick={this.props.onClose} className="text-gray-400 hover:text-gray-600 text-3xl transition-colors duration-200">
+                                &times;
+                            </button>
                         </div>
                     </div>
 
-                    <div className="flex justify-end mt-8 gap-x-9">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            type="button"
-                            onClick={handleSave}
-                            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
-                        >
-                            Salvar
-                        </button>
-                    </div>
-                    <div className="bg-white p-6 rounded-lg shadow-md max-w-lg mx-auto mt-10">
-                        <h3 className="text-xl font-semibold text-gray-800 mb-4">Deixe seu comentário</h3>
-                        <form action="#" method="POST">
-                            <div className="mb-4">
-                                <label className="block text-gray-700 font-medium mb-2">Comentário</label>
-                                <textarea id="comment" name="comment" className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200" placeholder="Digite seu comentário aqui..."></textarea>
+                    {/* Formulário com scroll */}
+                    <form onSubmit={this.handleSave} className='flex flex-col flex-grow overflow-hidden'>
+                        <div className="px-8 flex-grow overflow-y-auto">
+                            <div className='flex flex-col gap-y-6'>
+                                <div>
+                                    <label htmlFor="titulo" className="py-2 block text-sm font-medium text-gray-700">Título da Tarefa</label>
+                                    <input
+                                        type="text"
+                                        id="titulo"
+                                        name="titulo"
+                                        value={tarefaEmEdicao.titulo}
+                                        onChange={this.handleChange}
+                                        placeholder="Título da Tarefa"
+                                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
+                                        required
+                                    />
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div>
+                                        <select
+                                            id="status"
+                                            name="status"
+                                            value={tarefaEmEdicao.status}
+                                            onChange={this.handleChange}
+                                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
+                                        >
+                                            <option>Pendente</option>
+                                            <option>Em Desenvolvimento</option>
+                                            <option>Concluída</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label htmlFor="file-upload" className="cursor-pointer bg-white p-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center gap-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                            </svg>
+                                            <span>Anexo</span>
+                                            <input id="file-upload" name="file-upload" type="file" className="sr-only" onChange={this.handleFileChange} />
+                                        </label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label htmlFor="descricao" className="block text-sm font-medium text-gray-700">Descrição</label>
+                                    <textarea
+                                        id="descricao"
+                                        name="descricao"
+                                        value={tarefaEmEdicao.descricao}
+                                        onChange={this.handleChange}
+                                        rows={3}
+                                        className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 min-h-24 p-2"
+                                    ></textarea>
+                                </div>
+
+                                {/* Seção de Detalhes */}
+                                <div className="bg-white border mt-2 flex flex-col gap-6 p-4 rounded-md">
+                                    <h3 className="text-lg font-semibold text-gray-800">Detalhes</h3>
+                                    <hr />
+                                    <div className="grid grid-cols-1 gap-6">
+                                        <div className="flex flex-col gap-2">
+                                            <label className="block text-sm font-medium text-gray-700">Responsável</label>
+                                            <select
+                                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
+                                                name="responsavel"
+                                                value={tarefaEmEdicao.responsavel}
+                                                onChange={this.handleChange}
+                                            >
+                                                <option>Selecione um membro</option>
+                                                <option>Matheus</option>
+                                                <option>Ana Júlia</option>
+                                                <option>Gabriel</option>
+                                                <option>Ana Beatriz</option>
+                                            </select>
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <label className="block text-sm font-medium text-gray-700">Prioridade</label>
+                                            <select
+                                                className="block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
+                                                name="prioridade"
+                                                value={tarefaEmEdicao.prioridade}
+                                                onChange={this.handleChange}
+                                            >
+                                                <option>Alta</option>
+                                                <option>Média</option>
+                                                <option>Baixa</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Data de entrega</label>
+                                            <input
+                                                type="date"
+                                                className="block w-full ..."
+                                                name="entrega"
+                                                value={tarefaEmEdicao.entrega}
+                                                onChange={this.handleChange}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Seção de Comentários */}
+                                <div className="bg-gray-50 p-6 rounded-lg mt-4">
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Deixe seu comentário</h3>
+                                    <div className="mb-4">
+                                        <label htmlFor="comment" className="block text-gray-700 font-medium mb-2 sr-only">Comentário</label>
+                                        <textarea
+                                            id="comment"
+                                            name="comment"
+                                            value={novoComentario}
+                                            onChange={(e) => this.setState({ novoComentario: e.target.value })}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                                            placeholder="Digite seu comentário aqui..."
+                                        ></textarea>
+                                    </div>
+                                    <div className="text-right">
+                                        <button
+                                            type="button"
+                                            onClick={this.handleCommentSubmit}
+                                            className="bg-blue-600 text-white font-bold py-2 px-6 rounded-md hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                                        >
+                                            Enviar
+                                        </button>
+                                    </div>
+                                </div>
+
                             </div>
-                            <div className="text-right">
-                                <button type="submit" className="bg-blue-600 text-white font-bold py-2 px-6 rounded-md hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-                                    Enviar
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                        </div>
+
+                        {/* Rodapé com Botões */}
+                        <div className="p-8 pt-4 flex justify-end gap-x-4 flex-shrink-0">
+                            <button
+                                type="button"
+                                onClick={this.props.onClose}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="submit"
+                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                            >
+                                Salvar Alterações
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
-        </div>
-    );
+        );
+    }
 }

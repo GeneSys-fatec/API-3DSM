@@ -17,6 +17,7 @@ import com.taskmanager.taskmngr_backend.service.TarefaService;
 
 @RestController
 @RequestMapping("/tarefa")
+@CrossOrigin(origins = "http://localhost:5173")
 public class TarefaController {
 
     @Autowired
