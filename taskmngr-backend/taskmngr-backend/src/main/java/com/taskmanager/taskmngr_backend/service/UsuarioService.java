@@ -16,7 +16,7 @@ public class UsuarioService {
     private UsuarioRepository usuarioRepository;
     @Autowired
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-
+    
     public List<UsuarioModel> listarTodas() {
         return usuarioRepository.findAll();
     }

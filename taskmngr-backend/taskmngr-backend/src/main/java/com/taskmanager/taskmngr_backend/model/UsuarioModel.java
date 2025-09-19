@@ -1,7 +1,5 @@
 package com.taskmanager.taskmngr_backend.model;
 
-
-
 import java.util.Collection;
 import java.util.Collections;
 
@@ -20,7 +18,7 @@ public class UsuarioModel implements UserDetails {
     private String usu_dataAtualizacao;
     // private List<ProjetoModel> projetos;
     // private List<EquipeModel> equipes;
-    
+
     public String getUsu_id() {
         return usu_id;
     }
@@ -28,7 +26,7 @@ public class UsuarioModel implements UserDetails {
     public void setUsu_id(String usu_id) {
         this.usu_id = usu_id;
     }
-    
+
     public String getUsu_nome() {
         return usu_nome;
     }
@@ -82,15 +80,17 @@ public class UsuarioModel implements UserDetails {
     // }
 
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.emptyList(); 
+        return Collections.emptyList();
     }
 
+    @Override
     public String getPassword() {
         return usu_senha;
     }
 
+    @Override
     public String getUsername() {
-        return usu_email; 
+        return usu_email;
     }
 
     public boolean isAccountNonExpired() {

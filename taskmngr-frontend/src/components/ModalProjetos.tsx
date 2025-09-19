@@ -62,25 +62,52 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
     this.setState({ [name]: value } as Pick<ModalState, keyof ModalState>);
   };
 
-  handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault(); 
+  adicionarProjeto = async () => {
+    try {
+        const response = await fetch("http://localhost:8080/projeto/cadastrar", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                proj_nome: this.state.projectName,
+                proj_descricao: this.state.description,
+                proj_status: "Ativo",
+                proj_dataCriacao: new Date().toISOString().slice(0, 10),
+                proj_dataAtualizacao: new Date().toISOString().slice(0, 10),
+                equ_id: "1", // ajuste conforme necessário
+                equ_nome: this.state.team,
+            }),
+        });
+
+        if (!response.ok) {
+            const errorBody = await response.text();
+            throw new Error(`Erro ao cadastrar projeto: ${response.statusText}. Resposta do servidor: ${errorBody}`);
+        }
+
+        this.props.onAddProject({ nome: this.state.projectName });
+        this.setState({
+            projectName: '',
+            description: '',
+            team: 'Selecione a equipe',
+        });
+        this.props.onClose();
+
+    } catch (error) {
+        console.error("Falha ao adicionar projeto:", error);
+        alert("Não foi possível adicionar o projeto.");
+    }
+};
+
+  handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
     if (!this.state.projectName.trim()) {
       alert('Por favor, insira o nome do projeto.');
       return;
     }
 
-    const newProject: NovoProjeto = {
-      nome: this.state.projectName,
-    };
-
-    this.props.onAddProject(newProject);
-
-    this.setState({
-      projectName: '',
-      description: '',
-      team: 'Selecione a equipe',
-    });
+    await this.adicionarProjeto();
   };
 
   render() {
