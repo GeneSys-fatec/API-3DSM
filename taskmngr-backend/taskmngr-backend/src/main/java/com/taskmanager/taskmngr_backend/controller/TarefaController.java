@@ -69,6 +69,7 @@ public class TarefaController {
             t.setTar_status(dto.getTar_status());
             t.setTar_prioridade(dto.getTar_prioridade());
             t.setTar_anexo(dto.getTar_anexo());
+            t.setTar_prazo(dto.getTar_prazo());
             t.setTar_dataCriacao(dto.getTar_dataCriacao());
             t.setTar_dataAtualizacao(dto.getTar_dataAtualizacao());
             t.setUsu_id(dto.getUsu_id());

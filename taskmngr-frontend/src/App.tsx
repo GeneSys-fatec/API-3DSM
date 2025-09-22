@@ -10,23 +10,28 @@ import Equipes from "./pages/Equipes";
 import Calendario from "./pages/Calendario";
 import Tarefas from "./pages/Tarefas";
 import Dashboard from "./pages/Dashboard";
+import { ModalProvider } from "./context/ModalContext";
+import ModalRenderer from "./components/ModalRenderer";
 
 function App() {
   return (
     <>
       <Router>
-        <Routes>
-          <Route path="/cadastro" element={<Cadastro />} />
-          <Route path="/login" element={<Login />} />
-          <Route element={<LayoutPrincipal />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/equipes" element={<Equipes />} />
-            <Route path="/calendario" element={<Calendario />} />
-            <Route path="/tarefas" element={<Tarefas />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-          </Route>
-        </Routes>
+        <ModalProvider>
+          <Routes>
+            <Route path="/cadastro" element={<Cadastro />} />
+            <Route path="/login" element={<Login />} />
+            <Route element={<LayoutPrincipal />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/home" element={<Home />} />
+              <Route path="/equipes" element={<Equipes />} />
+              <Route path="/calendario" element={<Calendario />} />
+              <Route path="/tarefas" element={<Tarefas />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+            </Route>
+          </Routes>
+          <ModalRenderer />
+        </ModalProvider>
       </Router>
       <ToastContainer position="top-right" autoClose={2000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="colored" />
     </>
