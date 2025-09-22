@@ -1,5 +1,5 @@
 import { Component } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, Link } from "react-router-dom";
 
 import NavbarPrincipal from "../headers/NavbarPrincipal";
 import BarraLateral from "../BarraLateral";
@@ -19,6 +19,18 @@ interface LayoutState {
   isModalOpen: boolean;
   isSidebarOpen: boolean;
 }
+
+// eslint-disable-next-line react-refresh/only-export-components
+const BottomNavbar = () => (
+  <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-indigo-950 shadow-lg z-30">
+    <div className="flex justify-around items-center h-16">
+      <Link className="flex-1 flex justify-center p-2" to="/home"><i className="fa-solid fa-house text-2xl text-white"></i></Link>
+      <Link className="flex-1 flex justify-center p-2" to="/equipes"><i className="fa-solid fa-people-group text-2xl text-white"></i></Link>
+      <Link className="flex-1 flex justify-center p-2" to="/calendario"><i className="fa-solid fa-calendar text-2xl text-white"></i></Link>
+      <Link className="flex-1 flex justify-center p-2" to="/info"><i className="fa-solid fa-info-circle text-2xl text-white"></i></Link>
+    </div>
+  </div>
+);
 
 export default class LayoutPrincipal extends Component<object, LayoutState> {
   state = {
@@ -49,32 +61,34 @@ export default class LayoutPrincipal extends Component<object, LayoutState> {
         <NavbarPrincipal onToggleSidebar={this.toggleSidebar} />
 
         <div className="flex flex-1 overflow-hidden">
-          <div className="lg:block">
+          <div className="hidden lg:block">
             <BarraLateral />
           </div>
           <div className={`
             fixed lg:static top-0 left-0 h-full z-20 transition-transform duration-300 ease-in-out
             ${this.state.isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
             lg:translate-x-0`
-        }>
+          }>
             <BarraLateralProjetos 
                 projetos={this.state.projetos} 
                 onOpenModal={this.handleOpenModal} 
             />
-        </div>
-
-        {this.state.isSidebarOpen && (
-            <div 
-                className="fixed inset-0 bg-black/50 z-10 lg:hidden"
-                onClick={this.toggleSidebar}
-            ></div>
-        )}
-
-          <div className="p-2 md:p-4 flex-1 flex flex-col min-w-0 h-full">
-            <NavbarProjetos />
-
-            <Outlet />
           </div>
+
+          {this.state.isSidebarOpen && (
+              <div 
+                  className="fixed inset-0 bg-black/50 z-10 lg:hidden"
+                  onClick={this.toggleSidebar}
+              ></div>
+          )}
+
+          <main className="flex-1 flex flex-col min-w-0 h-full">
+            <NavbarProjetos />
+            
+            <div className="flex-1 overflow-y-auto p-4 pb-20 lg:pb-4">
+                <Outlet />
+            </div>
+          </main>
         </div>
 
         <ModalProjetos
@@ -82,7 +96,10 @@ export default class LayoutPrincipal extends Component<object, LayoutState> {
           onClose={this.handleCloseModal}
           onAddProject={this.handleAddProject}
         />
+        
+        <BottomNavbar />
       </div>
     );
   }
 }
+
