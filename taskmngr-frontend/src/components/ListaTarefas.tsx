@@ -1,6 +1,7 @@
 import React from "react";
 import ModalCriarTarefas from "./ModalCriarTarefas";
 import ModalEditarTarefas from "./ModalEditarTarefas";
+import { ModalContext } from "../context/ModalContext";
 
 export type Responsavel = {
     nome: string;
@@ -20,45 +21,24 @@ export type Tarefa = {
 
 export type ListaTarefasState = {
     tarefas: Tarefa[];
-    isModalCriarOpen: boolean;
-    isModalEdicaoOpen: boolean;
-    tarefaParaEditar: Tarefa | null;
     loading: boolean;
     error: string | null;
-    tarefaSelecionada: Tarefa | null;
 };
 
 export default class ListaTarefas extends React.Component<object, ListaTarefasState> {
+    static contextType = ModalContext;
+    declare context: React.ContextType<typeof ModalContext>;
+
     state: ListaTarefasState = {
         tarefas: [],
-        isModalCriarOpen: false,
-        isModalEdicaoOpen: false,
-        tarefaParaEditar: null,
         loading: false,
         error: null,
-        tarefaSelecionada: null,
     };
 
 
     componentDidMount() {
         this.carregarTarefas();
     }
-
-    openModalCriar = () => {
-        this.setState({ isModalCriarOpen: true });
-    };
-
-    closeModalCriar = () => {
-        this.setState({ isModalCriarOpen: false });
-    };
-
-
-
-    handleOpenModalEdicao = (tarefa: Tarefa) => this.setState({ isModalEdicaoOpen: true, tarefaSelecionada: tarefa });
-    handleCloseModalEdicao = () => this.setState({ isModalEdicaoOpen: false, tarefaSelecionada: null });
-    handleSaveTarefa = (tarefaAtualizada: Tarefa) => {
-        this.editarTarefa(tarefaAtualizada);
-    };
 
     carregarTarefas = async () => {
         this.setState({ loading: true, error: null });
@@ -118,8 +98,6 @@ export default class ListaTarefas extends React.Component<object, ListaTarefasSt
 
             await this.carregarTarefas();
 
-            // fechar modal
-            this.setState({ isModalCriarOpen: false });
 
         } catch (error) {
             console.error("Falha ao adicionar tarefa:", error);
@@ -128,12 +106,6 @@ export default class ListaTarefas extends React.Component<object, ListaTarefasSt
     };
 
     editarTarefa = async (tarefaAtualizada: Tarefa) => {
-        // A data do formulário vem como 'AAAA-MM-DD'.
-        // Enviamos esse valor diretamente ou 'null' se não houver data.
-        const prazoParaEnviar = (tarefaAtualizada.entrega && tarefaAtualizada.entrega !== '-')
-            ? tarefaAtualizada.entrega
-            : null;
-
         try {
             const response = await fetch(`http://localhost:8080/tarefa/atualizar/${tarefaAtualizada.id}`, {
                 method: "PUT",
@@ -145,7 +117,7 @@ export default class ListaTarefas extends React.Component<object, ListaTarefasSt
                     tar_descricao: tarefaAtualizada.descricao,
                     tar_status: tarefaAtualizada.status,
                     tar_prioridade: tarefaAtualizada.prioridade,
-                    tar_prazo: prazoParaEnviar, // Enviando 'AAAA-MM-DD' ou null
+                    tar_prazo: tarefaAtualizada.entrega && tarefaAtualizada.entrega !== "-" ? tarefaAtualizada.entrega : null,
                     tar_anexo: null,
                     usu_nome: tarefaAtualizada.responsavel,
                     proj_nome: "API-3sem",
@@ -158,11 +130,7 @@ export default class ListaTarefas extends React.Component<object, ListaTarefasSt
                 throw new Error(`Erro ao atualizar tarefa: ${response.statusText}. Resposta do servidor: ${errorBody}`);
             }
 
-            // atualizar lista após edição
             await this.carregarTarefas();
-
-            // fechar modal
-            this.setState({ isModalEdicaoOpen: false, tarefaSelecionada: null });
 
         } catch (error) {
             console.error("Falha ao editar tarefa:", error);
@@ -190,6 +158,25 @@ export default class ListaTarefas extends React.Component<object, ListaTarefasSt
         }
     };
 
+    abrirModalCriacao = () => {
+        if (this.context) {
+            this.context.openModal(
+                <ModalCriarTarefas onAdicionarTarefa={this.adicionarTarefa} />
+            );
+        } else {
+            console.error("ModalContext não está disponível. Verifique se o componente está dentro de um ModalProvider.");
+        }
+    };
+
+    abrirModalEdicao = (tarefa: Tarefa) => {
+        if (this.context) {
+            this.context.openModal(
+                <ModalEditarTarefas tarefa={tarefa} onSave={this.editarTarefa} />
+            );
+        } else {
+            console.error("ModalContext não está disponível. Verifique se o componente está dentro de um ModalProvider.");
+        }
+    };
 
     getStatusClass = (status: string) => {
         switch (status.toLowerCase()) {
@@ -199,6 +186,19 @@ export default class ListaTarefas extends React.Component<object, ListaTarefasSt
                 return 'bg-blue-100 text-blue-400';
             case 'concluída':
                 return 'bg-green-100 text-green-500';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    };
+
+    getPrioridadeClass = (prioridade: string) => {
+        switch (prioridade.toLowerCase()) {
+            case 'alta':
+                return 'bg-red-100 text-red-700';
+            case 'média':
+                return 'bg-yellow-100 text-yellow-700';
+            case 'baixa':
+                return 'bg-blue-100 text-blue-700';
             default:
                 return 'bg-gray-100 text-gray-800';
         }
@@ -234,30 +234,29 @@ export default class ListaTarefas extends React.Component<object, ListaTarefasSt
                         {tarefas.map((tarefa) => (
                             <div key={tarefa.id} className="grid grid-cols-9 gap-4 p-3 items-center hover:bg-gray-50 transition-colors duration-150">
                                 <div className="col-span-1 text-sm font-medium text-gray-800">{tarefa.id}</div>
-                                <div className="col-span-2 text-sm text-gray-800">{tarefa.titulo}</div>
-                                <div className="col-span-1">
-                                    <span className={`px-2 py-1 text-xs font-bold rounded-md uppercase whitespace-nowrap w-12 ${this.getStatusClass(tarefa.status)}`}>{tarefa.status}</span>
+                                <div className="col-span-2 text-sm text-gray-800 truncate" title={tarefa.titulo}>{tarefa.titulo}</div>
+                                <div className="col-span-1 overflow-hidden">
+                                    <span
+                                        className={`px-2 py-1 text-xs font-bold rounded-md uppercase truncate ${this.getStatusClass(tarefa.status)}`}
+                                        title={tarefa.status} 
+                                    >
+                                        {tarefa.status}
+                                    </span>
                                 </div>
                                 <div className="col-span-1 text-sm text-gray-800">{tarefa.responsavel}</div>
-                                <div className="col-span-1 text-sm text-gray-600">{tarefa.entrega}</div>
                                 <div className="col-span-1">
-                                    <span className="px-2 py-1 text-xs font-bold rounded-md uppercase bg-red-100 text-red-700">{tarefa.prioridade}</span>
+                                    <span className="text-xs font-semibold bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300 transition-colors">{tarefa.entrega}</span>
+                                </div>
+                                <div className="col-span-1">
+                                    <span className={`px-2 py-1 text-xs font-bold rounded-md uppercase  ${this.getPrioridadeClass(tarefa.prioridade)}`}>{tarefa.prioridade}</span>
                                 </div>
                                 <div className="col-span-1 flex justify-center">
                                     <button
-                                        onClick={() => this.handleOpenModalEdicao(tarefa)}
+                                        onClick={() => this.abrirModalEdicao(tarefa)}
                                         className="text-xs font-semibold bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300 transition-colors"                                    >
                                         Editar
                                     </button>
                                 </div>
-                                {this.state.tarefaSelecionada && (
-                                    <ModalEditarTarefas
-                                        isOpen={this.state.isModalEdicaoOpen}
-                                        onClose={this.handleCloseModalEdicao}
-                                        tarefa={this.state.tarefaSelecionada}
-                                        onSave={this.handleSaveTarefa}
-                                    />
-                                )}
                                 <div className="col-span-1 flex justify-center">
                                     <button
                                         className="text-xs font-semibold bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300 transition-colors"
@@ -270,14 +269,12 @@ export default class ListaTarefas extends React.Component<object, ListaTarefasSt
                         ))}
                     </div>
                     <button
-                        onClick={this.openModalCriar}
+                        onClick={this.abrirModalCriacao}
                         className="text-sm font-semibold text-blue-600 hover:text-blue-800 pt-4 cursor-pointer"
                     >
                         <i className="fa-solid fa-plus mr-2"></i>Adicionar Nova Tarefa
                     </button>
                 </div>
-
-                <ModalCriarTarefas isOpen={this.state.isModalCriarOpen} onClose={this.closeModalCriar} onAdicionarTarefa={this.adicionarTarefa} />
             </>
         );
     }

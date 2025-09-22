@@ -21,7 +21,7 @@ public class SegurançaConfig {
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/usuario/cadastrar").permitAll())
         .authorizeHttpRequests(auth -> auth
-            .anyRequest().authenticated())
+            .anyRequest().permitAll())
         .httpBasic(Customizer.withDefaults());
         return http.build();
     }
