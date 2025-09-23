@@ -73,22 +73,20 @@ export default class LayoutPrincipal extends Component<object, LayoutState> {
                 projetos={this.state.projetos} 
                 onOpenModal={this.handleOpenModal} 
             />
-          </div>
+        </div>
 
-          {this.state.isSidebarOpen && (
-              <div 
-                  className="fixed inset-0 bg-black/50 z-10 lg:hidden"
-                  onClick={this.toggleSidebar}
-              ></div>
-          )}
+        {this.state.isSidebarOpen && (
+            <div 
+                className="fixed inset-0 bg-black/50 z-10 lg:hidden"
+                onClick={this.toggleSidebar}
+            ></div>
+        )}
 
-          <main className="flex-1 flex flex-col min-w-0 h-full">
+          <div className="p-2 md:p-4 flex-1 flex flex-col min-w-0 h-full">
             <NavbarProjetos />
-            
-            <div className="flex-1 overflow-y-auto p-4 pb-20 lg:pb-4">
-                <Outlet />
-            </div>
-          </main>
+
+            <Outlet />
+          </div>
         </div>
 
         <ModalProjetos
