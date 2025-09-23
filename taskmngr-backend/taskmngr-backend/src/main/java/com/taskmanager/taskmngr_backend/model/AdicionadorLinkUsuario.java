@@ -18,9 +18,9 @@ public class AdicionadorLinkUsuario {
             .linkTo(WebMvcLinkBuilder.methodOn(UsuarioController.class).buscarPorId(id))
             .withSelfRel();
 
-        Link cadastrarLink = WebMvcLinkBuilder
-            .linkTo(WebMvcLinkBuilder.methodOn(UsuarioController.class).cadastrarUsuario(dto))
-            .withRel("cadastrar");
+        // Link cadastrarLink = WebMvcLinkBuilder
+        //     .linkTo(WebMvcLinkBuilder.methodOn(UsuarioController.class).cadastrarUsuario(dto))
+        //     .withRel("cadastrar");
 
         Link allLink = WebMvcLinkBuilder
             .linkTo(WebMvcLinkBuilder.methodOn(UsuarioController.class).listarUsuario())
@@ -34,7 +34,7 @@ public class AdicionadorLinkUsuario {
             .linkTo(WebMvcLinkBuilder.methodOn(UsuarioController.class).apagarUsuario(id))
             .withRel("excluir");
 
-        dto.add(selfLink, cadastrarLink, allLink, updateLink, deleteLink);
+        dto.add(selfLink, allLink, updateLink, deleteLink);
     }
 
     public void adicionarLink(List<UsuarioDTO> lista) {
