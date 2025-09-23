@@ -23,7 +23,7 @@ export default class BarraLateral extends React.Component {
                 </div>
 
                 <div className="lg:hidden fixed bottom-0 left-0 w-full bg-indigo-950 shadow-lg z-50">
-                    <div className="flex justify-around items-center h-16">
+                    <div className="flex justify-around items-center h-16 ">
                         <Link to="/home" className="flex-1 flex justify-center p-2">
                             <i className="fa-solid fa-house text-2xl text-white"></i>
                         </Link>
