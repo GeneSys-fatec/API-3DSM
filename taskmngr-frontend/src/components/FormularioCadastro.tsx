@@ -34,7 +34,7 @@ export default class FormularioCadastro extends React.Component<{}, Props> {
         };
 
         try {
-            const response = await fetch("http://localhost:8080/usuario/cadastrar", {
+            const response = await fetch("http://localhost:8080/auth/cadastrar", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(novoUsuario),

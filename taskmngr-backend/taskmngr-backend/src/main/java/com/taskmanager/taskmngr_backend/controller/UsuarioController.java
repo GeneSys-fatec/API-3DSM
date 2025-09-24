@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.taskmanager.taskmngr_backend.model.AdicionadorLinkUsuario;
@@ -21,6 +22,7 @@ import com.taskmanager.taskmngr_backend.service.UsuarioConverterService;
 import com.taskmanager.taskmngr_backend.service.UsuarioService;
 
 @RestController
+@RequestMapping("/usuario")
 public class UsuarioController {
 
     @Autowired
@@ -30,7 +32,15 @@ public class UsuarioController {
     @Autowired
     private UsuarioConverterService usuarioConverterService;
 
-    @GetMapping("/usuario/{usu_id}")
+    // @PostMapping("/cadastrar")
+    // public ResponseEntity<String> cadastrarUsuario(@RequestBody UsuarioDTO dto) { 
+    //     UsuarioModel usuario = usuarioConverterService.dtoParaModel(dto);
+    //     usuarioService.salvar(usuario);
+    //     return ResponseEntity.status(HttpStatus.CREATED)
+    //         .body("Usuário cadastrado com sucesso!");
+    // }
+
+    @GetMapping("/{usu_id}")
     public ResponseEntity<UsuarioDTO> buscarPorId(@PathVariable String usu_id) {
         Optional<UsuarioModel> usuarioOpt = usuarioService.buscarPorId(usu_id);
         if (usuarioOpt.isPresent()) {
@@ -40,9 +50,9 @@ public class UsuarioController {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-    } //caso precise buscar por id
+    } 
 
-    @GetMapping("/usuario/listar")
+    @GetMapping("/listar")
     public ResponseEntity<List<UsuarioDTO>> listarUsuario() {
         List<UsuarioModel> usuarios = usuarioService.listarTodas();
         List<UsuarioDTO> dtos = usuarios.stream()
@@ -52,18 +62,10 @@ public class UsuarioController {
         return ResponseEntity.ok(dtos);
     }
 
-    @PostMapping("/auth/cadastrar")
-    public ResponseEntity<String> cadastrarUsuario(@RequestBody UsuarioDTO dto) { //aqui tbm request body pede os atributos
-        UsuarioModel usuario = usuarioConverterService.dtoParaModel(dto);
-        usuarioService.salvar(usuario);
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body("Usuário cadastrado com sucesso!");
-    }
-
-    @PutMapping("/usuario/atualizar/{usu_id}")
+    @PutMapping("/atualizar/{usu_id}")
     public ResponseEntity<String> atualizarUsuario(@PathVariable String usu_id, @RequestBody UsuarioDTO dto) {
         Optional<UsuarioModel> usuarioExistente = usuarioService.buscarPorId(usu_id);
-        //busca no banco uma usuario pelo id que vai ser opcional (pode ou nao existir)
+      
         if (usuarioExistente.isPresent()) {
             UsuarioModel u = usuarioExistente.get();
             u.setUsu_id(dto.getUsu_id());
@@ -81,8 +83,8 @@ public class UsuarioController {
         }
     }
 
-    @DeleteMapping("/usuario/apagar/{usu_id}")
-    public ResponseEntity<String> apagarUsuario(@PathVariable String usu_id) { //enqnt o path so o id ? 
+    @DeleteMapping("/apagar/{usu_id}")
+    public ResponseEntity<String> apagarUsuario(@PathVariable String usu_id) { 
         Optional<UsuarioModel> usuarioExistente = usuarioService.buscarPorId(usu_id);
         if (usuarioExistente.isPresent()){
             usuarioService.deletar(usu_id);
