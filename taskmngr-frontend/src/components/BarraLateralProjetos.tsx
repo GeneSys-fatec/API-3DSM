@@ -1,4 +1,5 @@
 import React from "react";
+import ModalEditarProjetos from './ModalEditarProjetos';
 
 export interface Projeto {
     id: string;   // normalizado a partir de proj_id
@@ -16,7 +17,9 @@ interface BarraLateralProjetosState {
     projetos: Projeto[];
     optionsProjectId: string | null;
     isDeleting: boolean;
-    optionsMenuPos: { top: number; left: number } | null; // <- NOVO: posição do popover
+    optionsMenuPos: { top: number; left: number } | null; 
+    isEditModalOpen: boolean;
+    projetoParaEditar: Projeto | null;
 }
 
 export default class BarraLateralProjetos extends React.Component<BarraLateralProjetosProps, BarraLateralProjetosState> {
@@ -28,6 +31,8 @@ export default class BarraLateralProjetos extends React.Component<BarraLateralPr
             optionsProjectId: null,
             isDeleting: false,
             optionsMenuPos: null,
+            isEditModalOpen: false,
+            projetoParaEditar: null,
         };
     }
 
@@ -73,17 +78,21 @@ export default class BarraLateralProjetos extends React.Component<BarraLateralPr
         await this.fetchProjetos();
     };
 
-    handleProjectClick = async (projectId: string) => {
-        this.setState({ activeProjectId: projectId });
-        await this.fetchProjetos();
+    // Agora abre o modal direto ao clicar no projeto
+    handleProjectClick = (projectId: string) => {
+        const projeto = this.state.projetos.find(p => p.id === projectId) ?? null;
+        this.setState({ 
+            activeProjectId: projectId,
+            projetoParaEditar: projeto,
+            isEditModalOpen: true
+        });
     };
 
-    // Abre menu próximo ao ícone de 3 pontos (sem hardcode de largura)
     openOptions = (e: React.MouseEvent, projectId: string) => {
         e.stopPropagation();
         const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-        const top = rect.top + window.scrollY + rect.height / 2; // centro vertical do ícone
-        const left = rect.left + window.scrollX;                 // borda esquerda do ícone
+        const top = rect.top + window.scrollY + rect.height / 2;
+        const left = rect.left + window.scrollX;
         this.setState({ optionsProjectId: projectId, optionsMenuPos: { top, left } });
     };
 
@@ -92,10 +101,20 @@ export default class BarraLateralProjetos extends React.Component<BarraLateralPr
     };
 
     handleEdit = () => {
-        const { optionsProjectId } = this.state;
+        const { optionsProjectId, projetos } = this.state;
         if (!optionsProjectId) return;
-        window.dispatchEvent(new CustomEvent('projeto:edit', { detail: { id: optionsProjectId } }));
+        const projeto = projetos.find(p => p.id === optionsProjectId) ?? null;
+        this.setState({ projetoParaEditar: projeto, isEditModalOpen: true });
         this.closeOptions();
+    };
+
+    closeEditModal = () => {
+        this.setState({ isEditModalOpen: false, projetoParaEditar: null });
+    };
+
+    handleProjetoSalvo = (atualizado: Projeto) => {
+        this.fetchProjetos();
+        this.closeEditModal();
     };
 
     handleDelete = async () => {
@@ -121,8 +140,7 @@ export default class BarraLateralProjetos extends React.Component<BarraLateralPr
 
     render() {
         const { onOpenModal } = this.props;
-        const { projetos, optionsProjectId, optionsMenuPos, isDeleting } = this.state;
-        const selectedProject = projetos.find(p => p.id === optionsProjectId);
+        const { projetos, optionsProjectId, optionsMenuPos, isDeleting, isEditModalOpen, projetoParaEditar } = this.state;
 
         return (
             <div className="h-full w-64 bg-white border-r border-slate-200 flex flex-col">
@@ -158,7 +176,6 @@ export default class BarraLateralProjetos extends React.Component<BarraLateralPr
                                         }
                                     `}
                                 >
-                                    
                                     <div className="flex items-center gap-2">
                                         <span className={`
                                             w-1.5 h-1.5 rounded-full
@@ -192,7 +209,6 @@ export default class BarraLateralProjetos extends React.Component<BarraLateralPr
                             style={{
                                 top: optionsMenuPos.top,
                                 left: optionsMenuPos.left,
-                                // encosta o menu à esquerda do ícone e centraliza verticalmente
                                 transform: 'translate(calc(-100% - 6px), -50%)'
                             }}
                             onClick={(e) => e.stopPropagation()}
@@ -214,6 +230,15 @@ export default class BarraLateralProjetos extends React.Component<BarraLateralPr
                             </button>
                         </div>
                     </>
+                )}
+
+                {isEditModalOpen && projetoParaEditar && (
+                    <ModalEditarProjetos
+                        isOpen={isEditModalOpen}
+                        onClose={this.closeEditModal}
+                        projeto={projetoParaEditar}
+                        onSaved={this.handleProjetoSalvo}
+                    />
                 )}
             </div>
         )
