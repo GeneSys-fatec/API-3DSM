@@ -17,17 +17,15 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // ---- AQUI ESTÁ A CORREÇÃO ----
-        // DE: this.usuarioRepository.findBy(username)
-        // PARA: this.usuarioRepository.findByUsuEmail(username)
+      
         UsuarioModel usuarioModel = this.usuarioRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário Não Encontrado."));
 
         return User
                 .builder()
-                .username(usuarioModel.getUsername()) // getUsername() é o padrão do UserDetails
-                .password(usuarioModel.getPassword()) // getPassword() é o padrão do UserDetails
-                .roles("USER") // Você pode adicionar lógicas para roles diferentes aqui
+                .username(usuarioModel.getUsername()) 
+                .password(usuarioModel.getPassword()) 
+                .roles("USER") 
                 .build();
     }
 }
