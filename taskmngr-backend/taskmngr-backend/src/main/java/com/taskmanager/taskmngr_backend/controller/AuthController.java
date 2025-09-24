@@ -1,11 +1,7 @@
 package com.taskmanager.taskmngr_backend.controller;
 
-import com.taskmanager.taskmngr_backend.config.TokenService;
-import com.taskmanager.taskmngr_backend.model.UsuarioModel;
-import com.taskmanager.taskmngr_backend.model.dto.ResponseDTO;
-import com.taskmanager.taskmngr_backend.model.dto.UsuarioDTO;
-import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
-import lombok.RequiredArgsConstructor;
+import java.util.Optional;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,7 +10,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Optional;
+import com.taskmanager.taskmngr_backend.config.TokenService;
+import com.taskmanager.taskmngr_backend.model.UsuarioModel;
+import com.taskmanager.taskmngr_backend.model.dto.ResponseDTO;
+import com.taskmanager.taskmngr_backend.model.dto.UsuarioDTO;
+import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/auth")
@@ -27,10 +29,9 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity login(@RequestBody UsuarioDTO body) {
-        // CORREÇÃO: Usando o método correto 'findByUsuEmail'
+        
         Optional<UsuarioModel> usuarioOpt = this.usuarioRepository.findByEmail(body.getUsu_email());
 
-        // MELHORIA: Tratando o caso de usuário não encontrado e senha incorreta
         if (usuarioOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado.");
         }
@@ -46,10 +47,9 @@ public class AuthController {
 
     @PostMapping("/cadastrar")
     public ResponseEntity cadastrar(@RequestBody UsuarioDTO body) {
-        // CORREÇÃO: Usando o método correto 'findByUsuEmail'
+        
         Optional<UsuarioModel> usuarioOpt = this.usuarioRepository.findByEmail(body.getUsu_email());
 
-        // MELHORIA: Retornando um erro 409 Conflict se o usuário já existir
         if (usuarioOpt.isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Este e-mail já está em uso.");
         }
