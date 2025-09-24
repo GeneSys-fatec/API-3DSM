@@ -31,7 +31,8 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.POST,"/auth/login").permitAll()
             .requestMatchers(HttpMethod.POST,"/auth/cadastrar").permitAll()
-            .anyRequest().authenticated())
+            // .anyRequest().authenticated())
+            .anyRequest().permitAll())
         .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

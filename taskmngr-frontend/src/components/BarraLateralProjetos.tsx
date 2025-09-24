@@ -2,8 +2,10 @@ import React from "react";
 import ModalEditarProjetos from './ModalEditarProjetos';
 
 export interface Projeto {
-    id: string;   // normalizado a partir de proj_id
-    nome: string; // normalizado a partir de proj_nome
+    id: string;
+    nome: string;
+    descricao?: string;
+    dataCriacao?: string;
 }
 
 interface BarraLateralProjetosProps {
@@ -55,12 +57,19 @@ export default class BarraLateralProjetos extends React.Component<BarraLateralPr
             if (!response.ok) throw new Error("Erro ao buscar projetos");
             const data = await response.json();
 
-            type BackendProjeto = { proj_id?: string | number; id?: string | number; proj_nome?: string; nome?: string };
+            type BackendProjeto = {
+                proj_id?: string | number; id?: string | number;
+                proj_nome?: string; nome?: string;
+                proj_descricao?: string; descricao?: string;
+                proj_dataCriacao?: string; dataCriacao?: string;
+            };
 
             const normalized: Projeto[] = Array.isArray(data)
                 ? data.map((d: BackendProjeto) => ({
                     id: String(d.proj_id ?? d.id ?? ""),
                     nome: String(d.proj_nome ?? d.nome ?? ""),
+                    descricao: String(d.proj_descricao ?? d.descricao ?? ""),
+                    dataCriacao: String(d.proj_dataCriacao ?? d.dataCriacao ?? ""),
                 }))
                 : [];
 
@@ -80,11 +89,8 @@ export default class BarraLateralProjetos extends React.Component<BarraLateralPr
 
     // Agora abre o modal direto ao clicar no projeto
     handleProjectClick = (projectId: string) => {
-        const projeto = this.state.projetos.find(p => p.id === projectId) ?? null;
-        this.setState({ 
-            activeProjectId: projectId,
-            projetoParaEditar: projeto,
-            isEditModalOpen: true
+        this.setState({
+            activeProjectId: projectId
         });
     };
 
@@ -112,7 +118,7 @@ export default class BarraLateralProjetos extends React.Component<BarraLateralPr
         this.setState({ isEditModalOpen: false, projetoParaEditar: null });
     };
 
-    handleProjetoSalvo = (atualizado: Projeto) => {
+    handleProjetoSalvo = () => {
         this.fetchProjetos();
         this.closeEditModal();
     };

@@ -11,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.UsuarioNaoEncontradoException;
 import com.taskmanager.taskmngr_backend.model.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
 
@@ -37,13 +38,11 @@ public class SecurityFilter extends OncePerRequestFilter {
         var token = this.recoverToken(request); // Busca o Token.
         if (token != null) {
             var login = tokenService.validateToken(token); // Valida o Token. 
-            if (login != null) {
-                UsuarioModel usuario = usuarioRepository.findByEmail(login) // Carrega o usuário do banco e registra. 
-                        .orElseThrow(() -> new RuntimeException("Usuário referenciado no token não foi encontrado."));
-                var authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
-                var authentication = new UsernamePasswordAuthenticationToken(usuario, null, authorities);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            }
+            UsuarioModel usuario = usuarioRepository.findByEmail(login) // Carrega o usuário do banco e registra. 
+                    .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário não encontrado", "O email referenciado no token não existe na base."));
+            var authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+            var authentication = new UsernamePasswordAuthenticationToken(usuario, null, authorities);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
         filterChain.doFilter(request, response);

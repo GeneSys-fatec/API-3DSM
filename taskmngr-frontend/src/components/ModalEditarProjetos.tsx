@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 
 type Projeto = {
   id: string;
@@ -147,7 +148,7 @@ export default class ModalEditarProjetos extends React.Component<ModalProps, Mod
       return null;
     }
 
-    return (
+    const modalContent = (
       <div className="fixed inset-0 bg-gray-600/60 flex items-center justify-center z-50 p-4 font-sans">
         <div ref={this.modalRef} className="bg-white rounded-lg shadow-2xl w-full max-w-3xl p-8 flex flex-col gap-4">
           <div className="flex justify-between items-center mb-4">
@@ -184,7 +185,7 @@ export default class ModalEditarProjetos extends React.Component<ModalProps, Mod
               ></textarea>
             </div>
 
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Datas</label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -208,7 +209,7 @@ export default class ModalEditarProjetos extends React.Component<ModalProps, Mod
                   />
                 </div>
               </div>
-            </div>
+            </div> */}
 
             <div className="flex justify-center mt-6 gap-3">
               <button
@@ -231,6 +232,8 @@ export default class ModalEditarProjetos extends React.Component<ModalProps, Mod
         </div>
       </div>
     );
+
+    return createPortal(modalContent, document.body);
   }
 }
 
