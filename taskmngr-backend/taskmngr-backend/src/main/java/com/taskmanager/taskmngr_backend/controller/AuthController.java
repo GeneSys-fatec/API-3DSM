@@ -1,11 +1,7 @@
 package com.taskmanager.taskmngr_backend.controller;
 
-import com.taskmanager.taskmngr_backend.config.TokenService;
-import com.taskmanager.taskmngr_backend.model.UsuarioModel;
-import com.taskmanager.taskmngr_backend.model.dto.ResponseDTO;
-import com.taskmanager.taskmngr_backend.model.dto.UsuarioDTO;
-import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
-import lombok.RequiredArgsConstructor;
+import java.util.Optional;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,7 +10,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Optional;
+import com.taskmanager.taskmngr_backend.config.TokenService;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.CredenciaisInvalidasException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.EmailJaCadastradoException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.UsuarioNaoEncontradoException;
+import com.taskmanager.taskmngr_backend.model.UsuarioModel;
+import com.taskmanager.taskmngr_backend.model.dto.ResponseDTO;
+import com.taskmanager.taskmngr_backend.model.dto.UsuarioDTO;
+import com.taskmanager.taskmngr_backend.model.dto.UsuarioCadastroDTO;
+import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/auth")
@@ -27,12 +34,11 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity login(@RequestBody UsuarioDTO body) {
-        // CORREÇÃO: Usando o método correto 'findByUsuEmail'
+        
         Optional<UsuarioModel> usuarioOpt = this.usuarioRepository.findByEmail(body.getUsu_email());
 
-        // MELHORIA: Tratando o caso de usuário não encontrado e senha incorreta
         if (usuarioOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado.");
+            throw new UsuarioNaoEncontradoException("Usuário não encontrado", "Email não encontrado");
         }
 
         UsuarioModel usuario = usuarioOpt.get();
@@ -41,17 +47,16 @@ public class AuthController {
             return ResponseEntity.ok(new ResponseDTO(usuario.getUsu_nome(), token));
         }
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Senha inválida.");
+        throw new CredenciaisInvalidasException("Credenciais inválidas", "Senha incorreta.");
     }
 
     @PostMapping("/cadastrar")
-    public ResponseEntity cadastrar(@RequestBody UsuarioDTO body) {
-        // CORREÇÃO: Usando o método correto 'findByUsuEmail'
+    public ResponseEntity cadastrar(@RequestBody @Valid UsuarioCadastroDTO body) {
+        
         Optional<UsuarioModel> usuarioOpt = this.usuarioRepository.findByEmail(body.getUsu_email());
 
-        // MELHORIA: Retornando um erro 409 Conflict se o usuário já existir
         if (usuarioOpt.isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Este e-mail já está em uso.");
+            throw new EmailJaCadastradoException("Email já cadastrado.", "Este email já está sendo usado em outra conta.");
         }
 
         UsuarioModel novoUsuario = new UsuarioModel();
@@ -62,5 +67,6 @@ public class AuthController {
 
         String token = this.tokenService.generateToken(novoUsuario);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDTO(novoUsuario.getUsu_nome(), token));
+    
     }
 }
