@@ -11,6 +11,8 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.TokenCriacaoException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.TokenInvalidoException;
 import com.taskmanager.taskmngr_backend.model.UsuarioModel;
 
 @Service
@@ -30,7 +32,7 @@ public class TokenService {
                     .sign(algorithm);
             return token;
         } catch (JWTCreationException exception) {
-            throw new RuntimeException("Erro ao autenticar.");
+            throw new TokenCriacaoException("Erro ao gerar token.", exception.getMessage());
         }
     }
 
@@ -44,7 +46,7 @@ public class TokenService {
                     .verify(token)
                     .getSubject();
         } catch (JWTVerificationException exception) {
-            return null;
+            throw new TokenInvalidoException("Token inválido.", "O token enviado não é válido ou expirou.");
         }
     }
 

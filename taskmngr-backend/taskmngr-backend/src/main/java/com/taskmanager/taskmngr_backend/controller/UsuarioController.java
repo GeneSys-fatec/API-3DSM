@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,14 +30,6 @@ public class UsuarioController {
     private AdicionadorLinkUsuario adicionadorLink;
     @Autowired
     private UsuarioConverterService usuarioConverterService;
-
-    // @PostMapping("/cadastrar")
-    // public ResponseEntity<String> cadastrarUsuario(@RequestBody UsuarioDTO dto) { 
-    //     UsuarioModel usuario = usuarioConverterService.dtoParaModel(dto);
-    //     usuarioService.salvar(usuario);
-    //     return ResponseEntity.status(HttpStatus.CREATED)
-    //         .body("Usuário cadastrado com sucesso!");
-    // }
 
     @GetMapping("/{usu_id}")
     public ResponseEntity<UsuarioDTO> buscarPorId(@PathVariable String usu_id) {
