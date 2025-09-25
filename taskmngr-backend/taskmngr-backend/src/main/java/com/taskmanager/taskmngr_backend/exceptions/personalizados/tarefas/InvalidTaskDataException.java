@@ -5,10 +5,11 @@ public class InvalidTaskDataException extends RuntimeException {
 
     public InvalidTaskDataException(String mensagem, String detalhes) {
         super(mensagem);
-        this.detalhes = detalhes;
+        this.detalhes = detalhes ;
     }
 
     public String getDetalhes() {
         return detalhes;
     }
+
 }
