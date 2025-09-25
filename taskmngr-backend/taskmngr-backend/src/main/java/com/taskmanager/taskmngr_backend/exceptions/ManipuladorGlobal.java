@@ -14,6 +14,7 @@ import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.EmailJaCadastradoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.UsuarioNaoEncontradoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.projetos.ProjetoNaoEncontradoException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.InvalidTaskDataException;
 import com.taskmanager.taskmngr_backend.model.dto.ErroRespostaDTO;
 
 @ControllerAdvice
@@ -70,5 +71,12 @@ public class ManipuladorGlobal {
     public ResponseEntity<ErroRespostaDTO> manipularProjetoNaoEncontrado(ProjetoNaoEncontradoException ex) {
         ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
+    }
+
+    // InvalidTaskDataException
+    @ExceptionHandler(InvalidTaskDataException.class)
+    public ResponseEntity<ErroRespostaDTO> manipularInvalidTaskData(InvalidTaskDataException ex) {
+        ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getDetalhes());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
     }
 }
