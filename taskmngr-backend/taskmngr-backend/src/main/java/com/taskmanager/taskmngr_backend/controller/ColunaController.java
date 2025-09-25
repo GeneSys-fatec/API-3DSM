@@ -31,19 +31,19 @@ public class ColunaController {
         return ResponseEntity.ok(colunaService.listarTodas());
     }
 
-    @PostMapping
+    @PostMapping("/cadastrar")
     public ResponseEntity<ColunaDTO> criarColuna(@Valid @RequestBody ColunaDTO colunaDTO) {
         ColunaDTO novaColuna = colunaService.criarColuna(colunaDTO);
         return new ResponseEntity<>(novaColuna, HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/atualizar/{id}")
     public ResponseEntity<ColunaDTO> atualizarColuna(@PathVariable String id, @Valid @RequestBody ColunaDTO colunaDTO) {
         ColunaDTO colunaAtualizada = colunaService.atualizarColuna(id, colunaDTO);
         return ResponseEntity.ok(colunaAtualizada);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/deletar/{id}")
     public ResponseEntity<Void> deletarColuna(@PathVariable String id) { // id é String
         colunaService.deletarColuna(id);
         return ResponseEntity.noContent().build();

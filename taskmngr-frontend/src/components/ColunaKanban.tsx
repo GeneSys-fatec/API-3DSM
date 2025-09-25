@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import CardTarefa from "./CardTarefa";
 import {
   SortableContext,
@@ -15,6 +15,11 @@ interface ColunaKanbanProps {
   corFundo: string;
   onAbrirModalCriacao: () => void;
   onAbrirModalEdicao: (tarefa: Tarefa) => void;
+  onApagarColuna: () => void;
+  onExcluirTarefa: (tarefa: Tarefa) => void;
+  isEditing: boolean;
+  onStartEditing: (id: string | null) => void;
+  onFinishEditing: (id: string, newTitle: string) => void;
 }
 
 export default function ColunaKanban(props: ColunaKanbanProps) {
@@ -26,11 +31,18 @@ export default function ColunaKanban(props: ColunaKanbanProps) {
     corFundo,
     onAbrirModalCriacao,
     onAbrirModalEdicao,
+    onApagarColuna,
+    onExcluirTarefa,
+    isEditing,
+    onStartEditing,
+    onFinishEditing,
   } = props;
 
   const { setNodeRef } = useDroppable({ id });
 
   const tarefasIds = tarefas.map((t) => t.tar_id);
+
+  const [tempTitle, setTempTitle] = useState(titulo);
 
   const mapaDeCoresBorda: { [key: string]: string } = {
     "orange-400": "border-orange-400",
@@ -41,27 +53,65 @@ export default function ColunaKanban(props: ColunaKanbanProps) {
   };
   const classeBordaHeader = mapaDeCoresBorda[corClasse] || "border-gray-400";
 
+  useEffect(() => {
+    setTempTitle(titulo);
+  }, [titulo]);
+
+  const handleFinishEditing = () => {
+    if (tempTitle.trim() && tempTitle.trim() !== titulo) {
+      onFinishEditing(id, tempTitle.trim());
+    } else {
+      setTempTitle(titulo);
+      onStartEditing(null);
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
-      className="flex flex-col w-full lg:w-80 flex-shrink-0 bg-gray-100/80 rounded-lg max-h-[calc(100vh-120px)]"
+      className="flex flex-col w-full lg:w-96 lg:flex-shrink-0 bg-gray-100 rounded-lg max-h-[80vh] lg:h-full shadow-md"
     >
       <div
-        className={`p-3 border-t-4 ${classeBordaHeader} rounded-t-lg ${corFundo} flex justify-between items-center`}
+        className={`group p-3 border-t-4 ${classeBordaHeader} rounded-t-lg ${corFundo} flex items-center justify-between`}
       >
-        <h2 className="text-lg font-bold tracking-wider text-gray-700">
-          {titulo}
-        </h2>
+        {isEditing ? (
+          <input
+            type="text"
+            value={tempTitle}
+            onChange={(e) => setTempTitle(e.target.value)}
+            onBlur={handleFinishEditing}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleFinishEditing();
+            }}
+            className="text-lg font-bold tracking-wider text-gray-800 bg-transparent border-2 border-indigo-500 rounded-md w-full mr-2 outline-none"
+            autoFocus
+          />
+        ) : (
+          <h2
+            className="text-lg font-bold tracking-wider text-gray-800 antialiased"
+            onDoubleClick={() => onStartEditing(id)}
+          >
+            {titulo}
+          </h2>
+        )}
+
         <button
-          onClick={onAbrirModalCriacao}
-          className="text-gray-600 hover:text-black transition-colors"
-          title="Adicionar nova tarefa a esta coluna"
+          className="
+            flex items-center justify-center
+            w-7 h-7
+            text-gray-600/70 hover:text-gray-900
+            hover:bg-black/10
+            rounded-full
+            opacity-100 lg:opacity-0 lg:group-hover:opacity-100 
+            transition-all duration-200"
+          aria-label="Apagar coluna"
+          onClick={onApagarColuna}
         >
-          <i className="fa-solid fa-plus text-xl"></i>
+          <i className="fa-solid fa-xmark fa-lg"></i>
         </button>
       </div>
 
-      <div className="p-2 flex-1 flex flex-col gap-3 overflow-y-auto">
+      <div className="p-4 flex flex-col gap-4 overflow-y-auto">
         <SortableContext
           items={tarefasIds}
           strategy={verticalListSortingStrategy}
@@ -71,9 +121,18 @@ export default function ColunaKanban(props: ColunaKanbanProps) {
               key={tarefa.tar_id}
               tarefa={tarefa}
               onAbrirModalEdicao={onAbrirModalEdicao}
+              corClasse={corClasse}
+              onExcluir={onExcluirTarefa}
             />
           ))}
         </SortableContext>
+        <button
+          className="mt-2 text-left p-2 text-gray-500 hover:bg-gray-200 rounded-md transition-colors"
+          onClick={onAbrirModalCriacao}
+          title="Adicionar nova tarefa a esta coluna"
+        >
+          + Adicionar tarefa
+        </button>
       </div>
     </div>
   );

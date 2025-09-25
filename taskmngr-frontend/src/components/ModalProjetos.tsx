@@ -88,7 +88,7 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
 
     } catch (error) {
         console.error("Falha ao adicionar projeto:", error);
-        alert("Não foi possível adicionar o projeto.");
+        console.log("Não foi possível adicionar o projeto.");
     }
   };
 
@@ -96,7 +96,7 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
     event.preventDefault();
 
     if (!this.state.projectName.trim()) {
-      alert('Por favor, insira o nome do projeto.');
+      console.log('Por favor, insira o nome do projeto.');
       return;
     }
 

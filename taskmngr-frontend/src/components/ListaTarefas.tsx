@@ -43,13 +43,13 @@ export default class ListaTarefas extends React.Component<object, ListaTarefasSt
             }
             const data = await response.json();
 
-            // transformar o JSON do back no formato do front
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const tarefasConvertidas: Tarefa[] = data.map((item: any) => ({
                 tar_id: item.tar_id,
                 tar_titulo: item.tar_titulo,
                 tar_status: item.tar_status,
                 usu_nome: item.usu_nome,
-                tar_prazo: item.tar_prazo ?? "-", // se for null, mostra -
+                tar_prazo: item.tar_prazo ?? "-",
                 tar_prioridade: item.tar_prioridade,
                 tar_descricao: item.tar_descricao,
                 tar_anexo: null, // por enquanto é null, pq n tem nd funcionando
