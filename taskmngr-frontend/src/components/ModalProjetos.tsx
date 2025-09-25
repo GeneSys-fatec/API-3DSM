@@ -7,7 +7,7 @@ type NovoProjeto = {
 type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onAddProject: (projeto: NovoProjeto) => void;
+  onAddProject?: (projeto: NovoProjeto) => void; // permanece opcional, mas não será usado para “cache”
 };
 
 type ModalState = {
@@ -24,38 +24,29 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
     team: 'Selecione a equipe',
   };
 
-   
   componentDidMount() {
     if (this.props.isOpen) {
       document.addEventListener('mousedown', this.handleOutsideClick);
     }
   }
 
-  
   componentDidUpdate(prevProps: ModalProps) {
-    
     if (this.props.isOpen && !prevProps.isOpen) {
       document.addEventListener('mousedown', this.handleOutsideClick);
-    } 
-    
-    else if (!this.props.isOpen && prevProps.isOpen) {
+    } else if (!this.props.isOpen && prevProps.isOpen) {
       document.removeEventListener('mousedown', this.handleOutsideClick);
     }
   }
 
-  
   componentWillUnmount() {
     document.removeEventListener('mousedown', this.handleOutsideClick);
   }
 
-  
   private handleOutsideClick = (event: MouseEvent) => {
-    
     if (this.modalRef.current && !this.modalRef.current.contains(event.target as Node)) {
       this.props.onClose();
     }
   };
-
 
   handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = event.target;
@@ -75,7 +66,7 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
                 proj_status: "Ativo",
                 proj_dataCriacao: new Date().toISOString().slice(0, 10),
                 proj_dataAtualizacao: new Date().toISOString().slice(0, 10),
-                equ_id: "1", // ajuste conforme necessário
+                equ_id: "1",
                 equ_nome: this.state.team,
             }),
         });
@@ -85,7 +76,9 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
             throw new Error(`Erro ao cadastrar projeto: ${response.statusText}. Resposta do servidor: ${errorBody}`);
         }
 
-        this.props.onAddProject({ nome: this.state.projectName });
+        // Em vez de adicionar no “cache” local do front, dispare um evento global
+        window.dispatchEvent(new CustomEvent('projeto:created'));
+
         this.setState({
             projectName: '',
             description: '',
@@ -97,7 +90,7 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
         console.error("Falha ao adicionar projeto:", error);
         alert("Não foi possível adicionar o projeto.");
     }
-};
+  };
 
   handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -154,7 +147,7 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
               ></textarea>
             </div>
 
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Datas</label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input
@@ -163,12 +156,12 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 text-gray-500"
                 />
                 <input
-                  type="date"
+                  type="date" 
                   aria-label="Data Entrega"
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 text-gray-500"
                 />
               </div>
-            </div>
+            </div> */}
 
             <div>
               <label htmlFor="team" className="block text-sm font-medium text-gray-700 mb-1">Equipe</label>

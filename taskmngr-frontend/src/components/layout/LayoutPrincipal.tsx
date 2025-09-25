@@ -7,12 +7,6 @@ import BarraLateralProjetos, { type Projeto } from "../BarraLateralProjetos";
 import NavbarProjetos from "../NavbarProjetos";
 import ModalProjetos from "../ModalProjetos";
 
-const projetosMock: Projeto[] = [
-  { id: 1, nome: "API-3sem" },
-  { id: 2, nome: "Faculdade" },
-  { id: 3, nome: "Projeto Pessoal 1" },
-  { id: 4, nome: "Projeto Pessoal 2" },
-];
 
 interface LayoutState {
   projetos: Projeto[];
@@ -34,7 +28,7 @@ const BottomNavbar = () => (
 
 export default class LayoutPrincipal extends Component<object, LayoutState> {
   state = {
-    projetos: projetosMock,
+    projetos: [],
     isModalOpen: false,
     isSidebarOpen: false,
   };
@@ -46,7 +40,7 @@ export default class LayoutPrincipal extends Component<object, LayoutState> {
     this.setState((prevState) => ({
       projetos: [
         ...prevState.projetos,
-        { id: Date.now(), nome: novoProjeto.nome },
+        { id: Date.now().toString(), nome: novoProjeto.nome },
       ],
       isModalOpen: false,
     }));
