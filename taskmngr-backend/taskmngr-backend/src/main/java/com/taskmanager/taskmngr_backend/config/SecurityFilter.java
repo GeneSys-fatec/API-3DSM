@@ -2,7 +2,6 @@ package com.taskmanager.taskmngr_backend.config;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -11,6 +10,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.TokenInvalidoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.UsuarioNaoEncontradoException;
 import com.taskmanager.taskmngr_backend.model.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
@@ -28,40 +28,43 @@ public class SecurityFilter extends OncePerRequestFilter {
     UsuarioRepository usuarioRepository;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
-        if (isPublicRoute(request)) {
+        // Sempre libera preflight
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        var token = this.recoverToken(request); // Busca o Token.
+        var token = this.recoverToken(request);
+
         if (token != null) {
-            var login = tokenService.validateToken(token); // Valida o Token. 
-            UsuarioModel usuario = usuarioRepository.findByEmail(login) // Carrega o usuário do banco e registra. 
-                    .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário não encontrado", "O email referenciado no token não existe na base."));
-            var authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
-            var authentication = new UsernamePasswordAuthenticationToken(usuario, null, authorities);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            try {
+                var login = tokenService.validateToken(token);
+                UsuarioModel usuario = usuarioRepository.findByEmail(login)
+                        .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário não encontrado",
+                                "O email referenciado no token não existe na base."));
+                var authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+                var authentication = new UsernamePasswordAuthenticationToken(usuario, null, authorities);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } catch (TokenInvalidoException | UsuarioNaoEncontradoException ex) {
+                SecurityContextHolder.clearContext();
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Nao autorizado: " + ex.getMessage());
+                return;
+            }
         }
 
         filterChain.doFilter(request, response);
     }
 
-    // Pega o Token do header.
+
     private String recoverToken(HttpServletRequest request){
         var authHeader = request.getHeader("Authorization");
-        if(authHeader == null) return null;
-        return authHeader.replace("Bearer ", "");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) return null;
+        return authHeader.substring(7);
     }
 
-    // Rotas públicas que não precisam de autenticação.
-    private boolean isPublicRoute(HttpServletRequest request) {
-        String contextPath = request.getContextPath();
-        var publicRoutes = List.of(
-                contextPath + "/auth/login",
-                contextPath + "/auth/cadastrar"
-        );
-        return publicRoutes.stream().anyMatch(route -> request.getRequestURI().equals(route));
-    }
+
 }
