@@ -1,30 +1,31 @@
 import React from 'react';
-import type { Tarefa } from './ListaTarefas';
+import type { Tarefa } from '../pages/Home';
 import { ModalContext } from '../context/ModalContext';
 
 type ModalProps = {
-    onAdicionarTarefa: (tarefa: Omit<Tarefa, 'id'>) => void;
+    onAdicionarTarefa: (tarefa: Omit<Tarefa, 'tar_id'>) => void;
+    statusInicial: string;
 };
 
 type ModalState = {
-    titulo: string;
-    status: string;
-    descricao: string;
-    responsavel: string;
-    prioridade: string;
-    entrega: string;
-    anexo: File | null;
+    tar_titulo: string;
+    tar_status: string;
+    tar_descricao: string;
+    usu_nome: string;
+    tar_prioridade: Tarefa[`tar_prioridade`];
+    tar_prazo: string;
+    tar_anexo: File | null;
 };
 
 export default class ModalCriarTarefas extends React.Component<ModalProps> {
     state: ModalState = {
-        titulo: '',
-        status: 'Pendente',
-        descricao: '',
-        responsavel: 'Selecione um membro',
-        prioridade: 'Alta',
-        entrega: '',
-        anexo: null
+        tar_titulo: '',
+        tar_status: 'Pendente',
+        tar_descricao: '',
+        usu_nome: 'Selecione um membro',
+        tar_prioridade: 'Alta',
+        tar_prazo: '',
+        tar_anexo: null
     };
 
     handleChange = (
@@ -41,28 +42,28 @@ export default class ModalCriarTarefas extends React.Component<ModalProps> {
     handleSubmit = (e: React.FormEvent, closeModal: () => void) => {
         e.preventDefault();
 
-        const { titulo, status, descricao, responsavel, prioridade, entrega, anexo } = this.state;
+        const { tar_titulo, tar_status, tar_descricao, usu_nome, tar_prioridade, tar_prazo, tar_anexo } = this.state;
 
         const novaTarefa = {
-            titulo,
-            status,
-            descricao,
-            responsavel,
-            prioridade,
-            entrega,
-            anexo
+            tar_titulo,
+            tar_status,
+            tar_descricao,
+            usu_nome,
+            tar_prioridade,
+            tar_prazo,
+            tar_anexo
         };
 
         this.props.onAdicionarTarefa(novaTarefa);
 
         this.setState({
-            titulo: '',
-            status: 'Pendente',
-            descricao: '',
-            responsavel: 'Selecione um membro',
-            prioridade: 'Alta',
-            entrega: '',
-            anexo: null
+            tar_titulo: '',
+            tar_status: 'Pendente',
+            tar_descricao: '',
+            usu_nome: 'Selecione um membro',
+            tar_prioridade: 'Alta',
+            tar_prazo: '',
+            tar_anexo: null
         });
 
         closeModal();
@@ -114,9 +115,9 @@ export default class ModalCriarTarefas extends React.Component<ModalProps> {
                                                 </label>
                                                 <input
                                                     type="text"
-                                                    id="titulo"
-                                                    name="titulo"
-                                                    value={this.state.titulo}
+                                                    id="tar_titulo"
+                                                    name="tar_titulo"
+                                                    value={this.state.tar_titulo}
                                                     onChange={this.handleChange}
                                                     placeholder="Título da Tarefa"
                                                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
@@ -127,9 +128,9 @@ export default class ModalCriarTarefas extends React.Component<ModalProps> {
                                             <div className="flex items-center gap-4">
                                                 <div>
                                                     <select
-                                                        id="status"
-                                                        name="status"
-                                                        value={this.state.status}
+                                                        id="tar_status"
+                                                        name="tar_status"
+                                                        value={this.state.tar_status}
                                                         onChange={this.handleChange}
                                                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
                                                     >
@@ -175,9 +176,9 @@ export default class ModalCriarTarefas extends React.Component<ModalProps> {
                                                     Descrição
                                                 </label>
                                                 <textarea
-                                                    id="descricao"
-                                                    name="descricao"
-                                                    value={this.state.descricao}
+                                                    id="tar_descricao"
+                                                    name="tar_descricao"
+                                                    value={this.state.tar_descricao}
                                                     onChange={this.handleChange}
                                                     rows={3}
                                                     className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 min-h-24 p-2"
@@ -192,8 +193,8 @@ export default class ModalCriarTarefas extends React.Component<ModalProps> {
                                                         <label className="block text-sm font-medium text-gray-700">Responsável</label>
                                                         <select
                                                             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
-                                                            name="responsavel"
-                                                            value={this.state.responsavel}
+                                                            name="usu_nome"
+                                                            value={this.state.usu_nome}
                                                             onChange={this.handleChange}
                                                         >
                                                             <option>Selecione um membro</option>
@@ -208,8 +209,8 @@ export default class ModalCriarTarefas extends React.Component<ModalProps> {
                                                         <label className="block text-sm font-medium text-gray-700">Prioridade</label>
                                                         <select
                                                             className="block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
-                                                            name="prioridade"
-                                                            value={this.state.prioridade}
+                                                            name="tar_prioridade"
+                                                            value={this.state.tar_prioridade}
                                                             onChange={this.handleChange}
                                                         >
                                                             <option>Alta</option>
@@ -226,8 +227,8 @@ export default class ModalCriarTarefas extends React.Component<ModalProps> {
                                                             type="date"
                                                             aria-label="Planned Start"
                                                             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 text-gray-500"
-                                                            name="entrega"
-                                                            value={this.state.entrega}
+                                                            name="tar_prazo"
+                                                            value={this.state.tar_prazo}
                                                             onChange={this.handleChange}
                                                         />
                                                     </div>
