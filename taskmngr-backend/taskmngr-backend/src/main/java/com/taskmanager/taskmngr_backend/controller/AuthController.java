@@ -16,8 +16,8 @@ import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.Email
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.UsuarioNaoEncontradoException;
 import com.taskmanager.taskmngr_backend.model.UsuarioModel;
 import com.taskmanager.taskmngr_backend.model.dto.ResponseDTO;
-import com.taskmanager.taskmngr_backend.model.dto.UsuarioDTO;
 import com.taskmanager.taskmngr_backend.model.dto.UsuarioCadastroDTO;
+import com.taskmanager.taskmngr_backend.model.dto.UsuarioDTO;
 import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
 
 import jakarta.validation.Valid;
@@ -38,7 +38,7 @@ public class AuthController {
         Optional<UsuarioModel> usuarioOpt = this.usuarioRepository.findByEmail(body.getUsu_email());
 
         if (usuarioOpt.isEmpty()) {
-            throw new UsuarioNaoEncontradoException("Usuário não encontrado", "Email não encontrado");
+            throw new UsuarioNaoEncontradoException("Usuário não encontrado.", "Email não encontrado.");
         }
 
         UsuarioModel usuario = usuarioOpt.get();
@@ -47,7 +47,7 @@ public class AuthController {
             return ResponseEntity.ok(new ResponseDTO(usuario.getUsu_nome(), token));
         }
 
-        throw new CredenciaisInvalidasException("Credenciais inválidas", "Senha incorreta.");
+        throw new CredenciaisInvalidasException("Credenciais inválidas.", "Senha incorreta.");
     }
 
     @PostMapping("/cadastrar")
