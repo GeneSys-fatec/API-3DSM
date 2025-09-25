@@ -28,7 +28,7 @@ public class TarefaModel {
     public void setTar_titulo(String tar_titulo) {this.tar_titulo = tar_titulo;}
 
     public String getTar_descricao() {return tar_descricao;}
-    public void setTar_descricao(String proj_descricao) {this.tar_descricao = proj_descricao;}
+    public void setTar_descricao(String tar_descricao) {this.tar_descricao = tar_descricao;}
     
     public String getTar_prazo() {return tar_prazo;}
     public void setTar_prazo(String tar_prazo) {this.tar_prazo = tar_prazo;}

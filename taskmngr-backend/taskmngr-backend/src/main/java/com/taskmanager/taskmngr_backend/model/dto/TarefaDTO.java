@@ -1,12 +1,10 @@
 package com.taskmanager.taskmngr_backend.model.dto;
 
 import lombok.*;
-import org.springframework.data.annotation.Id;
 import org.springframework.hateoas.RepresentationModel;
 
 @Data
 public class TarefaDTO extends RepresentationModel<TarefaDTO>{
-    @Id
     private String tar_id;
     private String tar_titulo;
     private String tar_descricao;

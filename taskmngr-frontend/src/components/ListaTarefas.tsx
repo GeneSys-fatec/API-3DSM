@@ -231,7 +231,7 @@ export default class ListaTarefas extends React.Component<object, ListaTarefasSt
  
         return (
             <>
-                <div className="bg-white md:p-4 md:rounded-lg md:shadow-md overflow-hidden relative">
+                <div className="bg-white md:p-4 md:rounded-lg md:shadow-md overflow-hidden relative min-w-full">
                    
                     <div className="hidden md:block">
                         <div className="max-h-[500px] overflow-y-auto">

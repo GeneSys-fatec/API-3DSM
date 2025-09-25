@@ -1,12 +1,10 @@
 package com.taskmanager.taskmngr_backend.model.dto;
 
-import org.springframework.data.annotation.Id;
 import org.springframework.hateoas.RepresentationModel;
 import lombok.Data;
 
 @Data
 public class ProjetoDTO extends RepresentationModel<ProjetoDTO>{
-    @Id
     private String proj_id;
     private String proj_nome;
     private String proj_descricao;
