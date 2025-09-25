@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useContext, useCallback } from "react"; // NOVO: useContext
+import React, { useState } from "react";
 import ColunaKanban from "../components/ColunaKanban";
 import CardTarefa from "../components/CardTarefa";
-import {
-  DndContext,
+import { 
+  DndContext, 
   type DragEndEvent,
   type DragStartEvent,
   DragOverlay,
@@ -14,288 +14,197 @@ import {
   defaultDropAnimationSideEffects,
   type DropAnimation,
 } from "@dnd-kit/core";
-import { ModalContext } from "../context/ModalContext";
-import ModalCriarTarefas from "../components/ModalCriarTarefas";
-import ModalEditarTarefas from "../components/ModalEditarTarefas";
+import { arrayMove } from "@dnd-kit/sortable";
 
 export interface Tarefa {
-  tar_id: string;
-  tar_titulo: string;
-  tar_status: string;
-  usu_nome: string;
-  tar_prazo: string;
-  tar_prioridade: "Alta" | "Média" | "Baixa" ;
-  tar_descricao: string;
-  tar_anexo?: File | null;
+  id: number;
+  titulo: string;
+  descricao?: string;
+  prioridade: "Alta" | "Média" | "Baixa";
+  entrega: string;
+  responsavel: string;
+  status: string;
 }
-
-export type NovaTarefa = Omit<Tarefa, 'tar_id'>;
 
 type Coluna = {
   id: string;
   titulo: string;
-  ordem: number;
   corClasse: string;
   corFundo: string;
 };
 
+const tarefasIniciais: Tarefa[] = [
+  { id: 1, titulo: "Implementar login", descricao: "Adicionar autenticação com JWT", prioridade: "Alta", entrega: "22/08/2025", responsavel: "Matheus", status: "Pendente" },
+  { id: 2, titulo: "Criar dashboard", prioridade: "Média", entrega: "30/09/2025", responsavel: "Ana Júlia", status: "Em desenvolvimento" },
+  { id: 3, titulo: "Documentar API", prioridade: "Baixa", entrega: "15/10/2025", responsavel: "Lavínia", status: "Feito" },
+  { id: 4, titulo: "Configurar ambiente", descricao: "", prioridade: "Média", entrega: "22/08/2025", responsavel: "Gabriel", status: "Pendente" },
+  { id: 5, titulo: "Configurar rotas", prioridade: "Baixa", entrega: "30/09/2025", responsavel: "Ana Beatriz", status: "Pendente" },
+  { id: 6, titulo: "Autenticação de usuário", prioridade: "Média", entrega: "15/10/2025", responsavel: "Giovanni", status: "Feito" },
+];
+
+const colunasIniciais: Coluna[] = [
+  { id: "Pendente", titulo: "Pendente", corClasse: "orange-400", corFundo: "bg-orange-400/35" },
+  { id: "Em desenvolvimento", titulo: "Em desenvolvimento", corClasse: "blue-400", corFundo: "bg-blue-400/40" },
+  { id: "Feito", titulo: "Feito", corClasse: "green-500", corFundo: "bg-green-500/40" },
+];
+
 const agruparTarefasPorColuna = (tarefas: Tarefa[], colunas: Coluna[]) => {
   const tarefasAgrupadas: { [key: string]: Tarefa[] } = {};
   colunas.forEach((coluna) => {
-    tarefasAgrupadas[coluna.titulo] = tarefas.filter(
-      (tarefa) => tarefa.tar_status === coluna.titulo
+    tarefasAgrupadas[coluna.id] = tarefas.filter(
+      (tarefa) => tarefa.status === coluna.id
     );
   });
   return tarefasAgrupadas;
 };
 
-const adicionarCoresAsColunas = (colunasDaAPI: Omit<Coluna, 'corClasse' | 'corFundo'>[]): Coluna[] => {
-  const paletaDeCores = [
-    { corClasse: "orange-400", corFundo: "bg-orange-400/35" },
-    { corClasse: "blue-400", corFundo: "bg-blue-400/40" },
-    { corClasse: "green-500", corFundo: "bg-green-500/40" },
-    { corClasse: "purple-400", corFundo: "bg-purple-400/35" },
-    { corClasse: "red-400", corFundo: "bg-red-400/35" },
-  ];
-
-  return colunasDaAPI.map((coluna, index) => ({
-    ...coluna,
-    ...paletaDeCores[index % paletaDeCores.length]
-  }));
-}
-
-
 const dropAnimation: DropAnimation = {
   sideEffects: defaultDropAnimationSideEffects({
     styles: {
-      active: { opacity: '0.5' },
+      active: {
+        opacity: '0.5',
+      },
     },
   }),
 };
 
-
 export default function Home() {
-  const [colunas, setColunas] = useState<Coluna[]>([]);
-  const [tarefas, setTarefas] = useState<{ [key: string]: Tarefa[] }>({});
+  const [colunas, setColunas] = useState<Coluna[]>(colunasIniciais);
+  const [tarefas, setTarefas] = useState<{ [key: string]: Tarefa[] }>(
+    agruparTarefasPorColuna(tarefasIniciais, colunasIniciais)
+  );
   const [activeTask, setActiveTask] = useState<Tarefa | null>(null);
-  const [loading, setLoading] = useState(true);
-  const modalContext = useContext(ModalContext);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 10 },
+      activationConstraint: {
+        distance: 10,
+      },
     }),
     useSensor(KeyboardSensor, {})
   );
 
-  const fetchData = useCallback(async () => {
-    try {
-      const [colunasResponse, tarefasResponse] = await Promise.all([
-        fetch('http://localhost:8080/colunas'),
-        fetch('http://localhost:8080/tarefa/listar')
-      ]);
-      if (!colunasResponse.ok || !tarefasResponse.ok) {
-        throw new Error("Falha ao buscar dados da API");
-      }
-      let colunasData: Coluna[] = await colunasResponse.json();
-      const tarefasData: Tarefa[] = await tarefasResponse.json();
-      colunasData.sort((a, b) => a.ordem - b.ordem);
-      colunasData = adicionarCoresAsColunas(colunasData);
-      setColunas(colunasData);
-      setTarefas(agruparTarefasPorColuna(tarefasData, colunasData));
-    } catch (error) {
-      console.error("Erro ao carregar o quadro:", error);
-    } finally {
-      if (loading) setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    setLoading(true);
-    fetchData();
-  }, []);
-
-  const encontrarColunaDaTarefa = (tarefaId: string, tarefasAtuais: { [key: string]: Tarefa[] }) => {
+  const encontrarColunaDaTarefa = (tarefaId: number, tarefasAtuais: { [key: string]: Tarefa[] }) => {
     if (!tarefaId) return null;
-    return Object.keys(tarefasAtuais).find((colunaTitulo) =>
-      tarefasAtuais[colunaTitulo].some((tarefa) => tarefa.tar_id === tarefaId)
+    return Object.keys(tarefasAtuais).find((colunaId) =>
+      tarefasAtuais[colunaId].some((tarefa) => tarefa.id === tarefaId)
     );
   };
-
-
+  
   const handleDragStart = (event: DragStartEvent) => {
-    const activeId = event.active.id as string;
-    const colunaTitulo = encontrarColunaDaTarefa(activeId, tarefas);
-    if (colunaTitulo) {
-      const tarefa = tarefas[colunaTitulo].find(t => t.tar_id === activeId);
+    const { active } = event;
+    const activeId = active.id as number;
+    const colunaId = encontrarColunaDaTarefa(activeId, tarefas);
+    if (colunaId) {
+      const tarefa = tarefas[colunaId].find(t => t.id === activeId);
       if (tarefa) setActiveTask(tarefa);
     }
   };
 
-  const handleDragEnd = async (event: DragEndEvent) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     setActiveTask(null);
     const { active, over } = event;
-    if (!over || active.id === over.id) return;
+    if (!over) return;
 
-    const activeId = active.id as string;
-    const overId = over.id as string;
+    const activeId = active.id as number;
+    const overId = over.id as number | string;
 
-    const activeContainer = encontrarColunaDaTarefa(activeId, tarefas);
-    const overColuna = colunas.find(c => c.id === overId);
-    const overContainer = overColuna ? overColuna.titulo : encontrarColunaDaTarefa(overId, tarefas);
+    if (activeId === overId) return;
 
-    if (!activeContainer || !overContainer || activeContainer === overContainer) return;
-    
-    const tarefaMovidaOriginal = tarefas[activeContainer]?.find(t => t.tar_id === activeId);
-    if (!tarefaMovidaOriginal) return;
+    setTarefas((prev) => {
+      const activeContainer = encontrarColunaDaTarefa(activeId, prev);
+      const overContainer = encontrarColunaDaTarefa(overId as number, prev) || (typeof overId === 'string' ? overId : null);
+      
+      if (!activeContainer || !overContainer) return prev;
 
-    setTarefas(prev => {
-        const newTarefas = JSON.parse(JSON.stringify(prev));
+      const newTarefas = JSON.parse(JSON.stringify(prev));
+
+      if (activeContainer === overContainer) {
+        const items = newTarefas[activeContainer];
+        const oldIndex = items.findIndex((item: Tarefa) => item.id === activeId);
+        const newIndex = items.findIndex((item: Tarefa) => item.id === overId);
+        if (oldIndex !== -1 && newIndex !== -1) {
+          newTarefas[activeContainer] = arrayMove(items, oldIndex, newIndex);
+        }
+      } else {
         const activeItems = newTarefas[activeContainer];
-        const activeIndex = activeItems.findIndex((item: Tarefa) => item.tar_id === activeId);
-        if (activeIndex === -1) return prev;
-        
-        const [movedItem] = activeItems.splice(activeIndex, 1);
-        movedItem.tar_status = overContainer;
-        
         const overItems = newTarefas[overContainer];
-        let overIndex = overItems.findIndex((item: Tarefa) => item.tar_id === overId);
+        const activeIndex = activeItems.findIndex((item: Tarefa) => item.id === activeId);
+        const [movedItem] = activeItems.splice(activeIndex, 1);
+        movedItem.status = overContainer;
+        
+        let overIndex = overItems.findIndex((item: Tarefa) => item.id === overId);
         if (overIndex === -1) overIndex = overItems.length;
+        
         overItems.splice(overIndex, 0, movedItem);
 
-        return newTarefas;
+        newTarefas[activeContainer] = activeItems;
+        newTarefas[overContainer] = overItems;
+      }
+      return newTarefas;
     });
+  };
 
-    try {
-        const corpoDaRequisicao = { ...tarefaMovidaOriginal, tar_status: overContainer };
-
-        if (!corpoDaRequisicao.tar_descricao || corpoDaRequisicao.tar_descricao.trim() === '') {
-            corpoDaRequisicao.tar_descricao = " ";
-        }
-
-        const response = await fetch(`http://localhost:8080/tarefa/atualizar/${activeId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(corpoDaRequisicao)
-        });
-
-        if (!response.ok) throw new Error('Falha ao atualizar a tarefa no servidor.');
-
-    } catch (error) {
-        console.error("Erro ao salvar a mudança da tarefa, revertendo a UI:", error);
-        fetchData();
+  const handleAddColumn = () => {
+    const nomeNovaColuna = prompt("Digite o nome da nova coluna:");
+    if (nomeNovaColuna && nomeNovaColuna.trim() !== "") {
+      const novaColuna: Coluna = {
+        id: nomeNovaColuna,
+        titulo: nomeNovaColuna,
+        corClasse: "gray-400", 
+        corFundo: "bg-gray-400/35",
+      };
+      
+      setColunas((prevColunas) => [...prevColunas, novaColuna]);
+      
+      setTarefas((prevTarefas) => ({
+        ...prevTarefas,
+        [novaColuna.id]: [],
+      }));
     }
   };
 
-  const handleAddColumn = useCallback(async () => {
-    const nomeNovaColuna = prompt("Digite o nome da nova coluna:");
-
-    if (!nomeNovaColuna || nomeNovaColuna.trim() === "") {
-      return;
-    }
-
-    try {
-      const response = await fetch('http://localhost:8080/colunas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ titulo: nomeNovaColuna.trim() })
-      });
-
-      if (!response.ok) {
-        throw new Error("Falha ao criar a coluna no servidor.");
-      }
-
-      await fetchData();
-
-    } catch (error) {
-      console.error("Erro ao adicionar nova coluna:", error);
-      alert("Não foi possível adicionar a coluna. Tente novamente.");
-    }
-  }, [fetchData]);
-
-  const adicionarTarefa = useCallback(async (novaTarefa: NovaTarefa) => {
-    try {
-      const response = await fetch("http://localhost:8080/tarefa/cadastrar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...novaTarefa, proj_nome: "API-3sem" }),
-      });
-      if (!response.ok) throw new Error("Erro ao cadastrar tarefa");
-      await fetchData();
-    } catch (error) {
-      console.error("Falha ao adicionar tarefa:", error);
-    }
-  }, [fetchData]);
-
-  const editarTarefa = useCallback(async (tarefaAtualizada: Tarefa) => {
-    try {
-      const response = await fetch(`http://localhost:8080/tarefa/atualizar/${tarefaAtualizada.tar_id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...tarefaAtualizada, proj_nome: "API-3sem" }),
-      });
-      if (!response.ok) throw new Error("Erro ao atualizar tarefa");
-      await fetchData(); // Recarrega os dados do quadro
-    } catch (error) {
-      console.error("Falha ao editar tarefa:", error);
-    }
-  }, [fetchData]);
-
-  const abrirModalCriacao = useCallback((statusDaColuna: string) => {
-    if (modalContext) {
-      modalContext.openModal(
-        <ModalCriarTarefas onAdicionarTarefa={adicionarTarefa} statusInicial={statusDaColuna} />
-      );
-    }
-  }, [modalContext, adicionarTarefa]);
-
-  const abrirModalEdicao = useCallback((tarefa: Tarefa) => {
-    if (modalContext) {
-      modalContext.openModal(
-        <ModalEditarTarefas tarefa={tarefa} onSave={editarTarefa} />
-      );
-    }
-  }, [modalContext, editarTarefa]);
-
-  if (loading) {
-    return <div className="flex justify-center items-center h-screen text-xl font-semibold">Carregando quadro...</div>;
-  }
-
   return (
-    <DndContext
-      sensors={sensors}
+    <DndContext 
+      sensors={sensors} 
       collisionDetection={rectIntersection}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
       <div className="flex flex-col h-full lg:flex-row items-center lg:items-start gap-6 pt-5 pb-4 lg:pr-4 flex-1 overflow-y-auto lg:overflow-x-auto lg:overflow-y-hidden">
         {colunas.map((coluna) => (
-          <ColunaKanban
-            key={coluna.id}
-            id={coluna.id}
-            titulo={coluna.titulo}
-            corClasse={coluna.corClasse}
-            corFundo={coluna.corFundo}
-            tarefas={tarefas[coluna.titulo] || []}
-            onAbrirModalCriacao={() => abrirModalCriacao(coluna.titulo)}
-            onAbrirModalEdicao={abrirModalEdicao}
-          />
+            <ColunaKanban
+              key={coluna.id}
+              id={coluna.id}
+              titulo={coluna.titulo}
+              corClasse={coluna.corClasse}
+              corFundo={coluna.corFundo}
+              tarefas={tarefas[coluna.id] || []}
+            />
         ))}
+
         <DragOverlay dropAnimation={dropAnimation}>
           {activeTask ? (
-            <CardTarefa
-              tarefa={activeTask}
-              isOverlay
-            />
+             <CardTarefa
+                id={activeTask.id}
+                titulo={activeTask.titulo}
+                prioridade={activeTask.prioridade}
+                prazo={activeTask.entrega}
+                responsavel={{ nome: activeTask.responsavel }}
+                corClasse={colunas.find(c => c.id === activeTask.status)?.corClasse || 'gray-400'}
+                isOverlay
+              />
           ) : null}
         </DragOverlay>
+
+        {/* CORREÇÃO DEFINITIVA: Removida a classe 'mt-auto' */}
         <div className="w-full lg:w-80 flex-shrink-0 lg:mt-0">
           <button
             onClick={handleAddColumn}
             className="w-full rounded-lg bg-gray-200/70 p-3 text-center transition-colors hover:bg-gray-300 lg:h-full flex items-center justify-center"
           >
             <h2 className="text-xl font-bold tracking-wider text-gray-600">
-              + Adicionar Coluna
+              + Adicionar Card
             </h2>
           </button>
         </div>
@@ -303,3 +212,4 @@ export default function Home() {
     </DndContext>
   );
 }
+
