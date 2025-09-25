@@ -138,7 +138,7 @@ export default class BarraLateralProjetos extends React.Component<BarraLateralPr
             this.closeOptions();
         } catch (err) {
             console.error(err);
-            alert('Não foi possível excluir o projeto.');
+            console.log('Não foi possível excluir o projeto.');
         } finally {
             this.setState({ isDeleting: false });
         }

@@ -32,6 +32,7 @@ export default class ModalCriarTarefas extends React.Component<ModalProps> {
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) => {
         const { name, value } = e.target;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.setState({ [name]: value } as any);
     };
 

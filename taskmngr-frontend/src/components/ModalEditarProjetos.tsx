@@ -125,7 +125,7 @@ export default class ModalEditarProjetos extends React.Component<ModalProps, Mod
       .catch((error) => {
         console.error("Falha ao atualizar projeto:", error);
         this.setState({ error: "Não foi possível salvar as alterações." });
-        alert("Não foi possível salvar as alterações.");
+        console.log("Não foi possível salvar as alterações.");
       })
       .finally(() => this.setState({ saving: false }));
   };
@@ -134,7 +134,7 @@ export default class ModalEditarProjetos extends React.Component<ModalProps, Mod
     event.preventDefault();
 
     if (!this.state.projectName.trim()) {
-      alert('Por favor, insira o nome do projeto.');
+      console.log('Por favor, insira o nome do projeto.');
       return;
     }
 
