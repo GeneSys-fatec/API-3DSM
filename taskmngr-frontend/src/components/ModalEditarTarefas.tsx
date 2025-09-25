@@ -7,20 +7,21 @@ type ModalProps = {
 };
 
 type Tarefa = {
-    id: string;
-    titulo: string;
-    status: string;
-    responsavel: string;
-    entrega: string;
-    prioridade: string;
-    descricao: string;
-    anexo: File | null;
+    tar_id: string;
+    tar_titulo: string;
+    tar_status: string;
+    usu_nome: string;
+    tar_prazo: string;
+    tar_prioridade: "Alta" | "Média" | "Baixa" ;
+    tar_descricao: string;
+    tar_anexo?: File | null;
 };
 
 type ModalState = {
     tarefaEmEdicao: Tarefa;
     novoComentario: string;
 };
+
 
 export default class ModalEditarTarefas extends React.Component<ModalProps, ModalState> {
     constructor(props: ModalProps) {
@@ -33,7 +34,7 @@ export default class ModalEditarTarefas extends React.Component<ModalProps, Moda
     }
 
     componentDidUpdate(prevProps: ModalProps) {
-        if (this.props.tarefa.id !== prevProps.tarefa.id) {
+        if (this.props.tarefa.tar_id !== prevProps.tarefa.tar_id) {
             this.setState({ tarefaEmEdicao: { ...this.props.tarefa } });
         }
     }
@@ -77,7 +78,7 @@ export default class ModalEditarTarefas extends React.Component<ModalProps, Moda
             <ModalContext.Consumer>
                 {context => {
                     if (!context) { return null; }
-                    const {closeModal} = context;
+                    const { closeModal } = context;
                     const { tarefaEmEdicao, novoComentario } = this.state;
 
                     return (
@@ -102,9 +103,9 @@ export default class ModalEditarTarefas extends React.Component<ModalProps, Moda
                                                 <label htmlFor="titulo" className="py-2 block text-sm font-medium text-gray-700">Título da Tarefa</label>
                                                 <input
                                                     type="text"
-                                                    id="titulo"
-                                                    name="titulo"
-                                                    value={tarefaEmEdicao.titulo}
+                                                    id="tar_titulo"
+                                                    name="tar_titulo"
+                                                    value={tarefaEmEdicao.tar_titulo}
                                                     onChange={this.handleChange}
                                                     placeholder="Título da Tarefa"
                                                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
@@ -114,9 +115,9 @@ export default class ModalEditarTarefas extends React.Component<ModalProps, Moda
                                             <div className="flex items-center gap-4">
                                                 <div>
                                                     <select
-                                                        id="status"
-                                                        name="status"
-                                                        value={tarefaEmEdicao.status}
+                                                        id="tar_status"
+                                                        name="tar_status"
+                                                        value={tarefaEmEdicao.tar_status}
                                                         onChange={this.handleChange}
                                                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
                                                     >
@@ -138,9 +139,9 @@ export default class ModalEditarTarefas extends React.Component<ModalProps, Moda
                                             <div>
                                                 <label htmlFor="descricao" className="block text-sm font-medium text-gray-700">Descrição</label>
                                                 <textarea
-                                                    id="descricao"
-                                                    name="descricao"
-                                                    value={tarefaEmEdicao.descricao}
+                                                    id="tar_descricao"
+                                                    name="tar_descricao"
+                                                    value={tarefaEmEdicao.tar_descricao}
                                                     onChange={this.handleChange}
                                                     rows={3}
                                                     className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 min-h-24 p-2"
@@ -156,8 +157,8 @@ export default class ModalEditarTarefas extends React.Component<ModalProps, Moda
                                                         <label className="block text-sm font-medium text-gray-700">Responsável</label>
                                                         <select
                                                             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
-                                                            name="responsavel"
-                                                            value={tarefaEmEdicao.responsavel}
+                                                            name="usu_nome"
+                                                            value={tarefaEmEdicao.usu_nome}
                                                             onChange={this.handleChange}
                                                         >
                                                             <option>Selecione um membro</option>
@@ -171,8 +172,8 @@ export default class ModalEditarTarefas extends React.Component<ModalProps, Moda
                                                         <label className="block text-sm font-medium text-gray-700">Prioridade</label>
                                                         <select
                                                             className="block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
-                                                            name="prioridade"
-                                                            value={tarefaEmEdicao.prioridade}
+                                                            name="tar_prioridade"
+                                                            value={tarefaEmEdicao.tar_prioridade}
                                                             onChange={this.handleChange}
                                                         >
                                                             <option>Alta</option>
@@ -185,8 +186,8 @@ export default class ModalEditarTarefas extends React.Component<ModalProps, Moda
                                                         <input
                                                             type="date"
                                                             className="block w-full ..."
-                                                            name="entrega"
-                                                            value={tarefaEmEdicao.entrega}
+                                                            name="tar_prazo"
+                                                            value={tarefaEmEdicao.tar_prazo}
                                                             onChange={this.handleChange}
                                                         />
                                                     </div>
