@@ -11,7 +11,7 @@ export default class Tarefas extends React.Component<object, HomeState> {
     render() {
         return (
             <>
-                <div className="flex justify-center pt-5">
+                <div className="flex justify-center pt-5 min-w-full">
                             <ListaTarefas></ListaTarefas>
                 </div>
             </>

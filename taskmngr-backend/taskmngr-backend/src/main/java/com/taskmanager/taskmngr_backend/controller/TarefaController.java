@@ -5,9 +5,9 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus; // pra retornar erro/sucesso
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.web.bind.annotation.*; //importa todas as annotations do spring de 1 vez
 
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.InvalidTaskDataException;
 import com.taskmanager.taskmngr_backend.model.AdicionadorLinkTarefa;
 import com.taskmanager.taskmngr_backend.model.TarefaModel;
 import com.taskmanager.taskmngr_backend.model.dto.TarefaDTO;
@@ -51,7 +51,25 @@ public class TarefaController {
     }
 
     @PostMapping("/cadastrar")
-    public ResponseEntity<String> cadastrarTarefa(@RequestBody TarefaDTO dto) { //aqui tbm request body pede os atributos
+    public ResponseEntity<?> cadastrarTarefa(@RequestBody TarefaDTO dto) {
+        // Validar dados obrigatórios
+        if (dto.getTar_titulo() == null || dto.getTar_titulo().trim().isEmpty()) {
+            throw new InvalidTaskDataException("Dados da tarefa inválidos", "Título é obrigatório");
+        }
+        
+        if (dto.getTar_descricao() == null || dto.getTar_descricao().trim().isEmpty()) {
+            throw new InvalidTaskDataException("Dados da tarefa inválidos", "Descrição é obrigatória");
+        }
+        
+        // validações adicionais
+        if (dto.getTar_status() == null || dto.getTar_status().trim().isEmpty()) {
+            throw new InvalidTaskDataException("Dados da tarefa inválidos", "Status é obrigatório");
+        }
+        
+        if (dto.getTar_prioridade() == null || dto.getTar_prioridade().trim().isEmpty()) {
+            throw new InvalidTaskDataException("Dados da tarefa inválidos", "Prioridade é obrigatória");
+        } //dados obrigatorios que toda tarefa tem que ter: titulo descricao status e prioridade
+        
         TarefaModel tarefa = tarefaConverterService.dtoParaModel(dto);
         tarefaService.salvar(tarefa);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -60,6 +78,15 @@ public class TarefaController {
 
     @PutMapping("/atualizar/{tar_id}")
     public ResponseEntity<String> atualizarTarefa(@PathVariable String tar_id, @RequestBody TarefaDTO dto) {
+        // Adicionar as mesmas validações aqui também
+        if (dto.getTar_titulo() == null || dto.getTar_titulo().trim().isEmpty()) {
+            throw new InvalidTaskDataException("Dados da tarefa inválidos", "Título é obrigatório");
+        }
+        
+        if (dto.getTar_descricao() == null || dto.getTar_descricao().trim().isEmpty()) {
+            throw new InvalidTaskDataException("Dados da tarefa inválidos", "Descrição é obrigatória");
+        }
+        
         Optional<TarefaModel> tarefaExistente = tarefaService.buscarPorId(tar_id);
         //busca no banco uma tarefa pelo id que vai ser opcional (pode ou nao existir)
         if (tarefaExistente.isPresent()) {
