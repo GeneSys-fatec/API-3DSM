@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.CredenciaisInvalidasException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.TokenCriacaoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.TokenInvalidoException;
-import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.EmailJaCadastradoException;
-import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.UsuarioNaoEncontradoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.projetos.ProjetoNaoEncontradoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.InvalidTaskDataException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.EmailJaCadastradoException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.UsuarioNaoEncontradoException;
 import com.taskmanager.taskmngr_backend.model.dto.ErroRespostaDTO;
 
 @ControllerAdvice
@@ -67,6 +67,7 @@ public class ManipuladorGlobal {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
     }
 
+    // ProjetoNãoEncontradoException
     @ExceptionHandler(ProjetoNaoEncontradoException.class)
     public ResponseEntity<ErroRespostaDTO> manipularProjetoNaoEncontrado(ProjetoNaoEncontradoException ex) {
         ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
