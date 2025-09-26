@@ -22,13 +22,18 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/colunas")
 public class ColunaController {
-    
+
     @Autowired
     private ColunaService colunaService;
 
-    @GetMapping
-     public ResponseEntity<List<ColunaDTO>> listarColunas() {
-        return ResponseEntity.ok(colunaService.listarTodas());
+    // @GetMapping
+    //  public ResponseEntity<List<ColunaDTO>> listarColunas() {
+    //     return ResponseEntity.ok(colunaService.listarTodas());
+    // }
+
+    @GetMapping("/por-projeto/{projId}")
+    public ResponseEntity<List<ColunaDTO>> listarColunasPorProjeto(@PathVariable String projId) {
+        return ResponseEntity.ok(colunaService.listarPorProjeto(projId));
     }
 
     @PostMapping("/cadastrar")
@@ -44,7 +49,7 @@ public class ColunaController {
     }
 
     @DeleteMapping("/deletar/{id}")
-    public ResponseEntity<Void> deletarColuna(@PathVariable String id) { // id é String
+    public ResponseEntity<Void> deletarColuna(@PathVariable String id) {
         colunaService.deletarColuna(id);
         return ResponseEntity.noContent().build();
     }

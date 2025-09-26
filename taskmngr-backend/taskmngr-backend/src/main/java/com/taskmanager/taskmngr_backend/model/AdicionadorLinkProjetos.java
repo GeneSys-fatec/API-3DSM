@@ -9,29 +9,33 @@ import com.taskmanager.taskmngr_backend.controller.ProjetoController;
 import com.taskmanager.taskmngr_backend.model.dto.ProjetoDTO;
 
 @Component
-public class AdicionadorLinkProjetos{
+public class AdicionadorLinkProjetos {
 
     public void adicionarLink(ProjetoDTO dto) {
-        String id = dto.getProj_nome();
+
+        String id = dto.getProj_id();
+
         Link selfLink = WebMvcLinkBuilder
-            .linkTo(WebMvcLinkBuilder.methodOn(ProjetoController.class).buscarPorId(id))
-            .withSelfRel();
+                .linkTo(WebMvcLinkBuilder.methodOn(ProjetoController.class).buscarPorId(id))
+                .withSelfRel();
 
         Link cadastrarLink = WebMvcLinkBuilder
-            .linkTo(WebMvcLinkBuilder.methodOn(ProjetoController.class).cadastrarProjeto(dto))
-            .withRel("cadastrar");
+
+                .linkTo(WebMvcLinkBuilder.methodOn(ProjetoController.class).cadastrarProjeto(dto, null))
+                .withRel("cadastrar");
 
         Link allLink = WebMvcLinkBuilder
-            .linkTo(WebMvcLinkBuilder.methodOn(ProjetoController.class).listarTodas())
-            .withRel("listar");
+
+                .linkTo(WebMvcLinkBuilder.methodOn(ProjetoController.class).listarTodas())
+                .withRel("listar");
 
         Link updateLink = WebMvcLinkBuilder
-            .linkTo(WebMvcLinkBuilder.methodOn(ProjetoController.class).atualizar(id, dto))
-            .withRel("atualizar");
+                .linkTo(WebMvcLinkBuilder.methodOn(ProjetoController.class).atualizar(id, dto))
+                .withRel("atualizar");
 
         Link deleteLink = WebMvcLinkBuilder
-            .linkTo(WebMvcLinkBuilder.methodOn(ProjetoController.class).apagarProjeto(id))
-            .withRel("excluir");
+                .linkTo(WebMvcLinkBuilder.methodOn(ProjetoController.class).apagarProjeto(id))
+                .withRel("excluir");
 
         dto.add(selfLink, cadastrarLink, allLink, updateLink, deleteLink);
     }

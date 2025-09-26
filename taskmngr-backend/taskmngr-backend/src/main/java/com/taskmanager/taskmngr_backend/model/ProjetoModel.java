@@ -1,7 +1,11 @@
 package com.taskmanager.taskmngr_backend.model;
 
-import org.springframework.data.annotation.Id;
+import java.util.List;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Document(collection = "projetos")
 public class ProjetoModel {
     @Id
     private String proj_id;
@@ -12,6 +16,8 @@ public class ProjetoModel {
     private String proj_dataAtualizacao;
     private String equ_id;
     private String equ_nome;
+
+    private List<String> usuarioIds;
 
     public String getProj_id() {return proj_id;}
     public void setProj_id(String proj_id) {this.proj_id = proj_id;}
@@ -36,5 +42,8 @@ public class ProjetoModel {
 
     public String getEqu_nome() {return equ_nome;}
     public void setEqu_nome(String equ_nome) {this.equ_nome = equ_nome;}
+
+    public List<String> getUsuarioIds() {return usuarioIds;}
+    public void setUsuarioIds(List<String> usuarioIds) {this.usuarioIds = usuarioIds;}
 
 }

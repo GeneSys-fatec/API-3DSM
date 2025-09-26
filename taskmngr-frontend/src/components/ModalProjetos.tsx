@@ -1,4 +1,5 @@
 import React from 'react';
+import { authFetch } from '../utils/api'
 
 type NovoProjeto = {
   nome: string;
@@ -55,7 +56,7 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
 
   adicionarProjeto = async () => {
     try {
-        const response = await fetch("http://localhost:8080/projeto/cadastrar", {
+        const response = await authFetch("http://localhost:8080/projeto/cadastrar", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -163,7 +164,7 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
               </div>
             </div> */}
 
-            <div>
+            {/* <div>
               <label htmlFor="team" className="block text-sm font-medium text-gray-700 mb-1">Equipe</label>
               <select
                 id="team"
@@ -177,7 +178,7 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
                 <option>GeneSys</option>
                 <option>Fatec</option>
               </select>
-            </div>
+            </div> */}
 
             <div className="flex justify-center mt-6">
               <button

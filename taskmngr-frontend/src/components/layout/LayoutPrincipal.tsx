@@ -1,97 +1,83 @@
-import { Component } from "react";
+import { useState } from "react";
 import { Outlet, Link } from "react-router-dom";
 
 import NavbarPrincipal from "../headers/NavbarPrincipal";
 import BarraLateral from "../BarraLateral";
-import BarraLateralProjetos, { type Projeto } from "../BarraLateralProjetos";
+import BarraLateralProjetos from "../BarraLateralProjetos";
 import NavbarProjetos from "../NavbarProjetos";
 import ModalProjetos from "../ModalProjetos";
 
-
-interface LayoutState {
-  projetos: Projeto[];
-  isModalOpen: boolean;
-  isSidebarOpen: boolean;
-}
-
-// eslint-disable-next-line react-refresh/only-export-components
 const BottomNavbar = () => (
   <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-indigo-950 shadow-lg z-30">
     <div className="flex justify-around items-center h-16">
-      <Link className="flex-1 flex justify-center p-2" to="/home"><i className="fa-solid fa-house text-2xl text-white"></i></Link>
-      <Link className="flex-1 flex justify-center p-2" to="/equipes"><i className="fa-solid fa-people-group text-2xl text-white"></i></Link>
-      <Link className="flex-1 flex justify-center p-2" to="/calendario"><i className="fa-solid fa-calendar text-2xl text-white"></i></Link>
-      <Link className="flex-1 flex justify-center p-2" to="/info"><i className="fa-solid fa-info-circle text-2xl text-white"></i></Link>
+      <Link className="flex-1 flex justify-center p-2" to="/home">
+        <i className="fa-solid fa-house text-2xl text-white"></i>
+      </Link>
+      <Link className="flex-1 flex justify-center p-2" to="/equipes">
+        <i className="fa-solid fa-people-group text-2xl text-white"></i>
+      </Link>
+      <Link className="flex-1 flex justify-center p-2" to="/calendario">
+        <i className="fa-solid fa-calendar text-2xl text-white"></i>
+      </Link>
+      <Link className="flex-1 flex justify-center p-2" to="/info">
+        <i className="fa-solid fa-info-circle text-2xl text-white"></i>
+      </Link>
     </div>
   </div>
 );
 
-export default class LayoutPrincipal extends Component<object, LayoutState> {
-  state = {
-    projetos: [],
-    isModalOpen: false,
-    isSidebarOpen: false,
-  };
+export default function LayoutPrincipal() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  handleOpenModal = () => this.setState({ isModalOpen: true });
-  handleCloseModal = () => this.setState({ isModalOpen: false });
+  const [isModalProjetosOpen, setIsModalProjetosOpen] = useState(false);
 
-  handleAddProject = (novoProjeto: { nome: string }) => {
-    this.setState((prevState) => ({
-      projetos: [
-        ...prevState.projetos,
-        { id: Date.now().toString(), nome: novoProjeto.nome },
-      ],
-      isModalOpen: false,
-    }));
-  };
-  toggleSidebar = () => {
-    this.setState((prevState) => ({ isSidebarOpen: !prevState.isSidebarOpen }));
-  };
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
+    null
+  );
 
-  render() {
-    return (
-      <div className="bg-slate-50 h-screen flex flex-col">
-        <NavbarPrincipal onToggleSidebar={this.toggleSidebar} />
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-        <div className="flex flex-1 overflow-hidden">
-          <div className="hidden lg:block">
-            <BarraLateral />
-          </div>
-          <div className={`
+  const handleOpenModal = () => setIsModalProjetosOpen(true);
+  const handleCloseModal = () => setIsModalProjetosOpen(false);
+
+  return (
+    <div className="bg-slate-50 h-screen flex flex-col">
+      <NavbarPrincipal onToggleSidebar={toggleSidebar} />
+
+      <div className="flex flex-1 overflow-hidden">
+        <div className="hidden lg:block">
+          <BarraLateral />
+        </div>
+        <div
+          className={`
             fixed lg:static top-0 left-0 h-full z-20 transition-transform duration-300 ease-in-out
-            ${this.state.isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
-            lg:translate-x-0`
-          }>
-            <BarraLateralProjetos 
-                projetos={this.state.projetos} 
-                onOpenModal={this.handleOpenModal} 
-            />
+            ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} 
+            lg:translate-x-0`}
+        >
+          <BarraLateralProjetos
+            onOpenModal={handleOpenModal}
+            onProjectSelect={setSelectedProjectId}
+          />
         </div>
 
-        {this.state.isSidebarOpen && (
-            <div 
-                className="fixed inset-0 bg-black/50 z-10 lg:hidden"
-                onClick={this.toggleSidebar}
-            ></div>
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-10 lg:hidden"
+            onClick={toggleSidebar}
+          ></div>
         )}
 
-          <div className="p-2 md:p-4 flex-1 flex flex-col min-w-0 h-full">
-            <NavbarProjetos />
+        <div className="p-2 md:p-4 flex-1 flex flex-col min-w-0 h-full">
+          <NavbarProjetos />
 
-            <Outlet />
-          </div>
+          <Outlet context={{ selectedProjectId }} />
         </div>
-
-        <ModalProjetos
-          isOpen={this.state.isModalOpen}
-          onClose={this.handleCloseModal}
-          onAddProject={this.handleAddProject}
-        />
-        
-        <BottomNavbar />
       </div>
-    );
-  }
-}
 
+      {/* CORRIGIDO: Renderizando o ModalProjetos com as props que ele espera */}
+      <ModalProjetos isOpen={isModalProjetosOpen} onClose={handleCloseModal} />
+
+      <BottomNavbar />
+    </div>
+  );
+}
