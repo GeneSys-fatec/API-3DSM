@@ -15,24 +15,24 @@ public class AdicionadorLinkTarefa {
         String id = dto.getTar_id();
 
         Link selfLink = WebMvcLinkBuilder
-            .linkTo(WebMvcLinkBuilder.methodOn(TarefaController.class).buscarPorId(id))
-            .withSelfRel();
+                .linkTo(WebMvcLinkBuilder.methodOn(TarefaController.class).buscarPorId(id))
+                .withSelfRel();
 
         Link cadastrarLink = WebMvcLinkBuilder
-            .linkTo(WebMvcLinkBuilder.methodOn(TarefaController.class).cadastrarTarefa(dto))
-            .withRel("cadastrar");
+                .linkTo(WebMvcLinkBuilder.methodOn(TarefaController.class).cadastrarTarefa(dto, null))
+                .withRel("cadastrar");
 
         Link allLink = WebMvcLinkBuilder
-            .linkTo(WebMvcLinkBuilder.methodOn(TarefaController.class).listarTarefa())
-            .withRel("listar");
+                .linkTo(WebMvcLinkBuilder.methodOn(TarefaController.class).listarTarefa())
+                .withRel("listar");
 
         Link updateLink = WebMvcLinkBuilder
-            .linkTo(WebMvcLinkBuilder.methodOn(TarefaController.class).atualizarTarefa(id, dto))
-            .withRel("atualizar");
+                .linkTo(WebMvcLinkBuilder.methodOn(TarefaController.class).atualizarTarefa(id, dto, null))
+                .withRel("atualizar");
 
         Link deleteLink = WebMvcLinkBuilder
-            .linkTo(WebMvcLinkBuilder.methodOn(TarefaController.class).apagarTarefa(id))
-            .withRel("excluir");
+                .linkTo(WebMvcLinkBuilder.methodOn(TarefaController.class).apagarTarefa(id))
+                .withRel("excluir");
 
         dto.add(selfLink, cadastrarLink, allLink, updateLink, deleteLink);
     }

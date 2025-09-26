@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
+import { useOutletContext } from "react-router-dom";
 import ColunaKanban from "../components/ColunaKanban";
 import CardTarefa from "../components/CardTarefa";
 import {
@@ -17,6 +18,7 @@ import {
 import { ModalContext } from "../context/ModalContext";
 import ModalCriarTarefas from "../components/ModalCriarTarefas";
 import ModalEditarTarefas from "../components/ModalEditarTarefas";
+import { authFetch } from "../utils/api";
 
 export interface Tarefa {
   tar_id: string;
@@ -87,6 +89,55 @@ export default function Home() {
   const [colunaParaExcluir, setColunaParaExcluir] = useState<Coluna | null>(
     null
   );
+  const { selectedProjectId } = useOutletContext<{
+    selectedProjectId: string | null;
+  }>();
+
+  const fetchData = useCallback(async () => {
+    if (!selectedProjectId) {
+      setColunas([]);
+      setTarefas({});
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const [colunasResponse, tarefasResponse] = await Promise.all([
+        authFetch(
+          `http://localhost:8080/colunas/por-projeto/${selectedProjectId}`
+        ),
+        authFetch(
+          `http://localhost:8080/tarefa/por-projeto/${selectedProjectId}`
+        ),
+      ]);
+
+      if (!colunasResponse.ok || !tarefasResponse.ok) {
+        throw new Error("Falha ao buscar dados da API");
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const colunasDataFromAPI: any[] = await colunasResponse.json();
+      const tarefasData: Tarefa[] = await tarefasResponse.json();
+
+      let colunasData: Coluna[] = colunasDataFromAPI.map((c) => ({
+        id: c.id,
+        titulo: c.titulo,
+        ordem: c.ordem,
+        corClasse: "",
+        corFundo: "",
+      }));
+
+      colunasData.sort((a, b) => a.ordem - b.ordem);
+      colunasData = adicionarCoresAsColunas(colunasData);
+      setColunas(colunasData);
+      setTarefas(agruparTarefasPorColuna(tarefasData, colunasData));
+    } catch (error) {
+      console.error("Erro ao carregar o quadro:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedProjectId]);
 
   const handleUpdateColumnTitle = useCallback(
     async (id: string, newTitle: string) => {
@@ -104,19 +155,19 @@ export default function Home() {
       setEditingColumnId(null);
 
       try {
-        const response = await fetch(`http://localhost:8080/colunas/atualizar/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ titulo: newTitle }),
-        });
+        const response = await authFetch(
+          `http://localhost:8080/colunas/atualizar/${id}`,
+          {
+            method: "PUT",
+            body: JSON.stringify({ titulo: newTitle }),
+          }
+        );
 
         if (!response.ok)
           throw new Error("Falha ao atualizar o título no servidor.");
       } catch (error) {
         console.error("Erro ao atualizar título da coluna:", error);
-
         setColunas(originalColumns);
-        console.log("Não foi possível atualizar o título da coluna.");
       }
     },
     [colunas]
@@ -134,7 +185,7 @@ export default function Home() {
     if (!tarefaParaExcluir) return;
 
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `http://localhost:8080/tarefa/apagar/${tarefaParaExcluir.tar_id}`,
         {
           method: "DELETE",
@@ -157,7 +208,6 @@ export default function Home() {
       });
     } catch (error) {
       console.error("Falha ao excluir tarefa:", error);
-      console.log("Não foi possível excluir a tarefa.");
     } finally {
       setTarefaParaExcluir(null);
     }
@@ -170,32 +220,9 @@ export default function Home() {
     useSensor(KeyboardSensor, {})
   );
 
-  const fetchData = useCallback(async () => {
-    try {
-      const [colunasResponse, tarefasResponse] = await Promise.all([
-        fetch("http://localhost:8080/colunas"),
-        fetch("http://localhost:8080/tarefa/listar"),
-      ]);
-      if (!colunasResponse.ok || !tarefasResponse.ok) {
-        throw new Error("Falha ao buscar dados da API");
-      }
-      let colunasData: Coluna[] = await colunasResponse.json();
-      const tarefasData: Tarefa[] = await tarefasResponse.json();
-      colunasData.sort((a, b) => a.ordem - b.ordem);
-      colunasData = adicionarCoresAsColunas(colunasData);
-      setColunas(colunasData);
-      setTarefas(agruparTarefasPorColuna(tarefasData, colunasData));
-    } catch (error) {
-      console.error("Erro ao carregar o quadro:", error);
-    } finally {
-      if (loading) setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    setLoading(true);
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const encontrarColunaDaTarefa = (
     tarefaId: string,
@@ -269,14 +296,12 @@ export default function Home() {
         !corpoDaRequisicao.tar_descricao ||
         corpoDaRequisicao.tar_descricao.trim() === ""
       ) {
-        corpoDaRequisicao.tar_descricao = " ";
+        corpoDaRequisicao.tar_descricao = "Descrição não fornecida";
       }
-
-      const response = await fetch(
+      const response = await authFetch(
         `http://localhost:8080/tarefa/atualizar/${activeId}`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(corpoDaRequisicao),
         }
       );
@@ -293,57 +318,72 @@ export default function Home() {
   };
 
   const handleAddColumn = useCallback(async () => {
+    if (!selectedProjectId) {
+      alert("Por favor, selecione um projeto para adicionar uma coluna.");
+      return;
+    }
     try {
-      const response = await fetch("http://localhost:8080/colunas/cadastrar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await authFetch(
+        "http://localhost:8080/colunas/cadastrar",
+        {
+          method: "POST",
 
-        body: JSON.stringify({ titulo: "Nova Coluna" }),
-      });
+          body: JSON.stringify({
+            titulo: "Nova Coluna",
+            proj_id: selectedProjectId,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Falha ao criar a coluna no servidor.");
       }
 
-      const novaColunaSalva = await response.json();
-
-      setColunas((prevColunas) => {
-        const colunasAtualizadas = [...prevColunas, novaColunaSalva];
-
-        return adicionarCoresAsColunas(colunasAtualizadas);
-      });
-
-      setEditingColumnId(novaColunaSalva.id);
+      await fetchData();
     } catch (error) {
       console.error("Erro ao adicionar nova coluna:", error);
     }
-  }, [colunas]);
+  }, [selectedProjectId, fetchData]);
 
   const adicionarTarefa = useCallback(
     async (novaTarefa: NovaTarefa) => {
+      if (!selectedProjectId) {
+        console.log(
+          "Por favor, selecione um projeto antes de criar uma tarefa."
+        );
+        return;
+      }
+
       try {
-        const response = await fetch("http://localhost:8080/tarefa/cadastrar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...novaTarefa, proj_nome: "API-3sem" }),
-        });
+        const response = await authFetch(
+          "http://localhost:8080/tarefa/cadastrar",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              ...novaTarefa,
+
+              proj_id: selectedProjectId,
+            }),
+          }
+        );
+
         if (!response.ok) throw new Error("Erro ao cadastrar tarefa");
+
         await fetchData();
       } catch (error) {
         console.error("Falha ao adicionar tarefa:", error);
       }
     },
-    [fetchData]
+    [fetchData, selectedProjectId]
   );
 
   const editarTarefa = useCallback(
     async (tarefaAtualizada: Tarefa) => {
       try {
-        const response = await fetch(
+        const response = await authFetch(
           `http://localhost:8080/tarefa/atualizar/${tarefaAtualizada.tar_id}`,
           {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               ...tarefaAtualizada,
               proj_nome: "API-3sem",
@@ -407,7 +447,7 @@ export default function Home() {
     if (!colunaParaExcluir) return;
 
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `http://localhost:8080/colunas/deletar/${colunaParaExcluir.id}`,
         {
           method: "DELETE",
