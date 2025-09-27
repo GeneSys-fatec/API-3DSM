@@ -52,7 +52,7 @@ export default class ListaTarefas extends React.Component<object, ListaTarefasSt
                 tar_prazo: item.tar_prazo ?? "-",
                 tar_prioridade: item.tar_prioridade,
                 tar_descricao: item.tar_descricao,
-                tar_anexo: null, // por enquanto é null, pq n tem nd funcionando
+                tar_anexos: [], // por enquanto é null, pq n tem nd funcionando
             }));
 
             this.setState({ tarefas: tarefasConvertidas, loading: false });
@@ -78,7 +78,7 @@ export default class ListaTarefas extends React.Component<object, ListaTarefasSt
                     tar_status: novaTarefa.tar_status,
                     tar_prioridade: novaTarefa.tar_prioridade,
                     tar_prazo: novaTarefa.tar_prazo && novaTarefa.tar_prazo !== "-" ? novaTarefa.tar_prazo : null,
-                    tar_anexo: null,
+                    tar_anexos: [],
                     usu_nome: novaTarefa.usu_nome,
                     proj_nome: "API-3sem",
                 }),
@@ -111,7 +111,7 @@ export default class ListaTarefas extends React.Component<object, ListaTarefasSt
                     tar_status: tarefaAtualizada.tar_status,
                     tar_prioridade: tarefaAtualizada.tar_prioridade,
                     tar_prazo: tarefaAtualizada.tar_prazo && tarefaAtualizada.tar_prazo !== "-" ? tarefaAtualizada.tar_prazo : null,
-                    tar_anexo: null,
+                    tar_anexos: [],
                     usu_nome: tarefaAtualizada.usu_nome,
                     proj_nome: "API-3sem",
                 }),
