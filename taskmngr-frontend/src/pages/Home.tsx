@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
+import { useState, useEffect, useContext, useCallback } from "react";
 import { useOutletContext } from "react-router-dom";
 import ColunaKanban from "../components/ColunaKanban";
 import CardTarefa from "../components/CardTarefa";
@@ -24,6 +24,7 @@ export interface Tarefa {
   tar_id: string;
   tar_titulo: string;
   tar_status: string;
+  usu_id: string;
   usu_nome: string;
   tar_prazo: string;
   tar_prioridade: "Alta" | "Média" | "Baixa";

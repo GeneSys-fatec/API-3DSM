@@ -1,6 +1,6 @@
-import React, {createContext, useState, useContext, type ReactNode} from "react";
+import { createContext, useState, useContext, type ReactNode } from "react";
 
-type ModalContextType = {
+export type ModalContextType = {
     isModalOpen: boolean;
     modalContent: ReactNode | null;
     openModal: (content: ReactNode) => void;

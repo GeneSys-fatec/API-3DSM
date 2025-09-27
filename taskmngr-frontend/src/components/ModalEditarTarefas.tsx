@@ -10,6 +10,7 @@ type Tarefa = {
     tar_id: string;
     tar_titulo: string;
     tar_status: string;
+    usu_id: string;
     usu_nome: string;
     tar_prazo: string;
     tar_prioridade: "Alta" | "Média" | "Baixa" ;
@@ -17,9 +18,19 @@ type Tarefa = {
     tar_anexo?: File | null;
 };
 
+type Usuario = {
+    usu_id: string;
+    usu_nome: string;
+    usu_email?: string;
+    usu_caminhoFoto?: string;
+    usu_dataCriacao?: string;
+    usu_dataAtualizacao?: string;
+};
+
 type ModalState = {
     tarefaEmEdicao: Tarefa;
     novoComentario: string;
+    usuarios: Usuario[];
 };
 
 
@@ -30,6 +41,7 @@ export default class ModalEditarTarefas extends React.Component<ModalProps, Moda
         this.state = {
             tarefaEmEdicao: { ...props.tarefa },
             novoComentario: '',
+            usuarios: []
         };
     }
 
@@ -37,6 +49,13 @@ export default class ModalEditarTarefas extends React.Component<ModalProps, Moda
         if (this.props.tarefa.tar_id !== prevProps.tarefa.tar_id) {
             this.setState({ tarefaEmEdicao: { ...this.props.tarefa } });
         }
+    }
+
+    componentDidMount() {
+        fetch("http://localhost:8080/usuario/listar")
+        .then(res => res.json())
+        .then(data => this.setState({ usuarios: data }))
+        .catch(err => console.error("Erro ao buscar usuários:", err));
     }
 
     handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -63,6 +82,7 @@ export default class ModalEditarTarefas extends React.Component<ModalProps, Moda
 
     handleSave = (e: React.FormEvent, closeModal: () => void) => {
         e.preventDefault();
+        console.log("Tarefa enviada:", this.state.tarefaEmEdicao);
         this.props.onSave(this.state.tarefaEmEdicao);
         closeModal();
     };
@@ -157,15 +177,29 @@ export default class ModalEditarTarefas extends React.Component<ModalProps, Moda
                                                         <label className="block text-sm font-medium text-gray-700">Responsável</label>
                                                         <select
                                                             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
-                                                            name="usu_nome"
-                                                            value={tarefaEmEdicao.usu_nome}
-                                                            onChange={this.handleChange}
+                                                            name="usu_id"
+                                                            value={tarefaEmEdicao.usu_id}
+                                                            onChange={
+                                                            (e) => {
+                                                                const usu_id = e.target.value;
+                                                                const usuario = this.state.usuarios.find(u => u.usu_id === usu_id);
+                                                                if (usuario) {
+                                                                    this.setState(prevState => ({
+                                                                        tarefaEmEdicao: {
+                                                                            ...prevState.tarefaEmEdicao,
+                                                                            usu_id: usuario.usu_id,
+                                                                            usu_nome: usuario.usu_nome,
+                                                                        },
+                                                                    }));
+                                                                }
+                                                            }}
                                                         >
-                                                            <option>Selecione um membro</option>
-                                                            <option>Matheus</option>
-                                                            <option>Ana Júlia</option>
-                                                            <option>Gabriel</option>
-                                                            <option>Ana Beatriz</option>
+                                                            <option value="">Selecione um membro</option>
+                                                            {this.state.usuarios.map(usuario => (
+                                                                <option key={usuario.usu_id} value={usuario.usu_id}>
+                                                                    {usuario.usu_nome}
+                                                                </option>
+                                                            ))}
                                                         </select>
                                                     </div>
                                                     <div className="flex flex-col gap-2">

@@ -204,10 +204,10 @@ export default class BarraLateralProjetos extends React.Component<
                                         }
                                     `}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 truncate">
                     <span
                       className={`
-                                            w-1.5 h-1.5 rounded-full
+                                            w-1.5 h-1.5 rounded-full flex-shrink-0
                                             ${
                                               isActive
                                                 ? "bg-indigo-500"
@@ -215,7 +215,7 @@ export default class BarraLateralProjetos extends React.Component<
                                             }
                                         `}
                     ></span>
-                    <p className="leading-none">{p.nome}</p>
+                    <p className="leading-none truncate">{p.nome}</p>
                   </div>
                   <i
                     role="button"
@@ -224,7 +224,7 @@ export default class BarraLateralProjetos extends React.Component<
                     tabIndex={0}
                     onClick={(e) => this.openOptions(e, p.id)}
                     className={`
-                                            fa-solid fa-ellipsis-vertical cursor-pointer p-0 rounded-full
+                                            fa-solid fa-ellipsis-vertical cursor-pointer p-0 rounded-full flex-shrink-0
                                             ${
                                               isActive
                                                 ? "text-indigo-600"

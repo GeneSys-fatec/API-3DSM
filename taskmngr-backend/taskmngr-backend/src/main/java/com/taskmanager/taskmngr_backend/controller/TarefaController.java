@@ -126,10 +126,8 @@ public class TarefaController {
             t.setTar_dataAtualizacao(dto.getTar_dataAtualizacao());
 
             // AJUSTADO: Usar o usuário logado em vez do que vem do frontend
-            if (usuarioLogado != null) {
-                t.setUsu_id(usuarioLogado.getUsu_id());
-                t.setUsu_nome(usuarioLogado.getUsu_nome());
-            }
+            t.setUsu_id(dto.getUsu_id());
+            t.setUsu_nome(dto.getUsu_nome());
 
             t.setProj_id(dto.getProj_id());
             t.setProj_nome(dto.getProj_nome());

@@ -55,6 +55,7 @@ class FormularioLogin extends React.Component<LoginProps, LoginState> {
  
             if (res.ok) {
                 localStorage.setItem('token', data.token);
+                localStorage.setItem('nome', data.nome);
                 console.log('Token:', data.token);
                 toast.success('Usuário logado com sucesso!');
                 setTimeout(() => {
