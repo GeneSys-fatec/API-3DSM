@@ -28,7 +28,7 @@ const formatFileSize = (bytes: number) => {
 
 type ModalProps = {
     tarefa: Tarefa;
-    onSave: (tarefaAtualizada: Tarefa) => void;
+    onSave: () => void;
 };
 
 type Tarefa = {
@@ -200,7 +200,7 @@ export default class ModalEditarTarefas extends React.Component<ModalProps, Moda
                 }
             }
             await this.fetchAnexos(tarId);
-            this.props.onSave(tarefaEmEdicao);
+            this.props.onSave();
             this.setState({ novosAnexos: [] });
             closeModal();
         } catch (err) {

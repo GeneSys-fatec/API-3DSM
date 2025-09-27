@@ -27,8 +27,9 @@ const formatFileSize = (bytes: number) => {
 };
 
 type ModalProps = {
-    onAdicionarTarefa: (tarefa: Omit<Tarefa, 'tar_id'> & { anexos: File[] }) => void;
+    onSuccess: () => void;
     statusInicial: string;
+    selectedProjectId: string | null;
 };
 
 type ModalState = {
@@ -96,74 +97,70 @@ export default class ModalCriarTarefas extends React.Component<ModalProps, Modal
     };
 
     handleSubmit = async (e: React.FormEvent, closeModal: () => void) => {
-        e.preventDefault();
-        const { tar_titulo, tar_status, tar_descricao, usu_nome, tar_prioridade, tar_prazo, tar_anexos } = this.state;
+    e.preventDefault();
+    const { tar_titulo, tar_status, tar_descricao, usu_nome, tar_prioridade, tar_prazo, tar_anexos } = this.state;
 
-        try {
-            const response = await fetch("http://localhost:8080/tarefa/cadastrar", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    tar_titulo: tar_titulo,
-                    tar_descricao: tar_descricao,
-                    tar_status: tar_status,
-                    tar_prioridade: tar_prioridade,
-                    tar_prazo: tar_prazo,
-                    usu_nome: usu_nome,
-                })
-            });
+    if (!this.props.selectedProjectId) {
+        alert("Ocorreu um erro: ID do projeto não encontrado.");
+        return;
+    }
 
-        const novaTarefa = {
-            tar_titulo,
-            tar_status,
-            tar_descricao,
-            usu_id: this.state.usu_id,
-            usu_nome,
-            tar_prioridade,
-            tar_prazo,
-            tar_anexos
-        };
-            if (!response.ok) {
-                throw new Error("Erro ao criar tarefa");
-            }
+    try {
+        const response = await fetch("http://localhost:8080/tarefa/cadastrar", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                tar_titulo: tar_titulo,
+                tar_descricao: tar_descricao,
+                tar_status: tar_status,
+                tar_prioridade: tar_prioridade,
+                tar_prazo: tar_prazo,
+                usu_nome: usu_nome,
+                proj_id: this.props.selectedProjectId 
+            })
+        });
 
-            const tarefaCriada = await response.json();
-            this.props.onAdicionarTarefa(tarefaCriada);
-            const tar_id = tarefaCriada.tar_id;
-
-            for (const arquivo of tar_anexos) {
-                const formData = new FormData();
-                formData.append("file", arquivo);
-
-                const uploadRes = await fetch(`http://localhost:8080/tarefa/${tar_id}/upload`, {
-                    method: "POST",
-                    body: formData
-                });
-
-                if (!uploadRes.ok) {
-                    console.error(`Falha no upload do arquivo ${arquivo.name}`);
-                }
-            }
-
-            this.setState({
-                tar_titulo: '',
-                tar_status: 'Pendente',
-                tar_descricao: '',
-                usu_nome: 'Selecione um membro',
-                tar_prazo: 'Alta',
-                tar_anexos: []
-            });
-
-            closeModal();
-
-        } catch (err) {
-            console.error(err);
-            alert("Ocorreu um erro ao criar a tarefa");
+        if (!response.ok) {
+            throw new Error("Erro ao criar tarefa");
         }
-    };
 
+        const tarefaCriada = await response.json();
+        const tar_id = tarefaCriada.tar_id;
+
+        for (const arquivo of tar_anexos) {
+            const formData = new FormData();
+            formData.append("file", arquivo);
+
+            const uploadRes = await fetch(`http://localhost:8080/tarefa/${tar_id}/upload`, {
+                method: "POST",
+                body: formData
+            });
+
+            if (!uploadRes.ok) {
+                console.error(`Falha no upload do arquivo ${arquivo.name}`);
+            }
+        }
+
+        this.setState({
+            tar_titulo: '',
+            tar_status: 'Pendente',
+            tar_descricao: '',
+            usu_nome: 'Selecione um membro',
+            tar_prioridade: 'Alta',
+            tar_prazo: '',
+            tar_anexos: []
+        });
+
+        this.props.onSuccess();
+        closeModal();
+
+    } catch (err) {
+        console.error(err);
+        alert("Ocorreu um erro ao criar a tarefa");
+    }
+};
     handleCancel = (closeModal: () => void) => {
         this.setState({
             tar_titulo: '',
