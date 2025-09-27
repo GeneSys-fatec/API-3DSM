@@ -18,14 +18,17 @@ As etapas do projeto, incluindo o kickoff e as sprints, seguirão o cronograma e
 ## 📋 O Projeto
 > **📌 Status do Projeto: Em andamento**
  
-O **Sistema de Gerenciamento de Tarefas (To-Do/Task Manager)**, desenvolvido para a empresa **GSW**, tem como objetivo organizar, acompanhar e otimizar suas tarefas diárias. A plataforma oferece funcionalidades como criação de tarefas, atribuição de responsáveis, definição de prazos, categorização por projetos e visualização de progresso, promovendo maior produtividade e colaboração entre os usuários. <br>
-A solução será desenvolvida com **arquitetura baseada em microserviços**, banco de dados NoSQL, e front-end **Single Page Application (SPA)** utilizando React.  
- 
-O sistema deve contemplar:  
-* Criação, edição e exclusão de tarefas;  
-* Atribuição de tarefas a usuários;  
-* Upload de anexos relacionados a cada tarefa;  
-* Colaboração em equipe com atualização em tempo real.  <br>
+A empresa GSW enfrenta dificuldades no acompanhamento de tarefas, causando falhas de comunicação e atrasos nas entregas.
+
+O gerenciador de tarefas foi desenvolvido para resolver esses problemas, oferecendo uma plataforma unificada que permite saber o que precisa ser feito, por quem e quando.
+
+Baseado na metodologia ágil SCRUM e no ciclo CDIO, o projeto promove colaboração, autonomia e entregas contínuas, entregando um MVP funcional desde a primeira sprint.
+O sistema contará com as seguintes funcionalidades principais:
+
+* Criação, edição e exclusão de tarefas;
+* Atribuição de tarefas a usuários específicos;
+* Upload de anexos relacionados a cada tarefa;
+* Colaboração em equipe com atualizações em tempo real. <br>
  
 <br>
  
@@ -37,17 +40,22 @@ O sistema deve contemplar:
  
 <br>
  
-ID |          Prioridade           |                     User Story                      | Sprint |
+ID |          Prioridade           |                     User Story                      | Sprint | 
 :---: | :-------------------: | :----------------------------------------------------------: | :-----------:
-US01 | Alta |Como usuário, quero criar, editar e excluir tarefas, para organizar de forma eficiente minhas atividades diárias. | 1
-US02 | Alta |Como usuário, quero visualizar tarefas em aberto, em andamento e concluídas, para acompanhar o progresso das minhas atividades e/ou da minha equipe. | 1 |
+US01 | Alta |Como usuário, quero criar, editar e excluir tarefas, para organizar de forma eficiente minhas atividades. | 1
+US02 | Alta |Como usuário, quero visualizar tarefas em aberto, em andamento e concluídas, para acompanhar o progresso das minhas atividades pessoais ou da minha equipe. | 1 |
 US03 | Alta |Como usuário, quero me cadastrar informando nome, e-mail válido e senha, para garantir a segurança do meu acesso e facilitar meu ingresso no sistema. | 1 |
-US04 | Alta |Como usuário, quero iniciar sessão informando meu e-mail e senha cadastrados, para acessar e utilizar todas as funcionalidades do sistema. | 1 |  
-US05 | Alta |Como usuário, quero anexar arquivos nos formatos PDF, Word, Excel e imagens de diferentes extensões, para comprovar a realização das tarefas. | 1 |
-US06 | Média |Como usuário, quero criar equipes e gerenciar seus membros, para que todos colaborem e participem ativamente das atividades. | 2 |
-US07 | Média |Como membro de uma equipe, quero atribuir tarefas a outros participantes, para promover a colaboração, a divisão de responsabilidades e o acompanhamento coletivo. | 2 |
-US08 | Média |Como usuário, quero adicionar comentários em qualquer tarefa, para registrar o andamento das atividades e fornecer feedback a outros colaboradores.  | 2| 
-US09 | Média |Como usuário, quero receber notificações sobre tarefas atribuídas e comentários adicionados, para acompanhar em tempo real as atualizações relacionadas às minhas atividades. | 2 | 
+US04 | Alta |Como usuário, quero iniciar sessão informando meu e-mail e senha cadastrados, para acessar e utilizar todas as funcionalidades do sistema.| 1 |  
+US05 | Alta |Como usuário, quero criar e gerenciar projetos pessoais ou de equipe, para organizar e acompanhar minhas atividades de forma centralizada e eficiente. | 1 |
+US06 | Alta |Como usuário, quero anexar arquivos nos formatos PDF, Word, Excel e imagens de diferentes extensões, para comprovar a realização das tarefas. | 1 |
+US07 | Média |Como usuário, quero criar equipes e gerenciar seus membros, para que todos colaborem e participem ativamente das atividades. | 2 |
+US08 | Média |Como membro de uma equipe, quero atribuir tarefas a outros participantes, para promover a colaboração e a divisão de responsabilidades.  | 2| 
+US09 | Média |Como usuário, quero visualizar minhas tarefas em um calendário mensal e semanal, para ter uma visão organizada das atividades no tempo. | 2 | 
+US10 | Média |Como usuário, quero adicionar comentários em qualquer tarefa, para registrar o andamento das atividades e fornecer feedback a outros colaboradores. | 2 | 
+US11 | Média |Como usuário, quero receber notificações sobre tarefas atribuídas e comentários adicionados, para acompanhar em tempo real as atualizações relacionadas às minhas atividades. | 2 | 
+US12 | Baixa |Como gestor, quero acessar um dashboard com KPIs da equipe (tarefas concluídas, prazos e produtividade), para acompanhar a performance e melhorar o planejamento. | 2 | 
+US13 | Baixa |Como usuário, quero gerenciar os dados da minha conta (redefinir senha, alterar nome, e-mail e foto de perfil), para manter minhas informações seguras e atualizadas.| 3 | 
+US14 | Baixa |Como usuário, quero filtrar minhas tarefas por palavra-chave, por prioridade e por responsável, para localizar rapidamente atividades específicas. | 3 | 
  
 <br>
  
@@ -55,7 +63,7 @@ US09 | Média |Como usuário, quero receber notificações sobre tarefas atribu�
  
 ## 📍 DoR Definition of Ready
 **:link: Clique no link abaixo para visualizar o DoR do projeto:**  
-> [Definition of Ready](https://docs.google.com/document/d/1hIY7ZO-mqmuPyatN_c0C_M0vLosW4f5t4ho94eYAT-o/edit?tab=t.0#heading=h.wpgs4r3laaag)
+> [Definition of Ready](https://docs.google.com/document/d/1hIY7ZO-mqmuPyatN_c0C_M0vLosW4f5t4ho94eYAT-o/edit?usp=sharing)
  
 <br>
  
@@ -74,12 +82,16 @@ Tópicos utilizados para definir o DoR das Sprints:
 
 ## 📍 DoD Definition of Done
 **:link: Clique no link abaixo para visualizar o DoD do projeto:**
-> [Definition of Done]()
+> [Definition of Done](https://docs.google.com/document/d/1zKTHzSnM82f3k9vDCRv7sGIwZDe1isYBiLkQhQlkan0/edit?usp=sharing)
  
 <br>
  
 Tópicos utilizados para definir o DoD das Sprints:
-* Manual do Usuário;
+* Requisitos do Sistema;
+* Instalação;
+* Acessando o Sistema;
+* Principais Funcionalidades;
+* Solução de Problemas;
 
  
 <br>
@@ -88,12 +100,13 @@ Tópicos utilizados para definir o DoD das Sprints:
 ## 📊 Sprints
 Sprint | Previsão | Status | Relatório | Vídeo do Projeto |
 |------|--------|------|---------|----------|
-|01 | 08/09/2025 - 28/09/2025 |⌛ Em andamento| [Ver Relatório](https://github.com/GeneSys-fatec/API-3DSM/blob/updates-sprint1/README.md) | <a href=''>Ver Vídeo</a> |
+|01 | 08/09/2025 - 28/09/2025 |✔️ Concluído| [Ver Relatório](https://github.com/GeneSys-fatec/API-3DSM/blob/updates-sprint1/README.md) | <a href='https://youtu.be/GnxCSIv_jP4?si=REm8HHhPtJweiITJ'>Ver Vídeo</a> |
 |02|  06/10/2025 - 26/10/2025 |🕞 Pendente| [Ver Relatório](https://github.com/GeneSys-fatec/API-3DSM/blob/updates-sprint2/README.md) | <a href=''>Ver Vídeo</a> |
 |03| 03/11/2025 - 23/11/2025 |🕗 Pendente| [Ver Relatório](https://github.com/GeneSys-fatec/API-3DSM/blob/updates-sprint3/README.md) | <a href=''>Ver Vídeo</a> |
 <br>
  
 <span id="tecnologias">
+ 
 ## 🔧 Tecnologias
  
 As seguintes ferramentas, linguagens, bibliotecas e tecnologias foram usadas na construção do projeto:
