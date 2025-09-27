@@ -117,7 +117,6 @@ export default function Home() {
         throw new Error("Falha ao buscar dados da API");
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const colunasDataFromAPI: any[] = await colunasResponse.json();
       const tarefasData: Tarefa[] = await tarefasResponse.json();
 
@@ -346,83 +345,30 @@ export default function Home() {
     }
   }, [selectedProjectId, fetchData]);
 
-  const adicionarTarefa = useCallback(
-    async (novaTarefa: NovaTarefa) => {
-      if (!selectedProjectId) {
-        console.log(
-          "Por favor, selecione um projeto antes de criar uma tarefa."
-        );
-        return;
-      }
-
-      try {
-        const response = await authFetch(
-          "http://localhost:8080/tarefa/cadastrar",
-          {
-            method: "POST",
-            body: JSON.stringify({
-              ...novaTarefa,
-
-              proj_id: selectedProjectId,
-            }),
-          }
-        );
-
-        if (!response.ok) throw new Error("Erro ao cadastrar tarefa");
-
-        await fetchData();
-      } catch (error) {
-        console.error("Falha ao adicionar tarefa:", error);
-      }
-    },
-    [fetchData, selectedProjectId]
-  );
-
-  const editarTarefa = useCallback(
-    async (tarefaAtualizada: Tarefa) => {
-      try {
-        const response = await authFetch(
-          `http://localhost:8080/tarefa/atualizar/${tarefaAtualizada.tar_id}`,
-          {
-            method: "PUT",
-            body: JSON.stringify({
-              ...tarefaAtualizada,
-              proj_nome: "API-3sem",
-            }),
-          }
-        );
-        if (!response.ok) throw new Error("Erro ao atualizar tarefa");
-        await fetchData();
-      } catch (error) {
-        console.error("Falha ao editar tarefa:", error);
-      }
-    },
-    [fetchData]
-  );
-
   const abrirModalCriacao = useCallback(
     (statusDaColuna: string) => {
       if (modalContext) {
         modalContext.openModal(
           <ModalCriarTarefas
-            onAdicionarTarefa={adicionarTarefa}
+            onSuccess={fetchData} 
             statusInicial={statusDaColuna}
+            selectedProjectId={selectedProjectId}
           />
         );
       }
     },
-    [modalContext, adicionarTarefa]
+    [modalContext, fetchData, selectedProjectId]
   );
 
   const abrirModalEdicao = useCallback(
     (tarefa: Tarefa) => {
       if (modalContext) {
         modalContext.openModal(
-          <ModalEditarTarefas tarefa={tarefa} onSave={editarTarefa} />
+          <ModalEditarTarefas tarefa={tarefa} onSave={fetchData} />
         );
       }
     },
-    [modalContext, editarTarefa]
+    [modalContext, fetchData]
   );
 
   const iniciarExclusaoColuna = useCallback(

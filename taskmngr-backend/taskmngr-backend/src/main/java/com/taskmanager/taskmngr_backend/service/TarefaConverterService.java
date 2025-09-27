@@ -16,7 +16,7 @@ public class TarefaConverterService {
         model.setTar_prazo(dto.getTar_prazo());
         model.setTar_status(dto.getTar_status());
         model.setTar_prioridade(dto.getTar_prioridade());
-        model.setTar_anexo(dto.getTar_anexo());
+        model.setTar_anexos(dto.getTar_anexos());
         model.setTar_dataCriacao(dto.getTar_dataCriacao());
         model.setTar_dataAtualizacao(dto.getTar_dataAtualizacao());
         model.setUsu_id(dto.getUsu_id());
@@ -34,7 +34,7 @@ public class TarefaConverterService {
         dto.setTar_prazo(model.getTar_prazo());
         dto.setTar_status(model.getTar_status());
         dto.setTar_prioridade(model.getTar_prioridade());
-        dto.setTar_anexo(model.getTar_anexo());
+        dto.setTar_anexos(model.getTar_anexos());
         dto.setTar_dataCriacao(model.getTar_dataCriacao());
         dto.setTar_dataAtualizacao(model.getTar_dataAtualizacao());
         dto.setUsu_id(model.getUsu_id());
