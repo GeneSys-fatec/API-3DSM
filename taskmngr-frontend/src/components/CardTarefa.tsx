@@ -77,8 +77,8 @@ export default function CardTarefa(props: CardTarefaProps) {
         ${cursorClasses}`}
     >
       <div className="flex justify-between h-full">
-        <div className="flex flex-col justify-between">
-          <h2 className="font-semibold text-gray-800 pr-2">
+        <div className="flex flex-col justify-between truncate">
+          <h2 className="font-semibold text-gray-800 pr-2 truncate">
             {tarefa.tar_titulo}
           </h2>
           <div className="flex items-center gap-3 mt-2">

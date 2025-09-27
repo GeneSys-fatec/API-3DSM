@@ -6,6 +6,7 @@ import BarraLateral from "../BarraLateral";
 import BarraLateralProjetos from "../BarraLateralProjetos";
 import NavbarProjetos from "../NavbarProjetos";
 import ModalProjetos from "../ModalProjetos";
+import { useNavigate } from "react-router";
 
 const BottomNavbar = () => (
   <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-indigo-950 shadow-lg z-30">
@@ -40,9 +41,11 @@ export default function LayoutPrincipal() {
   const handleOpenModal = () => setIsModalProjetosOpen(true);
   const handleCloseModal = () => setIsModalProjetosOpen(false);
 
+  const navigate = useNavigate();
+
   return (
     <div className="bg-slate-50 h-screen flex flex-col">
-      <NavbarPrincipal onToggleSidebar={toggleSidebar} />
+      <NavbarPrincipal onToggleSidebar={toggleSidebar} navigate={navigate} />
 
       <div className="flex flex-1 overflow-hidden">
         <div className="hidden lg:block">

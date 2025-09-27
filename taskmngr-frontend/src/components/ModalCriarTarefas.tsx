@@ -11,10 +11,21 @@ type ModalState = {
     tar_titulo: string;
     tar_status: string;
     tar_descricao: string;
+    usu_id: string;
     usu_nome: string;
     tar_prioridade: Tarefa[`tar_prioridade`];
     tar_prazo: string;
     tar_anexo: File | null;
+    usuarios: Usuario[];
+};
+
+type Usuario = {
+    usu_id: string;
+    usu_nome: string;
+    usu_email?: string;
+    usu_caminhoFoto?: string;
+    usu_dataCriacao?: string;
+    usu_dataAtualizacao?: string;
 };
 
 export default class ModalCriarTarefas extends React.Component<ModalProps> {
@@ -22,11 +33,20 @@ export default class ModalCriarTarefas extends React.Component<ModalProps> {
         tar_titulo: '',
         tar_status: 'Pendente',
         tar_descricao: '',
+        usu_id: '',
         usu_nome: 'Selecione um membro',
         tar_prioridade: 'Alta',
         tar_prazo: '',
-        tar_anexo: null
+        tar_anexo: null,
+        usuarios: []
     };
+
+    componentDidMount() {
+        fetch("http://localhost:8080/usuario/listar")
+            .then(res => res.json())
+            .then(data => this.setState({ usuarios: data }))
+            .catch(err => console.error("Erro ao buscar usuários:", err));
+    }
 
     handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -49,6 +69,7 @@ export default class ModalCriarTarefas extends React.Component<ModalProps> {
             tar_titulo,
             tar_status,
             tar_descricao,
+            usu_id: this.state.usu_id,
             usu_nome,
             tar_prioridade,
             tar_prazo,
@@ -88,7 +109,7 @@ export default class ModalCriarTarefas extends React.Component<ModalProps> {
         return (
             <ModalContext.Consumer>
                 {context => {
-                    
+
                     if (!context) {
                         console.error("Erro: Formulário de Criação de tarefa deve ser usado dentro de um ModalProvider");
                         return null;
@@ -194,15 +215,26 @@ export default class ModalCriarTarefas extends React.Component<ModalProps> {
                                                         <label className="block text-sm font-medium text-gray-700">Responsável</label>
                                                         <select
                                                             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
-                                                            name="usu_nome"
-                                                            value={this.state.usu_nome}
-                                                            onChange={this.handleChange}
+                                                            name="usu_id"
+                                                            value={this.state.usu_id}
+                                                            onChange={
+                                                            (e) => {
+                                                                const usu_id = e.target.value;
+                                                                const usuario = this.state.usuarios.find(u => u.usu_id === usu_id);
+                                                                if (usuario) {
+                                                                    this.setState ({
+                                                                        usu_id: usuario.usu_id,
+                                                                        usu_nome: usuario.usu_nome
+                                                                    });
+                                                                }
+                                                            }}
                                                         >
-                                                            <option>Selecione um membro</option>
-                                                            <option>Matheus</option>
-                                                            <option>Ana Júlia</option>
-                                                            <option>Gabriel</option>
-                                                            <option>Ana Beatriz</option>
+                                                            <option value="">Selecione um membro</option>
+                                                            {this.state.usuarios.map(usuario => (
+                                                                <option key={usuario.usu_id} value={usuario.usu_id}>
+                                                                    {usuario.usu_nome}
+                                                                </option>
+                                                            ))}
                                                         </select>
                                                     </div>
 
