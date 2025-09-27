@@ -1,5 +1,7 @@
 package com.taskmanager.taskmngr_backend.model;
 
+import java.util.List;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -13,7 +15,7 @@ public class TarefaModel {
     private String tar_prazo;
     private String tar_status;
     private String tar_prioridade;
-    private String tar_anexo;
+    private List<AnexoTarefaModel> tar_anexos;
     private String tar_dataCriacao;
     private String tar_dataAtualizacao;
     private String usu_id;
@@ -39,8 +41,8 @@ public class TarefaModel {
     public String getTar_prioridade() {return tar_prioridade;}
     public void setTar_prioridade(String tar_prioridade) {this.tar_prioridade = tar_prioridade;}
 
-    public String getTar_anexo() {return tar_anexo;}
-    public void setTar_anexo(String tar_anexo) {this.tar_anexo = tar_anexo;}
+    public List<AnexoTarefaModel> getTar_anexos() {return tar_anexos;}
+    public void setTar_anexos(List<AnexoTarefaModel> tar_anexos) {this.tar_anexos = tar_anexos;}
 
     public String getTar_dataCriacao() {return tar_dataCriacao;}
     public void setTar_dataCriacao(String tar_dataCriacao) {this.tar_dataCriacao = tar_dataCriacao;}

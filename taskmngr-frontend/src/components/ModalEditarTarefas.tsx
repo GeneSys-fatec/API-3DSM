@@ -1,6 +1,31 @@
 import React from 'react';
 import { ModalContext } from '../context/ModalContext';
 
+
+const getFileIcon = (mimeType: string) => {
+    if (mimeType.includes('image')) {
+        return <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4.586-4.586a2 2 0 012.828 0L16 15zm-2-6a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>;
+    }
+    if (mimeType.includes('pdf')) {
+        return <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor"><path d="M5.5 13a1.5 1.5 0 01-1.5-1.5v-2a1.5 1.5 0 013 0v2a1.5 1.5 0 01-1.5 1.5zm1.336-.5a2.5 2.5 0 10-3.356 3.356l1.242 1.242a.25.25 0 00.354 0l1.242-1.242A2.5 2.5 0 006.836 12.5zm.707-8.707a1 1 0 00-1.414 0L3.5 6.5l1.414 1.414L6 6.414V11a1 1 0 102 0V6.414l1.086 1.086 1.414-1.414-2.828-2.828z" /></svg>;
+    }
+    if (mimeType.includes('document') || mimeType.includes('word')) {
+        return <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 2a1 1 0 00-1 1v1a1 1 0 001 1h8a1 1 0 001-1V7a1 1 0 00-1-1H6zm-1 5a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H6z" clipRule="evenodd" /></svg>;
+    }
+    if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) {
+        return <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 2a1 1 0 00-1 1v1a1 1 0 001 1h8a1 1 0 001-1V7a1 1 0 00-1-1H6zm-1 5a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H6z" clipRule="evenodd" /></svg>;
+    }
+    return <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 2a1 1 0 00-1 1v1h2V3a1 1 0 00-1-1zm-4 4a1 1 0 000 2h8a1 1 0 100-2H6zm-1 4a1 1 0 112 0 1 1 0 01-2 0zm5 0a1 1 0 112 0 1 1 0 01-2 0zm5 0a1 1 0 112 0 1 1 0 01-2 0zM4 14a1 1 0 00-1 1v1a1 1 0 001 1h12a1 1 0 001-1v-1a1 1 0 00-1-1H4z" clipRule="evenodd" /></svg>;
+};
+
+const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
 type ModalProps = {
     tarefa: Tarefa;
     onSave: (tarefaAtualizada: Tarefa) => void;
@@ -13,7 +38,7 @@ type Tarefa = {
     usu_id: string;
     usu_nome: string;
     tar_prazo: string;
-    tar_prioridade: "Alta" | "Média" | "Baixa" ;
+    tar_prioridade: "Alta" | "Média" | "Baixa";
     tar_descricao: string;
     tar_anexo?: File | null;
 };
@@ -27,10 +52,21 @@ type Usuario = {
     usu_dataAtualizacao?: string;
 };
 
+type Anexo = {
+    arquivoNome: string;
+    arquivoCaminho: string;
+    arquivoTipo: string;
+    arquivoTamanho?: number;
+};
+
 type ModalState = {
     tarefaEmEdicao: Tarefa;
     novoComentario: string;
     usuarios: Usuario[];
+    anexosExistentes: Anexo[];
+    novosAnexos: File[];
+    isLoadingAnexos?: boolean;
+    isSaving?: boolean;
 };
 
 
@@ -41,21 +77,46 @@ export default class ModalEditarTarefas extends React.Component<ModalProps, Moda
         this.state = {
             tarefaEmEdicao: { ...props.tarefa },
             novoComentario: '',
-            usuarios: []
+            usuarios: [],
+            anexosExistentes: [],
+            novosAnexos: [],
+            isLoadingAnexos: false,
+            isSaving: false,
         };
+
     }
 
-    componentDidUpdate(prevProps: ModalProps) {
-        if (this.props.tarefa.tar_id !== prevProps.tarefa.tar_id) {
-            this.setState({ tarefaEmEdicao: { ...this.props.tarefa } });
+    async fetchAnexos(tarId: string) {
+        if (!tarId) return;
+        this.setState({ isLoadingAnexos: true });
+        try {
+            const res = await fetch(`http://localhost:8080/tarefa/${tarId}/anexos`);
+            if (!res.ok) throw new Error('Erro ao buscar anexos');
+            const data = await res.json();
+            this.setState({ anexosExistentes: data || [] });
+        } catch (err) {
+            console.error('fetchAnexos:', err);
+        } finally {
+            this.setState({ isLoadingAnexos: false });
         }
     }
 
     componentDidMount() {
+        if (this.props.tarefa?.tar_id) {
+            this.fetchAnexos(this.props.tarefa.tar_id);
+        }
         fetch("http://localhost:8080/usuario/listar")
-        .then(res => res.json())
-        .then(data => this.setState({ usuarios: data }))
-        .catch(err => console.error("Erro ao buscar usuários:", err));
+            .then(res => res.json())
+            .then(data => this.setState({ usuarios: data }))
+            .catch(err => console.error("Erro ao buscar usuários:", err));
+    }
+
+    componentDidUpdate(prevProps: ModalProps) {
+        if (this.props.tarefa.tar_id !== prevProps.tarefa.tar_id) {
+            this.setState({ tarefaEmEdicao: { ...this.props.tarefa } }, () => {
+                this.fetchAnexos(this.props.tarefa.tar_id);
+            });
+        }
     }
 
     handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -69,23 +130,87 @@ export default class ModalEditarTarefas extends React.Component<ModalProps, Moda
     };
 
     handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            this.setState(prevState => ({
-                tarefaEmEdicao: {
-                    ...prevState.tarefaEmEdicao,
-                    anexo: file,
-                },
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+        this.setState(prev => ({
+            novosAnexos: [...prev.novosAnexos, ...files]
+        }));
+        e.target.value = '';
+    };
+
+    handleRemoveNovoAnexo = (fileToRemove: File) => {
+        this.setState(prev => ({
+            novosAnexos: prev.novosAnexos.filter(f => f !== fileToRemove)
+        }));
+    };
+
+    handleRemoverAnexoExistente = async (nomeArquivo: string) => {
+        const tarId = this.state.tarefaEmEdicao.tar_id;
+        if (!tarId) return;
+        if (!window.confirm(`Remover anexo "${nomeArquivo}"?`)) return;
+        try {
+            const res = await fetch(`http://localhost:8080/tarefa/${tarId}/anexos/${encodeURIComponent(nomeArquivo)}`, {
+                method: 'DELETE'
+            });
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(text || 'Erro ao remover anexo');
+            }
+            this.setState(prev => ({
+                anexosExistentes: prev.anexosExistentes.filter(a => a.arquivoNome !== nomeArquivo)
             }));
+        } catch (err) {
+            console.error('Erro remover anexo existente:', err);
+            alert('Erro ao remover anexo');
         }
     };
 
-    handleSave = (e: React.FormEvent, closeModal: () => void) => {
+
+
+    handleSave = async (e: React.FormEvent, closeModal: () => void) => {
         e.preventDefault();
-        console.log("Tarefa enviada:", this.state.tarefaEmEdicao);
-        this.props.onSave(this.state.tarefaEmEdicao);
-        closeModal();
+        const { tarefaEmEdicao, novosAnexos } = this.state;
+        const tarId = tarefaEmEdicao.tar_id;
+        if (!tarId) {
+            alert('Tarefa sem id');
+            return;
+        }
+
+        this.setState({ isSaving: true });
+        try {
+            const putRes = await fetch(`http://localhost:8080/tarefa/atualizar/${tarId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(tarefaEmEdicao)
+            });
+            if (!putRes.ok) {
+                const text = await putRes.text();
+                throw new Error(text || 'Erro ao atualizar tarefa');
+            }
+
+            for (const arquivo of novosAnexos) {
+                const formData = new FormData();
+                formData.append('file', arquivo);
+                const uploadRes = await fetch(`http://localhost:8080/tarefa/${tarId}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!uploadRes.ok) {
+                    console.error('Falha no upload do arquivo', arquivo.name);
+                }
+            }
+            await this.fetchAnexos(tarId);
+            this.props.onSave(tarefaEmEdicao);
+            this.setState({ novosAnexos: [] });
+            closeModal();
+        } catch (err) {
+            console.error('Erro ao salvar:', err);
+            alert('Erro ao salvar tarefa. Veja console.');
+        } finally {
+            this.setState({ isSaving: false });
+        }
     };
+
 
     handleCommentSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -156,6 +281,48 @@ export default class ModalEditarTarefas extends React.Component<ModalProps, Moda
                                                     </label>
                                                 </div>
                                             </div>
+                                            {/* ANEXOS EXISTENTES */}
+                                            {this.state.anexosExistentes.length > 0 && (
+                                                <div className="mt-4 p-3 border rounded-md bg-gray-50">
+                                                    <h4 className="font-semibold text-sm mb-2">Anexos existentes</h4>
+                                                    <ul className="space-y-2">
+                                                        {this.state.anexosExistentes.map((anexo) => (
+                                                            <li key={anexo.arquivoNome} className="flex items-center justify-between">
+                                                                <div className="flex items-center gap-2 truncate">
+                                                                    {getFileIcon(anexo.arquivoTipo || '')}
+                                                                    <a href={`http://localhost:8080/tarefa/${this.state.tarefaEmEdicao.tar_id}/anexos/${encodeURIComponent(anexo.arquivoNome)}`}
+                                                                        target="_blank" rel="noopener noreferrer" className="truncate">
+                                                                        {anexo.arquivoNome}
+                                                                    </a>
+                                                                    {anexo.arquivoTamanho && <span className="text-xs text-gray-400">({formatFileSize(anexo.arquivoTamanho)})</span>}
+                                                                </div>
+                                                                <button type="button" onClick={() => this.handleRemoverAnexoExistente(anexo.arquivoNome)}
+                                                                    className="text-red-500">&times;</button>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+
+                                            {/* ANEXOS NOVOS */}
+                                            {this.state.novosAnexos.length > 0 && (
+                                                <div className="mt-4 p-3 border rounded-md bg-gray-50">
+                                                    <h4 className="font-semibold text-sm mb-2">Anexos para enviar ({this.state.novosAnexos.length})</h4>
+                                                    <ul className="space-y-2">
+                                                        {this.state.novosAnexos.map((file, idx) => (
+                                                            <li key={idx} className="flex items-center justify-between">
+                                                                <div className="flex items-center gap-2 truncate">
+                                                                    {getFileIcon(file.type)}
+                                                                    <span title={file.name} className="truncate">{file.name}</span>
+                                                                    <span className="text-xs text-gray-400">({formatFileSize(file.size)})</span>
+                                                                </div>
+                                                                <button type="button" onClick={() => this.handleRemoveNovoAnexo(file)} className="text-red-500">&times;</button>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+
                                             <div>
                                                 <label htmlFor="descricao" className="block text-sm font-medium text-gray-700">Descrição</label>
                                                 <textarea

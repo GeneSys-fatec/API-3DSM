@@ -2,8 +2,32 @@ import React from 'react';
 import type { Tarefa } from '../pages/Home';
 import { ModalContext } from '../context/ModalContext';
 
+const getFileIcon = (mimeType: string) => {
+    if (mimeType.includes('image')) {
+        return <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4.586-4.586a2 2 0 012.828 0L16 15zm-2-6a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>;
+    }
+    if (mimeType.includes('pdf')) {
+        return <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor"><path d="M5.5 13a1.5 1.5 0 01-1.5-1.5v-2a1.5 1.5 0 013 0v2a1.5 1.5 0 01-1.5 1.5zm1.336-.5a2.5 2.5 0 10-3.356 3.356l1.242 1.242a.25.25 0 00.354 0l1.242-1.242A2.5 2.5 0 006.836 12.5zm.707-8.707a1 1 0 00-1.414 0L3.5 6.5l1.414 1.414L6 6.414V11a1 1 0 102 0V6.414l1.086 1.086 1.414-1.414-2.828-2.828z" /></svg>;
+    }
+    if (mimeType.includes('document') || mimeType.includes('word')) {
+        return <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 2a1 1 0 00-1 1v1a1 1 0 001 1h8a1 1 0 001-1V7a1 1 0 00-1-1H6zm-1 5a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H6z" clipRule="evenodd" /></svg>;
+    }
+    if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) {
+        return <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 2a1 1 0 00-1 1v1a1 1 0 001 1h8a1 1 0 001-1V7a1 1 0 00-1-1H6zm-1 5a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H6z" clipRule="evenodd" /></svg>;
+    }
+    return <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 2a1 1 0 00-1 1v1h2V3a1 1 0 00-1-1zm-4 4a1 1 0 000 2h8a1 1 0 100-2H6zm-1 4a1 1 0 112 0 1 1 0 01-2 0zm5 0a1 1 0 112 0 1 1 0 01-2 0zm5 0a1 1 0 112 0 1 1 0 01-2 0zM4 14a1 1 0 00-1 1v1a1 1 0 001 1h12a1 1 0 001-1v-1a1 1 0 00-1-1H4z" clipRule="evenodd" /></svg>;
+};
+
+const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
 type ModalProps = {
-    onAdicionarTarefa: (tarefa: Omit<Tarefa, 'tar_id'>) => void;
+    onAdicionarTarefa: (tarefa: Omit<Tarefa, 'tar_id'> & { anexos: File[] }) => void;
     statusInicial: string;
 };
 
@@ -15,7 +39,7 @@ type ModalState = {
     usu_nome: string;
     tar_prioridade: Tarefa[`tar_prioridade`];
     tar_prazo: string;
-    tar_anexo: File | null;
+    tar_anexos: File[];
     usuarios: Usuario[];
 };
 
@@ -28,7 +52,7 @@ type Usuario = {
     usu_dataAtualizacao?: string;
 };
 
-export default class ModalCriarTarefas extends React.Component<ModalProps> {
+export default class ModalCriarTarefas extends React.Component<ModalProps, ModalState> {
     state: ModalState = {
         tar_titulo: '',
         tar_status: 'Pendente',
@@ -37,7 +61,7 @@ export default class ModalCriarTarefas extends React.Component<ModalProps> {
         usu_nome: 'Selecione um membro',
         tar_prioridade: 'Alta',
         tar_prazo: '',
-        tar_anexo: null,
+        tar_anexos: [],
         usuarios: []
     };
 
@@ -52,18 +76,44 @@ export default class ModalCriarTarefas extends React.Component<ModalProps> {
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) => {
         const { name, value } = e.target;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.setState({ [name]: value } as any);
     };
 
     handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        this.setState({ anexo: e.target.files ? e.target.files[0] : null });
+        const files = Array.from(e.target.files || []);
+
+        this.setState(prevState => ({
+            tar_anexos: [...prevState.tar_anexos, ...files]
+        }));
+
+        e.target.value = '';
     };
 
-    handleSubmit = (e: React.FormEvent, closeModal: () => void) => {
-        e.preventDefault();
+    handleRemoveAnexo = (fileToRemove: File) => {
+        this.setState(prevState => ({
+            tar_anexos: prevState.tar_anexos.filter(file => file !== fileToRemove)
+        }));
+    };
 
-        const { tar_titulo, tar_status, tar_descricao, usu_nome, tar_prioridade, tar_prazo, tar_anexo } = this.state;
+    handleSubmit = async (e: React.FormEvent, closeModal: () => void) => {
+        e.preventDefault();
+        const { tar_titulo, tar_status, tar_descricao, usu_nome, tar_prioridade, tar_prazo, tar_anexos } = this.state;
+
+        try {
+            const response = await fetch("http://localhost:8080/tarefa/cadastrar", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    tar_titulo: tar_titulo,
+                    tar_descricao: tar_descricao,
+                    tar_status: tar_status,
+                    tar_prioridade: tar_prioridade,
+                    tar_prazo: tar_prazo,
+                    usu_nome: usu_nome,
+                })
+            });
 
         const novaTarefa = {
             tar_titulo,
@@ -73,11 +123,48 @@ export default class ModalCriarTarefas extends React.Component<ModalProps> {
             usu_nome,
             tar_prioridade,
             tar_prazo,
-            tar_anexo
+            tar_anexos
         };
+            if (!response.ok) {
+                throw new Error("Erro ao criar tarefa");
+            }
 
-        this.props.onAdicionarTarefa(novaTarefa);
+            const tarefaCriada = await response.json();
+            this.props.onAdicionarTarefa(tarefaCriada);
+            const tar_id = tarefaCriada.tar_id;
 
+            for (const arquivo of tar_anexos) {
+                const formData = new FormData();
+                formData.append("file", arquivo);
+
+                const uploadRes = await fetch(`http://localhost:8080/tarefa/${tar_id}/upload`, {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!uploadRes.ok) {
+                    console.error(`Falha no upload do arquivo ${arquivo.name}`);
+                }
+            }
+
+            this.setState({
+                tar_titulo: '',
+                tar_status: 'Pendente',
+                tar_descricao: '',
+                usu_nome: 'Selecione um membro',
+                tar_prazo: 'Alta',
+                tar_anexos: []
+            });
+
+            closeModal();
+
+        } catch (err) {
+            console.error(err);
+            alert("Ocorreu um erro ao criar a tarefa");
+        }
+    };
+
+    handleCancel = (closeModal: () => void) => {
         this.setState({
             tar_titulo: '',
             tar_status: 'Pendente',
@@ -85,27 +172,15 @@ export default class ModalCriarTarefas extends React.Component<ModalProps> {
             usu_nome: 'Selecione um membro',
             tar_prioridade: 'Alta',
             tar_prazo: '',
-            tar_anexo: null
-        });
-
-        closeModal();
-    };
-
-    handleCancel = (closeModal: () => void) => {
-        this.setState({
-            titulo: '',
-            status: 'Pendente',
-            descricao: '',
-            responsavel: 'Selecione um membro',
-            prioridade: 'Alta',
-            entrega: '',
-            anexo: null
+            tar_anexos: []
         });
         closeModal();
     };
 
 
     render() {
+        const { tar_anexos } = this.state;
+
         return (
             <ModalContext.Consumer>
                 {context => {
@@ -147,8 +222,8 @@ export default class ModalCriarTarefas extends React.Component<ModalProps> {
                                                 />
                                             </div>
 
-                                            <div className="flex items-center gap-4">
-                                                <div>
+                                             <div className="flex items-center gap-4">
+                                                {/*<div>
                                                     <select
                                                         id="tar_status"
                                                         name="tar_status"
@@ -160,7 +235,7 @@ export default class ModalCriarTarefas extends React.Component<ModalProps> {
                                                         <option>Em Desenvolvimento</option>
                                                         <option>Concluída</option>
                                                     </select>
-                                                </div>
+                                                </div> */}
 
                                                 <div>
                                                     <label
@@ -181,17 +256,44 @@ export default class ModalCriarTarefas extends React.Component<ModalProps> {
                                                                 d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
                                                             />
                                                         </svg>
-                                                        <span>Anexo</span>
+                                                        <span>Anexar Arquivos ({tar_anexos.length})</span>
                                                         <input
                                                             id="file-upload"
                                                             name="anexo"
                                                             type="file"
                                                             className="sr-only"
                                                             onChange={this.handleFileChange}
+                                                            accept=".pdf, .docx, .xlsx, image/png, image/jpeg, image/gif"
                                                         />
                                                     </label>
                                                 </div>
                                             </div>
+
+                                            {tar_anexos.length > 0 && (
+                                                <div className="mt-2 p-4 border border-dashed border-gray-300 rounded-md bg-gray-50 max-h-40 overflow-y-auto">
+                                                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Anexos Selecionados ({tar_anexos.length}):</h4>
+                                                    <ul className="space-y-2">
+                                                        {tar_anexos.map((file, index) => (
+                                                            <li key={index} className="flex items-center justify-between text-sm text-gray-600">
+                                                                <div className="flex items-center gap-2 truncate pr-2">
+                                                                    {getFileIcon(file.type)}
+                                                                    <span className="truncate" title={file.name}>{file.name}</span>
+                                                                    <span className="text-xs text-gray-400">({formatFileSize(file.size)})</span>
+                                                                </div>
+
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => this.handleRemoveAnexo(file)}
+                                                                    className="text-red-500 hover:text-red-700 ml-2 flex-shrink-0"
+                                                                    title="Remover anexo"
+                                                                >
+                                                                    &times;
+                                                                </button>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
 
                                             <div>
                                                 <label htmlFor="descricao" className="block text-sm font-medium text-gray-700">
