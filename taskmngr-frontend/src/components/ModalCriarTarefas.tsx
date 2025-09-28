@@ -2,7 +2,6 @@ import React from 'react';
 import type { Tarefa } from '../pages/Home';
 import { ModalContext } from '../context/ModalContext';
 import { toast } from 'react-toastify';
-import { authFetch } from '../utils/api'
 
 const getFileIcon = (mimeType: string) => {
     if (mimeType.includes('image')) {
@@ -123,8 +122,8 @@ export default class ModalCriarTarefas extends React.Component<ModalProps, Modal
 
             if (!response.ok) {
                 const errorMsg = await response.text();
-                    const errorJson = JSON.parse(errorMsg);
-                    toast.error(errorJson.mensagem || errorMsg); // agora mostra apenas a mensagem
+                const errorJson = JSON.parse(errorMsg);
+                toast.error(errorJson.mensagem || errorMsg);
                 return;
             }
 
@@ -221,22 +220,7 @@ export default class ModalCriarTarefas extends React.Component<ModalProps, Modal
                                                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
                                                 />
                                             </div>
-
                                             <div className="flex items-center gap-4">
-                                                {/*<div>
-                                                    <select
-                                                        id="tar_status"
-                                                        name="tar_status"
-                                                        value={this.state.tar_status}
-                                                        onChange={this.handleChange}
-                                                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
-                                                    >
-                                                        <option>Pendente</option>
-                                                        <option>Em Desenvolvimento</option>
-                                                        <option>Concluída</option>
-                                                    </select>
-                                                </div> */}
-
                                                 <div>
                                                     <label
                                                         htmlFor="file-upload"

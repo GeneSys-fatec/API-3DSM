@@ -72,7 +72,6 @@ public class ProjetoController {
         return ResponseEntity.ok(dtos);
     }
 
-    // ... dentro da classe ProjetoController
 
     @PostMapping("/cadastrar")
     public ResponseEntity<String> cadastrarProjeto(

@@ -198,7 +198,7 @@ public class TarefaController {
 
     @PutMapping("/atualizar/{tar_id}")
     public ResponseEntity<String> atualizarTarefa(@PathVariable String tar_id, @RequestBody TarefaDTO dto,
-            @AuthenticationPrincipal UsuarioModel usuarioLogado) { // Adicionado o usuarioLogado
+            @AuthenticationPrincipal UsuarioModel usuarioLogado) {
         if (dto.getTar_titulo() == null || dto.getTar_titulo().isBlank() ||
                 dto.getTar_descricao() == null || dto.getTar_descricao().isBlank() ||
                 dto.getTar_prazo() == null || dto.getTar_prazo().isBlank()) {
@@ -217,7 +217,6 @@ public class TarefaController {
             t.setTar_dataCriacao(dto.getTar_dataCriacao());
             t.setTar_dataAtualizacao(dto.getTar_dataAtualizacao());
 
-            // AJUSTADO: Usar o usuário logado em vez do que vem do frontend
             t.setUsu_id(dto.getUsu_id());
             t.setUsu_nome(dto.getUsu_nome());
 

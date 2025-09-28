@@ -31,10 +31,10 @@ class FormularioCadastro extends React.Component<CadastroProps, CadastroState> {
  
         this.setState(prev => ({
             ...prev,
-            [name]: value, // Atualiza o valor do input.
+            [name]: value,
             erros: {
                 ...prev.erros,
-                [name]: "" // Limpa o erro do campo quando o usuário digita.
+                [name]: "" 
             }
         }));
     };

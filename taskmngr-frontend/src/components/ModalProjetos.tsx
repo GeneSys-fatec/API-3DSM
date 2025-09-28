@@ -60,46 +60,46 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
     }));
   };
 
-adicionarProjeto = async () => {
-  try {
-    const response = await authFetch("http://localhost:8080/projeto/cadastrar", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        proj_nome: this.state.projectName,
-        proj_descricao: this.state.description,
-        proj_status: "Ativo",
-        proj_dataCriacao: new Date().toISOString().slice(0, 10),
-        proj_dataAtualizacao: new Date().toISOString().slice(0, 10),
-        equ_id: "1",
-        equ_nome: this.state.team,
-      }),
-    });
+  adicionarProjeto = async () => {
+    try {
+      const response = await authFetch("http://localhost:8080/projeto/cadastrar", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          proj_nome: this.state.projectName,
+          proj_descricao: this.state.description,
+          proj_status: "Ativo",
+          proj_dataCriacao: new Date().toISOString().slice(0, 10),
+          proj_dataAtualizacao: new Date().toISOString().slice(0, 10),
+          equ_id: "1",
+          equ_nome: this.state.team,
+        }),
+      });
 
-    const data = await response.text(); 
+      const data = await response.text();
 
-    if (response.ok) {
-      toast.success(data);
-    } else {
-      toast.error(data);
+      if (response.ok) {
+        toast.success(data);
+      } else {
+        toast.error(data);
+      }
+      window.dispatchEvent(new CustomEvent('projeto:created'));
+
+
+      this.setState({
+        projectName: '',
+        description: '',
+        team: 'Selecione a equipe',
+      });
+      this.props.onClose();
+
+    } catch (error) {
+      toast.error('Não foi possível adicionar o projeto.');
+      console.error("Erro:", error);
     }
-    window.dispatchEvent(new CustomEvent('projeto:created'));
-
-
-    this.setState({
-      projectName: '',
-      description: '',
-      team: 'Selecione a equipe',
-    });
-    this.props.onClose();
-
-  } catch (error) {
-    toast.error('Não foi possível adicionar o projeto.');
-    console.error("Erro:", error);
-  }
-};
+  };
 
 
   handleSubmit = async (event: React.FormEvent) => {
@@ -162,39 +162,7 @@ adicionarProjeto = async () => {
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
               ></textarea>
             </div>
-
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Datas</label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input
-                  type="date"
-                  aria-label="Data Inicio"
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 text-gray-500"
-                />
-                <input
-                  type="date" 
-                  aria-label="Data Entrega"
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 text-gray-500"
-                />
-              </div>
-            </div> */}
-
-            {/* <div>
-              <label htmlFor="team" className="block text-sm font-medium text-gray-700 mb-1">Equipe</label>
-              <select
-                id="team"
-                name="team"
-                value={this.state.team}
-                onChange={this.handleChange}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
-              >
-                <option>Selecione a equipe</option>
-                <option>GSW</option>
-                <option>GeneSys</option>
-                <option>Fatec</option>
-              </select>
-            </div> */}
-
+            
             <div className="flex justify-center mt-6">
               <button
                 type="submit"

@@ -196,7 +196,6 @@ export default class ModalEditarTarefas extends React.Component<ModalProps, Moda
                 return; 
             }
 
-            // upload dos novos anexos
             for (const arquivo of novosAnexos) {
                 const formData = new FormData();
                 formData.append("file", arquivo);

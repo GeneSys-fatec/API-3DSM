@@ -5,14 +5,14 @@ type Projeto = {
   id: string;
   nome: string;
   descricao?: string;
-  dataCriacao?: string; 
+  dataCriacao?: string;
 };
 
 type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  projeto: Projeto; 
-  onSaved?: (projeto: Projeto) => void; 
+  projeto: Projeto;
+  onSaved?: (projeto: Projeto) => void;
 };
 
 type ModalState = {
@@ -184,33 +184,6 @@ export default class ModalEditarProjetos extends React.Component<ModalProps, Mod
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
               ></textarea>
             </div>
-
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Datas</label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Data de Criação</label>
-                  <input
-                    type="date"
-                    name="dataCriacao"
-                    value={this.state.dataCriacao}
-                    onChange={this.handleChange}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 text-gray-700"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Data de Atualização</label>
-                  <input
-                    type="date"
-                    name="dataAtualizacao"
-                    value={this.state.dataAtualizacao}
-                    onChange={this.handleChange}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 text-gray-700"
-                  />
-                </div>
-              </div>
-            </div> */}
-
             <div className="flex justify-center mt-6 gap-3">
               <button
                 type="button"
