@@ -10,21 +10,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal; 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.InvalidTaskDataException;
 import com.taskmanager.taskmngr_backend.model.AdicionadorLinkTarefa;
 import com.taskmanager.taskmngr_backend.model.AnexoTarefaModel;
-import com.taskmanager.taskmngr_backend.model.ProjetoModel; 
+import com.taskmanager.taskmngr_backend.model.ProjetoModel;
 import com.taskmanager.taskmngr_backend.model.TarefaModel;
-import com.taskmanager.taskmngr_backend.model.UsuarioModel; 
+import com.taskmanager.taskmngr_backend.model.UsuarioModel;
 import com.taskmanager.taskmngr_backend.model.dto.TarefaDTO;
-import com.taskmanager.taskmngr_backend.service.ProjetoService; 
+import com.taskmanager.taskmngr_backend.service.ProjetoService;
 import com.taskmanager.taskmngr_backend.service.TarefaConverterService;
 import com.taskmanager.taskmngr_backend.service.TarefaService;
-
 
 @RestController
 @RequestMapping("/tarefa")
@@ -89,18 +88,15 @@ public class TarefaController {
     }
 
     @PostMapping("/cadastrar")
-    public ResponseEntity<?> cadastrarTarefa(@RequestBody TarefaDTO dto, @AuthenticationPrincipal UsuarioModel usuarioLogado) {
-        if (dto.getTar_titulo() == null || dto.getTar_titulo().trim().isEmpty()) {
-            throw new InvalidTaskDataException("Dados da tarefa inválidos", "Título é obrigatório");
-        }
-        if (dto.getTar_descricao() == null || dto.getTar_descricao().trim().isEmpty()) {
-            throw new InvalidTaskDataException("Dados da tarefa inválidos", "Descrição é obrigatória");
-        }
-        if (dto.getTar_status() == null || dto.getTar_status().trim().isEmpty()) {
-            throw new InvalidTaskDataException("Dados da tarefa inválidos", "Status é obrigatório");
-        }
-        if (dto.getTar_prioridade() == null || dto.getTar_prioridade().trim().isEmpty()) {
-            throw new InvalidTaskDataException("Dados da tarefa inválidos", "Prioridade é obrigatória");
+    public ResponseEntity<?> cadastrarTarefa(@RequestBody TarefaDTO dto,
+            @AuthenticationPrincipal UsuarioModel usuarioLogado) {
+
+        if (dto.getTar_titulo() == null || dto.getTar_titulo().isBlank() ||
+                dto.getTar_descricao() == null || dto.getTar_descricao().isBlank() ||
+                dto.getTar_prazo() == null || dto.getTar_prazo().isBlank()) {
+
+            throw new InvalidTaskDataException("Erro ao cadastrar tarefa",
+                    "Título, descrição e data são obrigatórios.");
         }
         TarefaModel tarefa = tarefaConverterService.dtoParaModel(dto);
         if (usuarioLogado != null) {
@@ -116,7 +112,7 @@ public class TarefaController {
     public ResponseEntity<?> uploadAnexo(@PathVariable String tar_id, @RequestParam("file") MultipartFile file) {
         try {
             AnexoTarefaModel anexo = tarefaService.adicionarAnexo(tar_id, file);
-            return ResponseEntity.ok(anexo); 
+            return ResponseEntity.ok(anexo);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Erro no upload: " + e.getMessage());
         } catch (Exception e) {
@@ -151,9 +147,9 @@ public class TarefaController {
             Resource resource = new UrlResource(path.toUri());
 
             return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=\"" + anexo.getArquivoNome() + "\"")
-                .header("Content-Type", anexo.getArquivoTipo())
-                .body(resource);
+                    .header("Content-Disposition", "attachment; filename=\"" + anexo.getArquivoNome() + "\"")
+                    .header("Content-Type", anexo.getArquivoTipo())
+                    .body(resource);
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao carregar o arquivo");
@@ -201,12 +197,14 @@ public class TarefaController {
     }
 
     @PutMapping("/atualizar/{tar_id}")
-    public ResponseEntity<String> atualizarTarefa(@PathVariable String tar_id, @RequestBody TarefaDTO dto, @AuthenticationPrincipal UsuarioModel usuarioLogado) { // Adicionado o usuarioLogado
-        if (dto.getTar_titulo() == null || dto.getTar_titulo().trim().isEmpty()) {
-            throw new InvalidTaskDataException("Dados da tarefa inválidos", "Título é obrigatório");
-        }
-        if (dto.getTar_descricao() == null || dto.getTar_descricao().trim().isEmpty()) {
-            throw new InvalidTaskDataException("Dados da tarefa inválidos", "Descrição é obrigatória");
+    public ResponseEntity<String> atualizarTarefa(@PathVariable String tar_id, @RequestBody TarefaDTO dto,
+            @AuthenticationPrincipal UsuarioModel usuarioLogado) { // Adicionado o usuarioLogado
+        if (dto.getTar_titulo() == null || dto.getTar_titulo().isBlank() ||
+                dto.getTar_descricao() == null || dto.getTar_descricao().isBlank() ||
+                dto.getTar_prazo() == null || dto.getTar_prazo().isBlank()) {
+
+            throw new InvalidTaskDataException("Erro ao cadastrar tarefa",
+                    "Título, descrição e data são obrigatórios.");
         }
         Optional<TarefaModel> tarefaExistente = tarefaService.buscarPorId(tar_id);
         if (tarefaExistente.isPresent()) {
@@ -236,11 +234,10 @@ public class TarefaController {
     @DeleteMapping("/apagar/{tar_id}")
     public ResponseEntity<String> apagarTarefa(@PathVariable String tar_id) {
         Optional<TarefaModel> tarefaExistente = tarefaService.buscarPorId(tar_id);
-        if (tarefaExistente.isPresent()){
+        if (tarefaExistente.isPresent()) {
             tarefaService.deletar(tar_id);
             return ResponseEntity.ok("Tarefa apagada com sucesso");
-        }
-        else {
+        } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Tarefa não encontrada");
         }

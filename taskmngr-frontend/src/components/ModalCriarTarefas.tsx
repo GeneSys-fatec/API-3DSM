@@ -1,6 +1,8 @@
 import React from 'react';
 import type { Tarefa } from '../pages/Home';
 import { ModalContext } from '../context/ModalContext';
+import { toast } from 'react-toastify';
+import { authFetch } from '../utils/api'
 
 const getFileIcon = (mimeType: string) => {
     if (mimeType.includes('image')) {
@@ -97,70 +99,72 @@ export default class ModalCriarTarefas extends React.Component<ModalProps, Modal
     };
 
     handleSubmit = async (e: React.FormEvent, closeModal: () => void) => {
-    e.preventDefault();
-    const { tar_titulo, tar_status, tar_descricao, usu_nome, tar_prioridade, tar_prazo, tar_anexos } = this.state;
+        e.preventDefault();
+        const { tar_titulo, tar_descricao, tar_prazo, tar_status, usu_nome, tar_prioridade, tar_anexos } = this.state;
 
-    if (!this.props.selectedProjectId) {
-        alert("Ocorreu um erro: ID do projeto não encontrado.");
-        return;
-    }
-
-    try {
-        const response = await fetch("http://localhost:8080/tarefa/cadastrar", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                tar_titulo: tar_titulo,
-                tar_descricao: tar_descricao,
-                tar_status: tar_status,
-                tar_prioridade: tar_prioridade,
-                tar_prazo: tar_prazo,
-                usu_nome: usu_nome,
-                proj_id: this.props.selectedProjectId 
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error("Erro ao criar tarefa");
+        if (!this.props.selectedProjectId) {
+            toast.error("ID do projeto não encontrado.");
+            return;
         }
-
-        const tarefaCriada = await response.json();
-        const tar_id = tarefaCriada.tar_id;
-
-        for (const arquivo of tar_anexos) {
-            const formData = new FormData();
-            formData.append("file", arquivo);
-
-            const uploadRes = await fetch(`http://localhost:8080/tarefa/${tar_id}/upload`, {
+        try {
+            const response = await fetch("http://localhost:8080/tarefa/cadastrar", {
                 method: "POST",
-                body: formData
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    tar_titulo,
+                    tar_descricao,
+                    tar_status,
+                    tar_prioridade,
+                    tar_prazo,
+                    usu_nome,
+                    proj_id: this.props.selectedProjectId
+                })
             });
 
-            if (!uploadRes.ok) {
-                console.error(`Falha no upload do arquivo ${arquivo.name}`);
+            if (!response.ok) {
+                const errorMsg = await response.text();
+                    const errorJson = JSON.parse(errorMsg);
+                    toast.error(errorJson.mensagem || errorMsg); // agora mostra apenas a mensagem
+                return;
             }
+
+            const tarefaCriada = await response.json();
+            const tar_id = tarefaCriada.tar_id;
+
+            for (const arquivo of tar_anexos) {
+                const formData = new FormData();
+                formData.append("file", arquivo);
+
+                const uploadRes = await fetch(`http://localhost:8080/tarefa/${tar_id}/upload`, {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!uploadRes.ok) {
+                    console.error(`Falha no upload do arquivo ${arquivo.name}`);
+                }
+            }
+
+            this.setState({
+                tar_titulo: '',
+                tar_status: 'Pendente',
+                tar_descricao: '',
+                usu_nome: 'Selecione um membro',
+                tar_prioridade: 'Alta',
+                tar_prazo: '',
+                tar_anexos: []
+            });
+
+            toast.success("Tarefa criada com sucesso!");
+            this.props.onSuccess();
+            closeModal();
+
+        } catch (errorMsg) {
+            console.error(errorMsg);
+            toast.error("Erro ao criar a tarefa.");
         }
+    };
 
-        this.setState({
-            tar_titulo: '',
-            tar_status: 'Pendente',
-            tar_descricao: '',
-            usu_nome: 'Selecione um membro',
-            tar_prioridade: 'Alta',
-            tar_prazo: '',
-            tar_anexos: []
-        });
-
-        this.props.onSuccess();
-        closeModal();
-
-    } catch (err) {
-        console.error(err);
-        alert("Ocorreu um erro ao criar a tarefa");
-    }
-};
     handleCancel = (closeModal: () => void) => {
         this.setState({
             tar_titulo: '',
@@ -215,11 +219,10 @@ export default class ModalCriarTarefas extends React.Component<ModalProps, Modal
                                                     onChange={this.handleChange}
                                                     placeholder="Título da Tarefa"
                                                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
-                                                    required
                                                 />
                                             </div>
 
-                                             <div className="flex items-center gap-4">
+                                            <div className="flex items-center gap-4">
                                                 {/*<div>
                                                     <select
                                                         id="tar_status"
@@ -317,16 +320,16 @@ export default class ModalCriarTarefas extends React.Component<ModalProps, Modal
                                                             name="usu_id"
                                                             value={this.state.usu_id}
                                                             onChange={
-                                                            (e) => {
-                                                                const usu_id = e.target.value;
-                                                                const usuario = this.state.usuarios.find(u => u.usu_id === usu_id);
-                                                                if (usuario) {
-                                                                    this.setState ({
-                                                                        usu_id: usuario.usu_id,
-                                                                        usu_nome: usuario.usu_nome
-                                                                    });
-                                                                }
-                                                            }}
+                                                                (e) => {
+                                                                    const usu_id = e.target.value;
+                                                                    const usuario = this.state.usuarios.find(u => u.usu_id === usu_id);
+                                                                    if (usuario) {
+                                                                        this.setState({
+                                                                            usu_id: usuario.usu_id,
+                                                                            usu_nome: usuario.usu_nome
+                                                                        });
+                                                                    }
+                                                                }}
                                                         >
                                                             <option value="">Selecione um membro</option>
                                                             {this.state.usuarios.map(usuario => (
