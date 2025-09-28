@@ -1,5 +1,6 @@
 import React from 'react';
 import { ModalContext } from '../context/ModalContext';
+import { toast } from 'react-toastify';
 
 
 const getFileIcon = (mimeType: string) => {
@@ -172,40 +173,53 @@ export default class ModalEditarTarefas extends React.Component<ModalProps, Moda
         const { tarefaEmEdicao, novosAnexos } = this.state;
         const tarId = tarefaEmEdicao.tar_id;
         if (!tarId) {
-            alert('Tarefa sem id');
+            toast.error("Tarefa sem ID.");
             return;
         }
 
         this.setState({ isSaving: true });
         try {
             const putRes = await fetch(`http://localhost:8080/tarefa/atualizar/${tarId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(tarefaEmEdicao)
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(tarefaEmEdicao),
             });
+
             if (!putRes.ok) {
-                const text = await putRes.text();
-                throw new Error(text || 'Erro ao atualizar tarefa');
+                const errorMsg = await putRes.text();
+                try {
+                    const errorJson = JSON.parse(errorMsg);
+                    toast.error(errorJson.mensagem || errorMsg);
+                } catch {
+                    toast.error(errorMsg);
+                }
+                return; 
             }
 
             for (const arquivo of novosAnexos) {
                 const formData = new FormData();
-                formData.append('file', arquivo);
+                formData.append("file", arquivo);
+
                 const uploadRes = await fetch(`http://localhost:8080/tarefa/${tarId}/upload`, {
-                    method: 'POST',
-                    body: formData
+                    method: "POST",
+                    body: formData,
                 });
+
                 if (!uploadRes.ok) {
-                    console.error('Falha no upload do arquivo', arquivo.name);
+                    console.error("Falha no upload do arquivo", arquivo.name);
                 }
             }
+
             await this.fetchAnexos(tarId);
             this.props.onSave();
             this.setState({ novosAnexos: [] });
+
+            toast.success("Tarefa atualizada com sucesso!");
             closeModal();
+
         } catch (err) {
-            console.error('Erro ao salvar:', err);
-            alert('Erro ao salvar tarefa. Veja console.');
+            console.error("Erro ao salvar:", err);
+            toast.error("Erro ao salvar tarefa.");
         } finally {
             this.setState({ isSaving: false });
         }
@@ -254,7 +268,6 @@ export default class ModalEditarTarefas extends React.Component<ModalProps, Moda
                                                     onChange={this.handleChange}
                                                     placeholder="Título da Tarefa"
                                                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
-                                                    required
                                                 />
                                             </div>
                                             <div className="flex items-center gap-4">
@@ -347,19 +360,19 @@ export default class ModalEditarTarefas extends React.Component<ModalProps, Moda
                                                             name="usu_id"
                                                             value={tarefaEmEdicao.usu_id}
                                                             onChange={
-                                                            (e) => {
-                                                                const usu_id = e.target.value;
-                                                                const usuario = this.state.usuarios.find(u => u.usu_id === usu_id);
-                                                                if (usuario) {
-                                                                    this.setState(prevState => ({
-                                                                        tarefaEmEdicao: {
-                                                                            ...prevState.tarefaEmEdicao,
-                                                                            usu_id: usuario.usu_id,
-                                                                            usu_nome: usuario.usu_nome,
-                                                                        },
-                                                                    }));
-                                                                }
-                                                            }}
+                                                                (e) => {
+                                                                    const usu_id = e.target.value;
+                                                                    const usuario = this.state.usuarios.find(u => u.usu_id === usu_id);
+                                                                    if (usuario) {
+                                                                        this.setState(prevState => ({
+                                                                            tarefaEmEdicao: {
+                                                                                ...prevState.tarefaEmEdicao,
+                                                                                usu_id: usuario.usu_id,
+                                                                                usu_nome: usuario.usu_nome,
+                                                                            },
+                                                                        }));
+                                                                    }
+                                                                }}
                                                         >
                                                             <option value="">Selecione um membro</option>
                                                             {this.state.usuarios.map(usuario => (

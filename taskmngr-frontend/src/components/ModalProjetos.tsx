@@ -1,5 +1,6 @@
 import React from 'react';
 import { authFetch } from '../utils/api'
+import { toast } from 'react-toastify';
 
 type NovoProjeto = {
   nome: string;
@@ -15,6 +16,7 @@ type ModalState = {
   projectName: string;
   description: string;
   team: string;
+  erros?: { [campo: string]: string };
 };
 
 export default class ModalProjetos extends React.Component<ModalProps, ModalState> {
@@ -23,6 +25,7 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
     projectName: '',
     description: '',
     team: 'Selecione a equipe',
+    erros: {},
   };
 
   componentDidMount() {
@@ -51,53 +54,65 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
 
   handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = event.target;
-    this.setState({ [name]: value } as Pick<ModalState, keyof ModalState>);
+    this.setState(prevState => ({
+      ...prevState,
+      [name]: value
+    }));
   };
 
   adicionarProjeto = async () => {
     try {
-        const response = await authFetch("http://localhost:8080/projeto/cadastrar", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                proj_nome: this.state.projectName,
-                proj_descricao: this.state.description,
-                proj_status: "Ativo",
-                proj_dataCriacao: new Date().toISOString().slice(0, 10),
-                proj_dataAtualizacao: new Date().toISOString().slice(0, 10),
-                equ_id: "1",
-                equ_nome: this.state.team,
-            }),
-        });
+      const response = await authFetch("http://localhost:8080/projeto/cadastrar", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          proj_nome: this.state.projectName,
+          proj_descricao: this.state.description,
+          proj_status: "Ativo",
+          proj_dataCriacao: new Date().toISOString().slice(0, 10),
+          proj_dataAtualizacao: new Date().toISOString().slice(0, 10),
+          equ_id: "1",
+          equ_nome: this.state.team,
+        }),
+      });
 
-        if (!response.ok) {
-            const errorBody = await response.text();
-            throw new Error(`Erro ao cadastrar projeto: ${response.statusText}. Resposta do servidor: ${errorBody}`);
-        }
+      const data = await response.text();
 
-        // Em vez de adicionar no “cache” local do front, dispare um evento global
-        window.dispatchEvent(new CustomEvent('projeto:created'));
+      if (response.ok) {
+        toast.success(data);
+      } else {
+        toast.error(data);
+      }
+      window.dispatchEvent(new CustomEvent('projeto:created'));
 
-        this.setState({
-            projectName: '',
-            description: '',
-            team: 'Selecione a equipe',
-        });
-        this.props.onClose();
+
+      this.setState({
+        projectName: '',
+        description: '',
+        team: 'Selecione a equipe',
+      });
+      this.props.onClose();
 
     } catch (error) {
-        console.error("Falha ao adicionar projeto:", error);
-        console.log("Não foi possível adicionar o projeto.");
+      toast.error('Não foi possível adicionar o projeto.');
+      console.error("Erro:", error);
     }
   };
+
 
   handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
     if (!this.state.projectName.trim()) {
+      toast.error('Por favor, insira o nome do projeto.');
       console.log('Por favor, insira o nome do projeto.');
+      return;
+    }
+    else if (!this.state.description.trim()) {
+      toast.error('Por favor, insira a descrição do projeto.');
+      console.log('Por favor, insira a descrição do projeto.');
       return;
     }
 
@@ -147,39 +162,7 @@ export default class ModalProjetos extends React.Component<ModalProps, ModalStat
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
               ></textarea>
             </div>
-
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Datas</label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input
-                  type="date"
-                  aria-label="Data Inicio"
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 text-gray-500"
-                />
-                <input
-                  type="date" 
-                  aria-label="Data Entrega"
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 text-gray-500"
-                />
-              </div>
-            </div> */}
-
-            {/* <div>
-              <label htmlFor="team" className="block text-sm font-medium text-gray-700 mb-1">Equipe</label>
-              <select
-                id="team"
-                name="team"
-                value={this.state.team}
-                onChange={this.handleChange}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
-              >
-                <option>Selecione a equipe</option>
-                <option>GSW</option>
-                <option>GeneSys</option>
-                <option>Fatec</option>
-              </select>
-            </div> */}
-
+            
             <div className="flex justify-center mt-6">
               <button
                 type="submit"

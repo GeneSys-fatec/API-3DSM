@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.projetos.ProjetoNaoEncontradoException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.projetos.ProjetoSemInformacaoException;
 import com.taskmanager.taskmngr_backend.model.AdicionadorLinkProjetos;
 import com.taskmanager.taskmngr_backend.model.ProjetoModel;
 import com.taskmanager.taskmngr_backend.model.UsuarioModel;
@@ -52,10 +53,9 @@ public class ProjetoController {
     @GetMapping("/{proj_id}")
     public ResponseEntity<ProjetoDTO> buscarPorId(@PathVariable String proj_id) {
         ProjetoModel projeto = projetoService.buscarPorId(proj_id)
-            .orElseThrow(() -> new ProjetoNaoEncontradoException(
-                "Projeto não encontrado",
-                "Projeto com id " + proj_id + " não foi encontrado"
-            ));
+                .orElseThrow(() -> new ProjetoNaoEncontradoException(
+                        "Projeto não encontrado",
+                        "Projeto com id " + proj_id + " não foi encontrado"));
 
         ProjetoDTO dto = projetoConverterService.modelParaDto(projeto);
         adicionadorLink.adicionarLink(dto);
@@ -65,16 +65,26 @@ public class ProjetoController {
     // ENDPOINT para admin. (talvez remover depois)
     @GetMapping("/listar")
     public ResponseEntity<List<ProjetoDTO>> listarTodas() {
-        List<ProjetoModel> projetos= projetoService.listarTodas();
-        List<ProjetoDTO> dtos = projetos.stream().map(projetoConverterService::modelParaDto).collect(Collectors.toList());
+        List<ProjetoModel> projetos = projetoService.listarTodas();
+        List<ProjetoDTO> dtos = projetos.stream().map(projetoConverterService::modelParaDto)
+                .collect(Collectors.toList());
         adicionadorLink.adicionarLink(dtos);
         return ResponseEntity.ok(dtos);
     }
 
-    // ... dentro da classe ProjetoController
 
     @PostMapping("/cadastrar")
-    public ResponseEntity<String> cadastrarProjeto(@RequestBody ProjetoDTO dto, @AuthenticationPrincipal UsuarioModel usuarioLogado) {
+    public ResponseEntity<String> cadastrarProjeto(
+            @RequestBody ProjetoDTO dto,
+            @AuthenticationPrincipal UsuarioModel usuarioLogado) {
+
+        if (dto.getProj_nome() == null || dto.getProj_nome().isBlank() ||
+                dto.getProj_descricao() == null || dto.getProj_descricao().isBlank()) {
+            throw new ProjetoSemInformacaoException(
+                    "Erro ao cadastrar projeto",
+                    "Nome e descrição do projeto são obrigatórios.");
+        }
+
         ProjetoModel projeto = projetoConverterService.dtoParaModel(dto);
 
         if (usuarioLogado != null) {
@@ -82,9 +92,10 @@ public class ProjetoController {
         }
         projetoService.criarNovoProjeto(projeto);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body("Projeto cadastrado com sucesso!");
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body("Projeto cadastrado com sucesso!");
     }
-
 
     @PutMapping("/atualizar/{proj_id}")
     public ResponseEntity<String> atualizar(@PathVariable String proj_id, @RequestBody ProjetoDTO dto) {
@@ -92,8 +103,7 @@ public class ProjetoController {
         if (projetoExistente.isEmpty()) {
             throw new ProjetoNaoEncontradoException(
                     "Projeto não encontrado",
-                    "Projeto com id " + proj_id + " não foi encontrado"
-            );
+                    "Projeto com id " + proj_id + " não foi encontrado");
         }
         ProjetoModel p = projetoExistente.get();
         p.setProj_nome(dto.getProj_nome());
@@ -107,10 +117,10 @@ public class ProjetoController {
     @DeleteMapping("/apagar/{proj_id}")
     public ResponseEntity<String> apagarProjeto(@PathVariable String proj_id) {
         Optional<ProjetoModel> projetoExistente = projetoService.buscarPorId(proj_id);
-        if (projetoExistente.isEmpty()){
+        if (projetoExistente.isEmpty()) {
             throw new ProjetoNaoEncontradoException("Projeto não encontrado",
-                "Não foi possivel deletar o projeto com id " + proj_id + ", não foi encontrado");
-        } 
+                    "Não foi possivel deletar o projeto com id " + proj_id + ", não foi encontrado");
+        }
         projetoService.deletar(proj_id);
         return ResponseEntity.ok("Projeto apagado com sucesso");
     }

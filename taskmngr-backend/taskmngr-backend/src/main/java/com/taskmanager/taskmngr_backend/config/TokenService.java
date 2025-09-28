@@ -20,7 +20,6 @@ public class TokenService {
     @Value("${api.security.token.secret}")
     private String secret;
 
-    // Cria o Token quando o usuário faz login.
     public String generateToken(UsuarioModel usuarioModel) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret); // Algoritmo de assinatura.
@@ -36,7 +35,6 @@ public class TokenService {
         }
     }
 
-    // Valida Tokens recebidos.
     public String validateToken(String token) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);

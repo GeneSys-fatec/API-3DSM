@@ -25,7 +25,7 @@ public class ProjetoService {
         ProjetoModel projetoSalvo = projetoRepository.save(projeto);
         String novoProjetoId = projetoSalvo.getProj_id();
 
-        // Cria as três colunas padrão <<<<<<<-----------------
+        // Logica de criação das colunas padrão
         ColunaModel pendente = new ColunaModel();
         pendente.setColTitulo("Pendente");
         pendente.setColOrdem(0);
@@ -53,7 +53,6 @@ public class ProjetoService {
 
     public List<ProjetoModel> listarPorUsuario(UsuarioModel usuario) {
         if (usuario == null || usuario.getUsu_id() == null) {
-            // Se não houver usuário logado, retorna uma lista vazia por segurança.
             return Collections.emptyList();
         }
         return projetoRepository.findByUsuarioIdsContaining(usuario.getUsu_id());}

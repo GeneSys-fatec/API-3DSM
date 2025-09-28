@@ -12,6 +12,7 @@ import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.TokenCriacaoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.TokenInvalidoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.projetos.ProjetoNaoEncontradoException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.projetos.ProjetoSemInformacaoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.InvalidTaskDataException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.EmailJaCadastradoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.UsuarioNaoEncontradoException;
@@ -23,15 +24,15 @@ public class ManipuladorGlobal {
     // Exception de Validação de Cadastro do UsuarioCadastroDTO
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErroRespostaDTO> manipularValidacaoCampos(MethodArgumentNotValidException ex) {
-    String mensagens = ex.getBindingResult()
-                         .getFieldErrors()
-                         .stream()
-                         .map(f -> f.getDefaultMessage())
-                         .collect(Collectors.joining("; "));
-            ErroRespostaDTO erro = new ErroRespostaDTO("Erro de validação", mensagens);
+        String mensagens = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(f -> f.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+        ErroRespostaDTO erro = new ErroRespostaDTO("Erro de validação", mensagens);
         return ResponseEntity.badRequest().body(erro);
     }
-    
+
     // CredenciaisInvalidasException
     @ExceptionHandler(CredenciaisInvalidasException.class)
     public ResponseEntity<ErroRespostaDTO> manipularCredenciaisInvalidas(CredenciaisInvalidasException ex) {
@@ -74,10 +75,18 @@ public class ManipuladorGlobal {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
     }
 
+    // ProjetoSemInformacaoException
+    @ExceptionHandler(ProjetoSemInformacaoException.class)
+    public ResponseEntity<ErroRespostaDTO> manipularProjetoSemInformacao(ProjetoSemInformacaoException ex) {
+        ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
+    }
+
     // InvalidTaskDataException
     @ExceptionHandler(InvalidTaskDataException.class)
     public ResponseEntity<ErroRespostaDTO> manipularInvalidTaskData(InvalidTaskDataException ex) {
-        ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getDetalhes());
+        ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
     }
+
 }
