@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 
-import LayoutPrincipal from "./components/layout/LayoutPrincipal";
+import LayoutPrincipal from "./layouts/LayoutPrincipal";
 
 import Cadastro from "./pages/Cadastro";
 import Login from "./pages/Login";
@@ -33,7 +33,18 @@ function App() {
           <ModalRenderer />
         </ModalProvider>
       </Router>
-      <ToastContainer position="top-right" autoClose={2000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="colored" />
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
     </>
   );
 }

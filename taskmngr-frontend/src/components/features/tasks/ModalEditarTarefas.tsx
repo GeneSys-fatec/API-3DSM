@@ -1,0 +1,175 @@
+import React, { useState, useEffect, useContext } from "react";
+import { ModalContext } from "@/context/ModalContext.tsx";
+import { toast } from "react-toastify";
+import FormularioTarefa from "./FormularioTarefa";
+import { getFileIcon } from "@/utils/fileUtils.tsx";
+import type { Tarefa, Usuario, Anexo } from "@/types/types.ts";
+
+interface ModalEditarTarefasProps {
+  tarefa: Tarefa;
+  onSave: () => void;
+}
+
+export default function ModalEditarTarefas({
+  tarefa: tarefaInicial,
+  onSave,
+}: ModalEditarTarefasProps) {
+  const modalContext = useContext(ModalContext);
+  const [tarefa, setTarefa] = useState<Partial<Tarefa>>(tarefaInicial);
+  const [novosAnexos, setNovosAnexos] = useState<File[]>([]);
+  const [anexosExistentes, setAnexosExistentes] = useState<Anexo[]>([]);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+
+  useEffect(() => {
+    fetch("http://localhost:8080/usuario/listar")
+      .then((res) => res.json())
+      .then(setUsuarios)
+      .catch((err) => console.error("Erro ao buscar usuários:", err));
+
+    fetch(`http://localhost:8080/tarefa/${tarefaInicial.tar_id}/anexos`)
+      .then((res) => res.json())
+      .then(setAnexosExistentes)
+      .catch((err) => console.error("Erro ao buscar anexos:", err));
+  }, [tarefaInicial.tar_id]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNovosAnexos((prev) => [...prev, ...Array.from(e.target.files || [])]);
+    e.target.value = "";
+  };
+
+  const handleRemoveNovoAnexo = (fileToRemove: File) => {
+    setNovosAnexos((prev) => prev.filter((file) => file !== fileToRemove));
+  };
+
+  const handleRemoverAnexoExistente = async (nomeArquivo: string) => {
+    if (!window.confirm(`Remover anexo "${nomeArquivo}"?`)) return;
+    try {
+      await fetch(
+        `http://localhost:8080/tarefa/${
+          tarefa.tar_id
+        }/anexos/${encodeURIComponent(nomeArquivo)}`,
+        { method: "DELETE" }
+      );
+      setAnexosExistentes((prev) =>
+        prev.filter((a) => a.arquivoNome !== nomeArquivo)
+      );
+      toast.success("Anexo removido.");
+    } catch (err) {
+      console.error("Falha ao remover anexo:", err);
+      toast.error("Erro ao remover anexo.");
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await fetch(`http://localhost:8080/tarefa/atualizar/${tarefa.tar_id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(tarefa),
+      });
+
+      for (const arquivo of novosAnexos) {
+        const formData = new FormData();
+        formData.append("file", arquivo);
+        await fetch(`http://localhost:8080/tarefa/${tarefa.tar_id}/upload`, {
+          method: "POST",
+          body: formData,
+        });
+      }
+
+      toast.success("Tarefa atualizada com sucesso!");
+      onSave();
+      modalContext?.closeModal();
+    } catch (error) {
+      console.error("Falha ao atualizar tarefa:", error);
+      toast.error("Erro ao atualizar a tarefa.");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-gray-600/60 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
+        <div className="p-8 pb-4 flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-gray-800">Editar Tarefa</h2>
+          <button
+            onClick={() => modalContext?.closeModal()}
+            className="text-gray-400 hover:text-gray-600 text-3xl"
+          >
+            &times;
+          </button>
+        </div>
+
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col flex-grow overflow-hidden"
+        >
+          <div className="px-8 flex-grow overflow-y-auto">
+            <FormularioTarefa
+              tarefa={tarefa}
+              setTarefa={setTarefa}
+              usuarios={usuarios}
+              anexos={novosAnexos}
+              handleFileChange={handleFileChange}
+              handleRemoveAnexo={handleRemoveNovoAnexo}
+            />
+            {anexosExistentes.length > 0 && (
+              <div className="mt-4 p-3 border rounded-md bg-gray-50">
+                <h4 className="font-semibold text-sm mb-2">
+                  Anexos existentes
+                </h4>
+                <ul className="space-y-2">
+                  {anexosExistentes.map((anexo) => (
+                    <li
+                      key={anexo.arquivoNome}
+                      className="flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        {getFileIcon(anexo.arquivoTipo || "")}
+                        <a
+                          href={`http://localhost:8080/tarefa/${
+                            tarefa.tar_id
+                          }/anexos/${encodeURIComponent(anexo.arquivoNome)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="truncate text-blue-600 hover:underline"
+                        >
+                          {anexo.arquivoNome}
+                        </a>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleRemoverAnexoExistente(anexo.arquivoNome)
+                        }
+                        className="text-red-500"
+                      >
+                        &times;
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          <div className="p-8 pt-4 flex justify-end gap-x-4">
+            <button
+              type="button"
+              onClick={() => modalContext?.closeModal()}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+            >
+              Salvar Alterações
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
