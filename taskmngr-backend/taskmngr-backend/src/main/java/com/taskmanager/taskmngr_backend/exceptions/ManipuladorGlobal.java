@@ -17,6 +17,9 @@ import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.Invali
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.EmailJaCadastradoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.UsuarioNaoEncontradoException;
 import com.taskmanager.taskmngr_backend.model.dto.ErroRespostaDTO;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.EquipeNaoEncontradaException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.EquipeSemInformacaoException;
+
 
 @ControllerAdvice
 public class ManipuladorGlobal {
@@ -79,12 +82,26 @@ public class ManipuladorGlobal {
     @ExceptionHandler(ProjetoSemInformacaoException.class)
     public ResponseEntity<ErroRespostaDTO> manipularProjetoSemInformacao(ProjetoSemInformacaoException ex) {
         ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
     }
 
     // InvalidTaskDataException
     @ExceptionHandler(InvalidTaskDataException.class)
     public ResponseEntity<ErroRespostaDTO> manipularInvalidTaskData(InvalidTaskDataException ex) {
+        ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
+    }
+
+    // EquipeNaoEncontradaException
+    @ExceptionHandler(EquipeNaoEncontradaException.class)
+    public ResponseEntity<ErroRespostaDTO> manipularEquipeNaoEncontrada(EquipeNaoEncontradaException ex) {
+        ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
+    }
+
+    // EquipeSemInformacaoException
+    @ExceptionHandler(EquipeSemInformacaoException.class)
+    public ResponseEntity<ErroRespostaDTO> manipularEquipeSemInformacao(EquipeSemInformacaoException ex) {
         ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
     }
