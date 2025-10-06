@@ -1,20 +1,20 @@
 import React from "react";
-import ListaTarefas from "../components/ListaTarefas";
-import type { Projeto } from "../components/BarraLateralProjetos";
+import ListaTarefas from "../components/features/tasks/ListaTarefas";
+import type { Projeto } from "../components/layout/BarraLateralProjetos";
 
 type HomeState = {
-    projetos: Projeto[];
-    isModalOpen: boolean;
+  projetos: Projeto[];
+  isModalOpen: boolean;
 };
 
 export default class Tarefas extends React.Component<object, HomeState> {
-    render() {
-        return (
-            <>
-                <div className="flex justify-center pt-5 min-w-full">
-                            <ListaTarefas></ListaTarefas>
-                </div>
-            </>
-        )
-    }
+  render() {
+    return (
+      <>
+        <div className="flex justify-center pt-5 min-w-full">
+          <ListaTarefas></ListaTarefas>
+        </div>
+      </>
+    );
+  }
 }

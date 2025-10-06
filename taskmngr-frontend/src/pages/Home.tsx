@@ -1,238 +1,47 @@
-import { useState, useEffect, useContext, useCallback } from "react";
+import { ModalContext } from "../context/ModalContext";
+import { authFetch } from "../utils/api";
+import { useKanban } from "../hooks/useKanban";
+import { encontrarColunaDaTarefa, dropAnimation } from "../utils/kanbanUtils";
+import { type Tarefa, type Coluna } from "../types/types";
+
+import ColunaKanban from "../components/features/tasks/ColunaKanban";
+import CardTarefa from "../components/features/tasks/CardTarefa";
+import ModalCriarTarefas from "../components/features/tasks/ModalCriarTarefas";
+import ModalEditarTarefas from "../components/features/tasks/ModalEditarTarefas";
+import ModalConfirmacao from "../components/ui/ModalConfirmacao";
+import { useState, useContext, useCallback } from "react";
 import { useOutletContext } from "react-router-dom";
-import ColunaKanban from "../components/ColunaKanban";
-import CardTarefa from "../components/CardTarefa";
 import {
   DndContext,
-  type DragEndEvent,
-  type DragStartEvent,
   DragOverlay,
   PointerSensor,
   KeyboardSensor,
   useSensor,
   useSensors,
   rectIntersection,
-  defaultDropAnimationSideEffects,
-  type DropAnimation,
+  type DragEndEvent,
+  type DragStartEvent,
 } from "@dnd-kit/core";
-import { ModalContext } from "../context/ModalContext";
-import ModalCriarTarefas from "../components/ModalCriarTarefas";
-import ModalEditarTarefas from "../components/ModalEditarTarefas";
-import { authFetch } from "../utils/api";
-
-export interface Tarefa {
-  tar_id: string;
-  tar_titulo: string;
-  tar_status: string;
-  usu_id: string;
-  usu_nome: string;
-  tar_prazo: string;
-  tar_prioridade: "Alta" | "Média" | "Baixa";
-  tar_descricao: string;
-  tar_anexo?: File | null;
-}
-
-export type NovaTarefa = Omit<Tarefa, "tar_id">;
-
-type Coluna = {
-  id: string;
-  titulo: string;
-  ordem: number;
-  corClasse: string;
-  corFundo: string;
-};
-
-const agruparTarefasPorColuna = (tarefas: Tarefa[], colunas: Coluna[]) => {
-  const tarefasAgrupadas: { [key: string]: Tarefa[] } = {};
-  colunas.forEach((coluna) => {
-    tarefasAgrupadas[coluna.titulo] = tarefas.filter(
-      (tarefa) => tarefa.tar_status === coluna.titulo
-    );
-  });
-  return tarefasAgrupadas;
-};
-
-const adicionarCoresAsColunas = (
-  colunasDaAPI: Omit<Coluna, "corClasse" | "corFundo">[]
-): Coluna[] => {
-  const paletaDeCores = [
-    { corClasse: "orange-400", corFundo: "bg-orange-400/35" },
-    { corClasse: "blue-400", corFundo: "bg-blue-400/40" },
-    { corClasse: "green-500", corFundo: "bg-green-500/40" },
-    { corClasse: "purple-400", corFundo: "bg-purple-400/35" },
-    { corClasse: "red-400", corFundo: "bg-red-400/35" },
-  ];
-
-  return colunasDaAPI.map((coluna, index) => ({
-    ...coluna,
-    ...paletaDeCores[index % paletaDeCores.length],
-  }));
-};
-
-const dropAnimation: DropAnimation = {
-  sideEffects: defaultDropAnimationSideEffects({
-    styles: {
-      active: { opacity: "0.5" },
-    },
-  }),
-};
 
 export default function Home() {
-  const [colunas, setColunas] = useState<Coluna[]>([]);
-  const [tarefas, setTarefas] = useState<{ [key: string]: Tarefa[] }>({});
-  const [activeTask, setActiveTask] = useState<Tarefa | null>(null);
-  const [loading, setLoading] = useState(true);
-  const modalContext = useContext(ModalContext);
-  const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
-  const [tarefaParaExcluir, setTarefaParaExcluir] = useState<Tarefa | null>(
-    null
-  );
-  const [colunaParaExcluir, setColunaParaExcluir] = useState<Coluna | null>(
-    null
-  );
   const { selectedProjectId } = useOutletContext<{
     selectedProjectId: string | null;
   }>();
+  const { colunas, tarefas, loading, fetchData, setTarefas, setColunas } =
+    useKanban(selectedProjectId);
+  const modalContext = useContext(ModalContext);
 
-  const fetchData = useCallback(async () => {
-    if (!selectedProjectId) {
-      setColunas([]);
-      setTarefas({});
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const [colunasResponse, tarefasResponse] = await Promise.all([
-        authFetch(
-          `http://localhost:8080/colunas/por-projeto/${selectedProjectId}`
-        ),
-        authFetch(
-          `http://localhost:8080/tarefa/por-projeto/${selectedProjectId}`
-        ),
-      ]);
-
-      if (!colunasResponse.ok || !tarefasResponse.ok) {
-        throw new Error("Falha ao buscar dados da API");
-      }
-
-      const colunasDataFromAPI: any[] = await colunasResponse.json();
-      const tarefasData: Tarefa[] = await tarefasResponse.json();
-
-      let colunasData: Coluna[] = colunasDataFromAPI.map((c) => ({
-        id: c.id,
-        titulo: c.titulo,
-        ordem: c.ordem,
-        corClasse: "",
-        corFundo: "",
-      }));
-
-      colunasData.sort((a, b) => a.ordem - b.ordem);
-      colunasData = adicionarCoresAsColunas(colunasData);
-      setColunas(colunasData);
-      setTarefas(agruparTarefasPorColuna(tarefasData, colunasData));
-    } catch (error) {
-      console.error("Erro ao carregar o quadro:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedProjectId]);
-
-  const handleUpdateColumnTitle = useCallback(
-    async (id: string, newTitle: string) => {
-      const originalColumns = [...colunas];
-      const columnToUpdate = originalColumns.find((c) => c.id === id);
-
-      if (!columnToUpdate || columnToUpdate.titulo === newTitle) {
-        setEditingColumnId(null);
-        return;
-      }
-
-      setColunas((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, titulo: newTitle } : c))
-      );
-      setEditingColumnId(null);
-
-      try {
-        const response = await authFetch(
-          `http://localhost:8080/colunas/atualizar/${id}`,
-          {
-            method: "PUT",
-            body: JSON.stringify({ titulo: newTitle }),
-          }
-        );
-
-        if (!response.ok)
-          throw new Error("Falha ao atualizar o título no servidor.");
-      } catch (error) {
-        console.error("Erro ao atualizar título da coluna:", error);
-        setColunas(originalColumns);
-      }
-    },
-    [colunas]
-  );
-
-  const abrirModalExclusao = useCallback((tarefa: Tarefa) => {
-    setTarefaParaExcluir(tarefa);
-  }, []);
-
-  const cancelarExclusao = useCallback(() => {
-    setTarefaParaExcluir(null);
-  }, []);
-
-  const executarExclusao = useCallback(async () => {
-    if (!tarefaParaExcluir) return;
-
-    try {
-      const response = await authFetch(
-        `http://localhost:8080/tarefa/apagar/${tarefaParaExcluir.tar_id}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Erro ao excluir a tarefa.");
-      }
-
-      setTarefas((prevTarefas) => {
-        const novasTarefas = { ...prevTarefas };
-        const colunaDaTarefa = novasTarefas[tarefaParaExcluir.tar_status];
-        if (colunaDaTarefa) {
-          novasTarefas[tarefaParaExcluir.tar_status] = colunaDaTarefa.filter(
-            (t) => t.tar_id !== tarefaParaExcluir.tar_id
-          );
-        }
-        return novasTarefas;
-      });
-    } catch (error) {
-      console.error("Falha ao excluir tarefa:", error);
-    } finally {
-      setTarefaParaExcluir(null);
-    }
-  }, [tarefaParaExcluir]);
+  const [activeTask, setActiveTask] = useState<Tarefa | null>(null);
+  const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
+  const [itemParaExcluir, setItemParaExcluir] = useState<{
+    type: "tarefa" | "coluna";
+    data: Tarefa | Coluna;
+  } | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 10 },
-    }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 10 } }),
     useSensor(KeyboardSensor, {})
   );
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  const encontrarColunaDaTarefa = (
-    tarefaId: string,
-    tarefasAtuais: { [key: string]: Tarefa[] }
-  ) => {
-    if (!tarefaId) return null;
-    return Object.keys(tarefasAtuais).find((colunaTitulo) =>
-      tarefasAtuais[colunaTitulo].some((tarefa) => tarefa.tar_id === tarefaId)
-    );
-  };
 
   const handleDragStart = (event: DragStartEvent) => {
     const activeId = event.active.id as string;
@@ -260,10 +69,10 @@ export default function Home() {
     if (!activeContainer || !overContainer || activeContainer === overContainer)
       return;
 
-    const tarefaMovidaOriginal = tarefas[activeContainer]?.find(
+    const tarefaMovida = tarefas[activeContainer]?.find(
       (t) => t.tar_id === activeId
     );
-    if (!tarefaMovidaOriginal) return;
+    if (!tarefaMovida) return;
 
     setTarefas((prev) => {
       const newTarefas = JSON.parse(JSON.stringify(prev));
@@ -271,41 +80,24 @@ export default function Home() {
       const activeIndex = activeItems.findIndex(
         (item: Tarefa) => item.tar_id === activeId
       );
-      if (activeIndex === -1) return prev;
 
       const [movedItem] = activeItems.splice(activeIndex, 1);
       movedItem.tar_status = overContainer;
 
       const overItems = newTarefas[overContainer];
-      let overIndex = overItems.findIndex(
-        (item: Tarefa) => item.tar_id === overId
-      );
-      if (overIndex === -1) overIndex = overItems.length;
-      overItems.splice(overIndex, 0, movedItem);
+      overItems.push(movedItem);
 
       return newTarefas;
     });
 
     try {
-      const corpoDaRequisicao = {
-        ...tarefaMovidaOriginal,
-        tar_status: overContainer,
-      };
-
-      if (
-        !corpoDaRequisicao.tar_descricao ||
-        corpoDaRequisicao.tar_descricao.trim() === ""
-      ) {
-        corpoDaRequisicao.tar_descricao = "Descrição não fornecida";
-      }
       const response = await authFetch(
         `http://localhost:8080/tarefa/atualizar/${activeId}`,
         {
           method: "PUT",
-          body: JSON.stringify(corpoDaRequisicao),
+          body: JSON.stringify({ ...tarefaMovida, tar_status: overContainer }),
         }
       );
-
       if (!response.ok)
         throw new Error("Falha ao atualizar a tarefa no servidor.");
     } catch (error) {
@@ -317,108 +109,109 @@ export default function Home() {
     }
   };
 
-  const handleAddColumn = useCallback(async () => {
-    if (!selectedProjectId) {
-      alert("Por favor, selecione um projeto para adicionar uma coluna.");
-      return;
-    }
+  const handleAddColumn = async () => {
+    if (!selectedProjectId) return;
     try {
       const response = await authFetch(
         "http://localhost:8080/colunas/cadastrar",
         {
           method: "POST",
-
           body: JSON.stringify({
             titulo: "Nova Coluna",
             proj_id: selectedProjectId,
           }),
         }
       );
-
-      if (!response.ok) {
-        throw new Error("Falha ao criar a coluna no servidor.");
-      }
-
+      if (!response.ok) throw new Error("Falha ao criar a coluna.");
       await fetchData();
     } catch (error) {
       console.error("Erro ao adicionar nova coluna:", error);
     }
-  }, [selectedProjectId, fetchData]);
+  };
+
+  const handleUpdateColumnTitle = async (id: string, newTitle: string) => {
+    const originalColumns = [...colunas];
+    setEditingColumnId(null);
+    setColunas((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, titulo: newTitle } : c))
+    );
+
+    try {
+      const response = await authFetch(
+        `http://localhost:8080/colunas/atualizar/${id}`,
+        {
+          method: "PUT",
+          body: JSON.stringify({ titulo: newTitle }),
+        }
+      );
+      if (!response.ok) throw new Error("Falha ao atualizar o título.");
+      await fetchData();
+    } catch (error) {
+      console.error("Erro ao atualizar título da coluna:", error);
+      setColunas(originalColumns);
+    }
+  };
 
   const abrirModalCriacao = useCallback(
     (statusDaColuna: string) => {
-      if (modalContext) {
-        modalContext.openModal(
-          <ModalCriarTarefas
-            onSuccess={fetchData} 
-            statusInicial={statusDaColuna}
-            selectedProjectId={selectedProjectId}
-          />
-        );
-      }
+      modalContext?.openModal(
+        <ModalCriarTarefas
+          onSuccess={fetchData}
+          statusInicial={statusDaColuna}
+          selectedProjectId={selectedProjectId}
+        />
+      );
     },
     [modalContext, fetchData, selectedProjectId]
   );
 
   const abrirModalEdicao = useCallback(
     (tarefa: Tarefa) => {
-      if (modalContext) {
-        modalContext.openModal(
-          <ModalEditarTarefas tarefa={tarefa} onSave={fetchData} />
-        );
-      }
+      modalContext?.openModal(
+        <ModalEditarTarefas tarefa={tarefa} onSave={fetchData} />
+      );
     },
     [modalContext, fetchData]
   );
 
-  const iniciarExclusaoColuna = useCallback(
-    (coluna: Coluna) => {
-      const tarefasNestaColuna = tarefas[coluna.titulo] || [];
-      if (tarefasNestaColuna.length > 0) {
-        console.warn(
-          `AÇÃO BLOQUEADA: Não é possível apagar a coluna "${coluna.titulo}" porque ela contém tarefas.`
-        );
-        return;
-      }
-
-      setColunaParaExcluir(coluna);
-    },
-    [tarefas]
-  );
-
-  const cancelarExclusaoColuna = useCallback(() => {
-    setColunaParaExcluir(null);
-  }, []);
-
-  const executarExclusaoColuna = useCallback(async () => {
-    if (!colunaParaExcluir) return;
+  const executarExclusao = async () => {
+    if (!itemParaExcluir) return;
+    const { type, data } = itemParaExcluir;
+    const url =
+      type === "tarefa"
+        ? `http://localhost:8080/tarefa/apagar/${(data as Tarefa).tar_id}`
+        : `http://localhost:8080/colunas/deletar/${(data as Coluna).id}`;
 
     try {
-      const response = await authFetch(
-        `http://localhost:8080/colunas/deletar/${colunaParaExcluir.id}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Falha ao apagar a coluna no servidor.");
-      }
-
-      setColunas((prevColunas) =>
-        prevColunas.filter((c) => c.id !== colunaParaExcluir.id)
-      );
+      const response = await authFetch(url, { method: "DELETE" });
+      if (!response.ok) throw new Error(`Erro ao excluir ${type}.`);
+      fetchData();
     } catch (error) {
-      console.error("Erro ao apagar coluna:", error);
+      console.error(`Falha ao excluir ${type}:`, error);
     } finally {
-      setColunaParaExcluir(null);
+      setItemParaExcluir(null);
     }
-  }, [colunaParaExcluir]);
+  };
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen text-xl font-semibold">
         Carregando quadro...
+      </div>
+    );
+  }
+
+  if (!selectedProjectId) {
+    return (
+      <div className="flex flex-col justify-center items-center h-full text-center p-4">
+        <i className="fa-solid fa-folder-open text-5xl text-slate-300 mb-4"></i>
+        <h2 className="text-xl font-bold text-slate-600">
+          Nenhum projeto selecionado
+        </h2>
+        <p className="text-slate-500 mt-1">
+          Crie um projeto ou selecione um existente na barra lateral para
+          começar.
+        </p>
       </div>
     );
   }
@@ -435,15 +228,20 @@ export default function Home() {
           {colunas.map((coluna) => (
             <ColunaKanban
               key={coluna.id}
-              id={coluna.id}
-              titulo={coluna.titulo}
-              corClasse={coluna.corClasse}
-              corFundo={coluna.corFundo}
+              {...coluna}
               tarefas={tarefas[coluna.titulo] || []}
               onAbrirModalCriacao={() => abrirModalCriacao(coluna.titulo)}
               onAbrirModalEdicao={abrirModalEdicao}
-              onApagarColuna={() => iniciarExclusaoColuna(coluna)}
-              onExcluirTarefa={abrirModalExclusao}
+              onApagarColuna={() => {
+                if ((tarefas[coluna.titulo] || []).length > 0) {
+                  alert("Não é possível apagar colunas com tarefas.");
+                  return;
+                }
+                setItemParaExcluir({ type: "coluna", data: coluna });
+              }}
+              onExcluirTarefa={(tarefa) =>
+                setItemParaExcluir({ type: "tarefa", data: tarefa })
+              }
               isEditing={editingColumnId === coluna.id}
               onStartEditing={setEditingColumnId}
               onFinishEditing={handleUpdateColumnTitle}
@@ -464,75 +262,28 @@ export default function Home() {
           </div>
         </div>
       </DndContext>
-      {tarefaParaExcluir && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl">
-            <div className="text-center">
-              <i className="fa-solid fa-triangle-exclamation text-red-500 text-4xl mb-4"></i>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Tem certeza?
-              </h3>
-              <p className="text-gray-600">
-                A tarefa "
-                <span className="font-bold">
-                  {tarefaParaExcluir.tar_titulo}
-                </span>
-                " será excluída permanentemente.
-              </p>
-              <div
-                className="flex gap-4 justify-center"
-                style={{ paddingTop: "20px" }}
-              >
-                <button
-                  onClick={cancelarExclusao}
-                  className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={executarExclusao}
-                  className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-                >
-                  Excluir
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      {colunaParaExcluir && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl">
-            <div className="text-center">
-              <i className="fa-solid fa-triangle-exclamation text-red-500 text-4xl mb-4"></i>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Excluir Coluna?
-              </h3>
-              <p className="text-gray-600">
-                A coluna "
-                <span className="font-bold">{colunaParaExcluir.titulo}</span>"
-                será excluída permanentemente. Esta ação não pode ser desfeita.
-              </p>
-              <div
-                className="flex gap-4 justify-center"
-                style={{ paddingTop: "20px" }}
-              >
-                <button
-                  onClick={cancelarExclusaoColuna}
-                  className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={executarExclusaoColuna}
-                  className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-                >
-                  Excluir
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+
+      {itemParaExcluir && (
+        <ModalConfirmacao
+          titulo={
+            itemParaExcluir.type === "tarefa"
+              ? "Tem certeza?"
+              : "Excluir Coluna?"
+          }
+          mensagem={
+            <p>
+              {itemParaExcluir.type === "tarefa" ? 'A tarefa "' : 'A coluna "'}
+              <span className="font-bold">
+                {itemParaExcluir.type === "tarefa"
+                  ? (itemParaExcluir.data as Tarefa).tar_titulo
+                  : (itemParaExcluir.data as Coluna).titulo}
+              </span>
+              {'" será excluída permanentemente.'}
+            </p>
+          }
+          onConfirm={executarExclusao}
+          onCancel={() => setItemParaExcluir(null)}
+        />
       )}
     </>
   );
