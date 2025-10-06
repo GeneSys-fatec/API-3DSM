@@ -8,7 +8,7 @@ As etapas do projeto, incluindo o kickoff e as sprints, seguirão o cronograma e
 <span id="sumario">
  
 <div align=center>
-<a href ="#projeto"> Projeto </a> | <a href ="#backlog&userstories"> Backlog do Produto </a> | <a href ="#dor-dod"> DoR e DoD </a> | <a href ="#sprints"> Sprints </a> | <a href ="#tecnologias"> Tecnologias </a> | <a href ="#equipe"> Equipe </a>
+<a href ="#projeto"> Projeto </a> | <a href ="#backlog&userstories"> Backlog do Produto </a> | <a href ="#dor-dod"> DoR e DoD </a> | <a href ="#manual-usuario"> Manual do Usuário </a> | <a href ="#sprints"> Sprints </a> | <a href ="#tecnologias"> Tecnologias </a> | <a href ="#instalacao"> Manual de Instalação </a> | <a href ="#equipe"> Equipe </a>
 </div>
  
 <br>
@@ -47,7 +47,7 @@ US02 | Alta |Como usuário, quero visualizar tarefas em aberto, em andamento e c
 US03 | Alta |Como usuário, quero me cadastrar informando nome, e-mail válido e senha, para garantir a segurança do meu acesso e facilitar meu ingresso no sistema. | 1 |
 US04 | Alta |Como usuário, quero iniciar sessão informando meu e-mail e senha cadastrados, para acessar e utilizar todas as funcionalidades do sistema.| 1 |  
 US05 | Alta |Como usuário, quero criar e gerenciar projetos pessoais ou de equipe, para organizar e acompanhar minhas atividades de forma centralizada e eficiente. | 1 |
-US06 | Alta |Como usuário, quero anexar arquivos nos formatos PDF, Word, Excel e imagens de diferentes extensões, para comprovar a realização das tarefas. | 1 |
+US06 | Alta |Como usuário, quero anexar arquivos nos formatos PDF, Word, Excel e imagens de diferentes extensões, para comprovar a realização das tarefas. | 2 |
 US07 | Média |Como usuário, quero criar equipes e gerenciar seus membros, para que todos colaborem e participem ativamente das atividades. | 2 |
 US08 | Média |Como membro de uma equipe, quero atribuir tarefas a outros participantes, para promover a colaboração e a divisão de responsabilidades.  | 2| 
 US09 | Média |Como usuário, quero visualizar minhas tarefas em um calendário mensal e semanal, para ter uma visão organizada das atividades no tempo. | 2 | 
@@ -82,18 +82,20 @@ Tópicos utilizados para definir o DoR das Sprints:
 
 ## 📍 DoD Definition of Done
 **:link: Clique no link abaixo para visualizar o DoD do projeto:**
-> [Definition of Done](https://docs.google.com/document/d/1zKTHzSnM82f3k9vDCRv7sGIwZDe1isYBiLkQhQlkan0/edit?usp=sharing)
- 
-<br>
- 
-Tópicos utilizados para definir o DoD das Sprints:
-* Requisitos do Sistema;
-* Instalação;
-* Acessando o Sistema;
-* Principais Funcionalidades;
-* Solução de Problemas;
+> [Definition of Done](https://docs.google.com/document/d/1M_z4ewjxnl0ZRcF8LDUnpuOYvtZM9DJmg4pRREf-3II/edit?usp=sharing)
 
- 
+<br>
+
+Tópicos utilizados para definir o DoD das Sprints:
+* Testes e comprovações;
+
+<br>
+<span id="manual-usuario">
+
+## 📜 Manual do Usuário
+**:link: Clique no link abaixo para visualizar o Manual do Usuário:**
+> [Manual do Usuário](https://docs.google.com/document/d/1qaFu2WWyHemj5ZPkcTv_nWbqaylwRaAksL1E5nF807I/edit?usp=sharing)
+
 <br>
 <span id="sprints">
  
@@ -101,7 +103,7 @@ Tópicos utilizados para definir o DoD das Sprints:
 Sprint | Previsão | Status | Relatório | Vídeo do Projeto |
 |------|--------|------|---------|----------|
 |01 | 08/09/2025 - 28/09/2025 |✔️ Concluído| [Ver Relatório](https://github.com/GeneSys-fatec/API-3DSM/blob/updates-sprint1/README.md) | <a href='https://youtu.be/GnxCSIv_jP4?si=REm8HHhPtJweiITJ'>Ver Vídeo</a> |
-|02|  06/10/2025 - 26/10/2025 |🕞 Pendente| [Ver Relatório](https://github.com/GeneSys-fatec/API-3DSM/blob/updates-sprint2/README.md) | <a href=''>Ver Vídeo</a> |
+|02|  06/10/2025 - 26/10/2025 |⌛ Em andamento| [Ver Relatório](https://github.com/GeneSys-fatec/API-3DSM/blob/updates-sprint2/README.md) | <a href=''>Ver Vídeo</a> |
 |03| 03/11/2025 - 23/11/2025 |🕗 Pendente| [Ver Relatório](https://github.com/GeneSys-fatec/API-3DSM/blob/updates-sprint3/README.md) | <a href=''>Ver Vídeo</a> |
 <br>
  
@@ -115,7 +117,62 @@ As seguintes ferramentas, linguagens, bibliotecas e tecnologias foram usadas na 
 <br>
  
 <span id="instalacao">
+
+## ⚙️ Manual de Instalação
  
+### Pré-requisitos
+* Node.js
+* Java 17
+* MongoDB Atlas
+* Apache Maven
+
+### Como executar o projeto
+
+**1. Clone o repositório:**
+```
+git clone https://github.com/GeneSys-fatec/API-3DSM.git
+cd API-3DSM
+```
+
+**2. Configure o front-end:**
+
+* Acesse a pasta do front-end
+```
+cd taskmngr-frontend
+```
+* Instale as dependências
+```
+npm install
+```
+* Inicie o front-end
+```
+npm run dev
+```
+
+**3. Configure o back-end:**
+
+* No arquivo “application.properties”, altere a string de conexão do MongoDB Atlas, no formato:
+   ```
+   spring.data.mongodb.uri=mongodb+srv://<usuario>:<senha>@<cluster-url>/<database>?retryWrites=true&w=majority
+   ```
+* E defina uma chave secreta JWT (string aleatória e segura), exemplo:
+   ```
+   api.security.token.secret=MinhaChave
+   ```
+* Em um novo terminal, navegue até o diretório
+   ```
+   cd API-3DSM/taskmngr-backend/taskmngr-backend
+   ```
+* Instale as dependências
+   ```
+   mvn clean install
+   ```
+* Inicie o back-end
+   ```
+   mvn spring-boot:run
+   ```
+
+ **4. A aplicação estará disponível em: http://localhost:5173**
 
 <span id="equipe">
  
