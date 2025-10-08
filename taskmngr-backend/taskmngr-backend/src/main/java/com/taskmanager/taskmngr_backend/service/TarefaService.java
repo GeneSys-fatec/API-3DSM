@@ -1,23 +1,22 @@
 package com.taskmanager.taskmngr_backend.service;
 
-import com.taskmanager.taskmngr_backend.model.AnexoTarefaModel;
-import com.taskmanager.taskmngr_backend.model.ProjetoModel;
-import com.taskmanager.taskmngr_backend.model.TarefaModel;
-import com.taskmanager.taskmngr_backend.repository.TarefaRepository;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Collections;
-import java.util.stream.Collectors;
-import java.util.UUID;
-import java.io.File;
-import java.io.IOException;
-import java.awt.image.BufferedImage;
-
-import javax.imageio.ImageIO;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.AnexoTamanhoExcedente;
+import com.taskmanager.taskmngr_backend.model.AnexoTarefaModel;
+import com.taskmanager.taskmngr_backend.model.ProjetoModel;
+import com.taskmanager.taskmngr_backend.model.TarefaModel;
+import com.taskmanager.taskmngr_backend.repository.TarefaRepository;
 
 @Service
 public class TarefaService {
@@ -26,6 +25,12 @@ public class TarefaService {
     private TarefaRepository tarefaRepository;
 
     private final String UPLOAD_DIR = new File("").getAbsolutePath() + "/taskmngr-backend/uploads/";
+
+    // 1 MiB
+    private static final long MB = 1024L * 1024L;
+    // mínimo de 2 MiB para arquivos não‑imagem
+    private static final long FILE_SIZE = 2L;
+    private static final long MAX_FILE_SIZE = FILE_SIZE * MB;
 
     public List<TarefaModel> listarTodas() {
         return tarefaRepository.findAll();
@@ -75,6 +80,15 @@ public class TarefaService {
         boolean permitido = tipo.matches("application/pdf|application/vnd.openxmlformats-officedocument.wordprocessingml.document|application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|image/.*");
         if (!permitido) throw new IOException("Tipo de arquivo não permitido");
 
+        boolean isImage = tipo.startsWith("image/");
+        // Verificação de tamanho mínimo para arquivos não-imagem (>= 2MB)
+        if (!isImage && arquivo.getSize() > MAX_FILE_SIZE) {
+            throw new AnexoTamanhoExcedente(
+                "Tamanho de arquivo insuficiente",
+                "Arquivos devem ter pelo menos " + FILE_SIZE + " MB."
+            );
+        }
+
         File pasta = new File(UPLOAD_DIR);
         if (!pasta.exists()) pasta.mkdirs();
 
@@ -82,14 +96,8 @@ public class TarefaService {
         String caminho = UPLOAD_DIR + uuid + "_" + arquivo.getOriginalFilename();
         File destino = new File(caminho);
 
-        if (tipo.startsWith("image/") && arquivo.getSize() > 2 * 1024 * 1024) {
-            BufferedImage image = ImageIO.read(arquivo.getInputStream());
-            ImageIO.write(image, "jpg", destino); 
-        } else if (tipo.equals("application/pdf") && arquivo.getSize() > 5 * 1024 * 1024) {
-            arquivo.transferTo(destino); 
-        } else {
-            arquivo.transferTo(destino);
-        }
+        // Imagens serão tratadas depois; por ora apenas salva o arquivo
+        arquivo.transferTo(destino);
 
         Optional<TarefaModel> tarefaOpt = tarefaRepository.findById(tarefaId);
         if (tarefaOpt.isPresent()) {
