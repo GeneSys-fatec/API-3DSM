@@ -1,4 +1,4 @@
-package com.taskmanager.taskmngr_backend.controller;
+package com.taskmanager.taskmngr_backend.controller.Auth;
 
 import java.util.Optional;
 
@@ -10,24 +10,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.taskmanager.taskmngr_backend.config.TokenService;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.CredenciaisInvalidasException;
-import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.EmailJaCadastradoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.UsuarioNaoEncontradoException;
-import com.taskmanager.taskmngr_backend.model.UsuarioModel;
 import com.taskmanager.taskmngr_backend.model.dto.ResponseDTO;
-import com.taskmanager.taskmngr_backend.model.dto.UsuarioCadastroDTO;
 import com.taskmanager.taskmngr_backend.model.dto.UsuarioDTO;
+import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
+import com.taskmanager.taskmngr_backend.service.TokenService;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-public class AuthController {
-
+public class LogarUsuarioController {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
@@ -35,38 +31,18 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity login(@RequestBody UsuarioDTO body) {
         
-        Optional<UsuarioModel> usuarioOpt = this.usuarioRepository.findByEmail(body.getUsu_email());
+        Optional<UsuarioModel> usuarioOpt = this.usuarioRepository.findByEmail(body.getUsuEmail());
 
         if (usuarioOpt.isEmpty()) {
             throw new UsuarioNaoEncontradoException("Usuário não encontrado.", "Email não encontrado.");
         }
 
         UsuarioModel usuario = usuarioOpt.get();
-        if (passwordEncoder.matches(body.getUsu_senha(), usuario.getPassword())) {
+        if (passwordEncoder.matches(body.getUsuSenha(), usuario.getPassword())) {
             String token = this.tokenService.generateToken(usuario);
-            return ResponseEntity.ok(new ResponseDTO(usuario.getUsu_nome(), token));
+            return ResponseEntity.ok(new ResponseDTO(usuario.getUsuNome(), token));
         }
 
         throw new CredenciaisInvalidasException("Credenciais inválidas.", "Senha incorreta.");
-    }
-
-    @PostMapping("/cadastrar")
-    public ResponseEntity cadastrar(@RequestBody @Valid UsuarioCadastroDTO body) {
-        
-        Optional<UsuarioModel> usuarioOpt = this.usuarioRepository.findByEmail(body.getUsu_email());
-
-        if (usuarioOpt.isPresent()) {
-            throw new EmailJaCadastradoException("Email já cadastrado.", "Este email já está sendo usado em outra conta.");
-        }
-
-        UsuarioModel novoUsuario = new UsuarioModel();
-        novoUsuario.setUsu_senha(passwordEncoder.encode(body.getUsu_senha()));
-        novoUsuario.setUsu_email(body.getUsu_email());
-        novoUsuario.setUsu_nome(body.getUsu_nome());
-        this.usuarioRepository.save(novoUsuario);
-
-        String token = this.tokenService.generateToken(novoUsuario);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDTO(novoUsuario.getUsu_nome(), token));
-    
     }
 }

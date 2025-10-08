@@ -7,8 +7,8 @@ interface LoginProps {
   navigate: (path: string) => void;
 }
 interface LoginState {
-  email: string;
-  senha: string;
+  usuEmail: string;
+  usuSenha: string;
   erros: { [campo: string]: string };
 }
 
@@ -16,8 +16,8 @@ class FormularioLogin extends React.Component<LoginProps, LoginState> {
   constructor(props: LoginProps) {
     super(props);
     this.state = {
-      email: "",
-      senha: "",
+      usuEmail: "",
+      usuSenha: "",
       erros: {},
     };
   }
@@ -39,8 +39,8 @@ class FormularioLogin extends React.Component<LoginProps, LoginState> {
   handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const { email, senha } = this.state;
-    const usuario = { usu_email: email, usu_senha: senha };
+    const { usuEmail, usuSenha } = this.state;
+    const usuario = { usuEmail: usuEmail, usuSenha: usuSenha };
 
     try {
       const res = await fetch("http://localhost:8080/auth/login", {
@@ -50,7 +50,7 @@ class FormularioLogin extends React.Component<LoginProps, LoginState> {
       });
 
       const data = await res.json();
-      const campos = ["email", "senha"];
+      const campos = ["usuEmail", "usuSenha"];
       const errosMap: { [campo: string]: string } = {};
 
       if (res.ok) {
@@ -79,7 +79,7 @@ class FormularioLogin extends React.Component<LoginProps, LoginState> {
   };
 
   render() {
-    const { email, senha, erros } = this.state;
+    const { usuEmail, usuSenha, erros } = this.state;
 
     return (
       <div className="flex flex-col md:flex-row justify-center bg-gray-100 items-center min-h-screen p-4">
@@ -99,17 +99,17 @@ class FormularioLogin extends React.Component<LoginProps, LoginState> {
               <div className="relative">
                 <i className="fa-solid fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                 <input
-                  type="email"
+                  type="usuEmail"
                   placeholder="E-mail"
-                  name="email"
+                  name="usuEmail"
                   className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm"
-                  value={email}
+                  value={usuEmail}
                   onChange={this.handleChange}
                   required
                 />
               </div>
-              {erros.email && (
-                <p className="text-red-500 text-xs mt-1">{erros.email}</p>
+              {erros.usuEmail && (
+                <p className="text-red-500 text-xs mt-1">{erros.usuEmail}</p>
               )}
             </div>
 
@@ -119,15 +119,15 @@ class FormularioLogin extends React.Component<LoginProps, LoginState> {
                 <input
                   type="password"
                   placeholder="Senha"
-                  name="senha"
+                  name="usuSenha"
                   className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm"
-                  value={senha}
+                  value={usuSenha}
                   onChange={this.handleChange}
                   required
                 />
               </div>
-              {erros.senha && (
-                <p className="text-red-500 text-xs mt-1">{erros.senha}</p>
+              {erros.usuSenha && (
+                <p className="text-red-500 text-xs mt-1">{erros.usuSenha}</p>
               )}
             </div>
 

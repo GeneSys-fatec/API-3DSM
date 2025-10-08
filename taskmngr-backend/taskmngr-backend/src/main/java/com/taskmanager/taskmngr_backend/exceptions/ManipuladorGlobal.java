@@ -19,6 +19,9 @@ import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.Invali
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.EmailJaCadastradoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.UsuarioNaoEncontradoException;
 import com.taskmanager.taskmngr_backend.model.dto.ErroRespostaDTO;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.EquipeNaoEncontradaException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.EquipeSemInformacaoException;
+
 
 @ControllerAdvice
 public class ManipuladorGlobal {
@@ -81,7 +84,7 @@ public class ManipuladorGlobal {
     @ExceptionHandler(ProjetoSemInformacaoException.class)
     public ResponseEntity<ErroRespostaDTO> manipularProjetoSemInformacao(ProjetoSemInformacaoException ex) {
         ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
     }
 
     // InvalidTaskDataException
@@ -91,17 +94,18 @@ public class ManipuladorGlobal {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
     }
 
-    // AnexoTamanhoExcedente
-    @ExceptionHandler(AnexoTamanhoExcedente.class)
-    public ResponseEntity<ErroRespostaDTO> manipularAnexoTamanhoExcedente(AnexoTamanhoExcedente ex) {
+    // EquipeNaoEncontradaException
+    @ExceptionHandler(EquipeNaoEncontradaException.class)
+    public ResponseEntity<ErroRespostaDTO> manipularEquipeNaoEncontrada(EquipeNaoEncontradaException ex) {
         ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
-        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(erro);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
     }
 
-    // Quando o limite do multipart do servidor é excedido (antes do controller)
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<ErroRespostaDTO> manipularUploadExcedido(MaxUploadSizeExceededException ex) {
-        ErroRespostaDTO erro = new ErroRespostaDTO("Tamanho de upload excedente", "Arquivos devem ter no máximo 2 MB.");
-        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(erro);
+    // EquipeSemInformacaoException
+    @ExceptionHandler(EquipeSemInformacaoException.class)
+    public ResponseEntity<ErroRespostaDTO> manipularEquipeSemInformacao(EquipeSemInformacaoException ex) {
+        ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
     }
+
 }

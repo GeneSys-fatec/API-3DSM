@@ -1,4 +1,4 @@
-package com.taskmanager.taskmngr_backend.config;
+package com.taskmanager.taskmngr_backend.service;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -13,7 +13,7 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.TokenCriacaoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.TokenInvalidoException;
-import com.taskmanager.taskmngr_backend.model.UsuarioModel;
+import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 
 @Service
 public class TokenService {
@@ -26,7 +26,7 @@ public class TokenService {
 
             String token = JWT.create()
                     .withIssuer("taskmngr-backend")
-                    .withSubject(usuarioModel.getUsu_email())
+                    .withSubject(usuarioModel.getUsuEmail())
                     .withExpiresAt(this.generateExpirationDate())
                     .sign(algorithm);
             return token;

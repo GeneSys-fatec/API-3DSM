@@ -74,16 +74,16 @@ export default function ListaTarefas() {
       const data: any[] = await response.json();
 
       const tarefasConvertidas: Tarefa[] = data.map((item) => ({
-        tar_id: item.tar_id,
-        tar_titulo: item.tar_titulo,
-        tar_status: item.tar_status,
-        usu_nome: item.usu_nome,
-        usu_id: item.usu_id,
-        tar_prazo: item.tar_prazo ?? "-",
-        tar_prioridade: item.tar_prioridade,
-        tar_descricao: item.tar_descricao,
-        proj_id: item.proj_id,
-        tar_anexo: null,
+        tarId: item.tarId,
+        tarTitulo: item.tarTitulo,
+        tarStatus: item.tarStatus,
+        usuNome: item.usuNome,
+        usuId: item.usuId,
+        tarPrazo: item.tarPrazo ?? "-",
+        tarPrioridade: item.tarPrioridade,
+        tarDescricao: item.tarDescricao,
+        projId: item.projId,
+        tarAnexo: null,
       }));
 
       setTarefas(tarefasConvertidas);
@@ -117,7 +117,7 @@ export default function ListaTarefas() {
         );
       }
       setTarefas((prevTarefas) =>
-        prevTarefas.filter((tarefa) => tarefa.tar_id !== tarefaParaExcluir)
+        prevTarefas.filter((tarefa) => tarefa.tarId !== tarefaParaExcluir)
       );
       setTarefaParaExcluir(null);
     } catch (err) {
@@ -207,46 +207,46 @@ export default function ListaTarefas() {
             <div>
               {tarefas.map((tarefa, index) => (
                 <div
-                  key={tarefa.tar_id}
+                  key={tarefa.tarId}
                   className="grid grid-cols-12 gap-3 p-3 items-center hover:bg-gray-100 transition-all duration-100 ease-in-out"
                 >
                   <div
                     className="col-span-1 text-sm font-medium text-gray-800 text-center"
-                    title={tarefa.tar_id}
+                    title={tarefa.tarId}
                   >
                     {index + 1}
                   </div>
                   <div
                     className="col-span-3 text-sm text-gray-800 truncate"
-                    title={tarefa.tar_titulo}
+                    title={tarefa.tarTitulo}
                   >
-                    <span className="truncate">{tarefa.tar_titulo}</span>
+                    <span className="truncate">{tarefa.tarTitulo}</span>
                   </div>
                   <div className="col-span-2 text-sm text-gray-800 text-center">
-                    {tarefa.usu_nome}
+                    {tarefa.usuNome}
                   </div>
                   <div className="col-span-2 flex justify-center">
                     <span className="text-xs font-semibold bg-gray-200 text-gray-700 px-2 py-1 rounded-md hover:bg-gray-300 transition-colors">
-                      {tarefa.tar_prazo}
+                      {tarefa.tarPrazo}
                     </span>
                   </div>
                   <div className="col-span-1 flex justify-center">
                     <span
                       className={`px-2 py-1 text-xs font-bold rounded-md uppercase ${getPrioridadeClass(
-                        tarefa.tar_prioridade
+                        tarefa.tarPrioridade
                       )}`}
                     >
-                      {tarefa.tar_prioridade}
+                      {tarefa.tarPrioridade}
                     </span>
                   </div>
                   <div className="col-span-1 overflow-hidden flex justify-center">
                     <span
                       className={`px-2 py-1 text-xs font-bold rounded-md uppercase truncate ${getStatusClass(
-                        tarefa.tar_status
+                        tarefa.tarStatus
                       )}`}
-                      title={tarefa.tar_status}
+                      title={tarefa.tarStatus}
                     >
-                      {tarefa.tar_status}
+                      {tarefa.tarStatus}
                     </span>
                   </div>
                   <div className="col-span-1 flex justify-center">
@@ -260,7 +260,7 @@ export default function ListaTarefas() {
                   <div className="col-span-1 flex justify-center">
                     <button
                       className="text-xs font-semibold bg-gray-200 text-gray-700 px-2 py-1 rounded-md hover:bg-gray-300 transition-colors"
-                      onClick={() => setTarefaParaExcluir(tarefa.tar_id)}
+                      onClick={() => setTarefaParaExcluir(tarefa.tarId)}
                     >
                       Excluir
                     </button>
@@ -282,28 +282,28 @@ export default function ListaTarefas() {
           <div className="max-h-[calc(100vh-280px)] overflow-y-auto pb-20 px-1 -mt-2">
             <div className="space-y-4">
               {tarefas.map((tarefa, index) => (
-                <React.Fragment key={tarefa.tar_id}>
+                <React.Fragment key={tarefa.tarId}>
                   <div className="bg-white rounded-lg p-5 hover:bg-gray-200 active:bg-gray-200 transition-all duration-300 ease-in-out">
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1 min-w-0 mr-3">
                         <h3 className="font-semibold text-gray-800 text-lg break-words mb-2">
                           <span className="text-gray-500">#{index + 1}</span> -{" "}
-                          {tarefa.tar_titulo}
+                          {tarefa.tarTitulo}
                         </h3>
                         <div className="flex gap-2">
                           <span
                             className={`px-3 py-1 text-sm font-bold rounded-full uppercase ${getPrioridadeClass(
-                              tarefa.tar_prioridade
+                              tarefa.tarPrioridade
                             )}`}
                           >
-                            {tarefa.tar_prioridade}
+                            {tarefa.tarPrioridade}
                           </span>
                           <span
                             className={`px-3 py-1 text-sm font-bold rounded-full uppercase ${getStatusClass(
-                              tarefa.tar_status
+                              tarefa.tarStatus
                             )}`}
                           >
-                            {tarefa.tar_status}
+                            {tarefa.tarStatus}
                           </span>
                         </div>
                       </div>
@@ -317,7 +317,7 @@ export default function ListaTarefas() {
                         </button>
                         <button
                           className="text-red-600 hover:text-red-800 p-2"
-                          onClick={() => setTarefaParaExcluir(tarefa.tar_id)}
+                          onClick={() => setTarefaParaExcluir(tarefa.tarId)}
                           title="Excluir"
                         >
                           <i className="fa-solid fa-trash text-lg"></i>
@@ -331,7 +331,7 @@ export default function ListaTarefas() {
                             Responsável:
                           </span>
                           <span className="text-gray-800 font-medium pl-2 break-words">
-                            {tarefa.usu_nome}
+                            {tarefa.usuNome}
                           </span>
                         </div>
                       </div>
@@ -341,7 +341,7 @@ export default function ListaTarefas() {
                             Entrega:
                           </span>
                           <span className="text-gray-800 font-medium pl-2">
-                            {tarefa.tar_prazo}
+                            {tarefa.tarPrazo}
                           </span>
                         </div>
                       </div>

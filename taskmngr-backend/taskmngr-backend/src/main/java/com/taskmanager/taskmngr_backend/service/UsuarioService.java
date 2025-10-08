@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.taskmanager.taskmngr_backend.model.UsuarioModel;
+import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
 
 @Service
@@ -26,7 +26,7 @@ public class UsuarioService {
     }
 
     public UsuarioModel salvar(UsuarioModel usuario) {
-        usuario.setUsu_senha(encoder.encode(usuario.getUsu_senha()));
+        usuario.setUsuSenha(encoder.encode(usuario.getUsuSenha()));
         return usuarioRepository.save(usuario);
     }
 

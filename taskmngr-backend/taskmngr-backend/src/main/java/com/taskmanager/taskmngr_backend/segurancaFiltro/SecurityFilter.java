@@ -1,4 +1,4 @@
-package com.taskmanager.taskmngr_backend.config;
+package com.taskmanager.taskmngr_backend.segurancaFiltro;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -12,8 +12,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.TokenInvalidoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.UsuarioNaoEncontradoException;
-import com.taskmanager.taskmngr_backend.model.UsuarioModel;
+import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
+import com.taskmanager.taskmngr_backend.service.TokenService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

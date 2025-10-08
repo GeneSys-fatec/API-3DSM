@@ -6,11 +6,11 @@ import lombok.Data;
 
 @Data
 public class UsuarioDTO extends RepresentationModel<UsuarioDTO>{
-    private String usu_id;
-    private String usu_nome;
-    private String usu_email;
-    private String usu_caminhoFoto;
-    private String usu_senha;
-    private String usu_dataCriacao;
-    private String usu_dataAtualizacao;
+    private String usuId;
+    private String usuNome;
+    private String usuEmail;
+    private String usuCaminhoFoto;
+    private String usuSenha;
+    private String usuDataCriacao;
+    private String usuDataAtualizacao;
 }

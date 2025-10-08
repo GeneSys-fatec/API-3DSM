@@ -1,22 +1,23 @@
 package com.taskmanager.taskmngr_backend.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
+import com.taskmanager.taskmngr_backend.model.entidade.AnexoTarefaModel;
+import com.taskmanager.taskmngr_backend.model.entidade.ProjetoModel;
+import com.taskmanager.taskmngr_backend.model.entidade.TarefaModel;
+import com.taskmanager.taskmngr_backend.repository.TarefaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.AnexoTamanhoExcedente;
-import com.taskmanager.taskmngr_backend.model.AnexoTarefaModel;
-import com.taskmanager.taskmngr_backend.model.ProjetoModel;
-import com.taskmanager.taskmngr_backend.model.TarefaModel;
-import com.taskmanager.taskmngr_backend.repository.TarefaRepository;
+import java.util.List;
+import java.util.Optional;
+import java.util.Collections;
+import java.util.stream.Collectors;
+import java.util.UUID;
+import java.io.File;
+import java.io.IOException;
+import java.awt.image.BufferedImage;
+
+import javax.imageio.ImageIO;
 
 @Service
 public class TarefaService {
@@ -41,7 +42,7 @@ public class TarefaService {
             return Collections.emptyList();
         }
         List<String> projetoIds = projetos.stream()
-                .map(ProjetoModel::getProj_id)
+                .map(ProjetoModel::getProjId)
                 .collect(Collectors.toList());
         return tarefaRepository.findByProjIdIn(projetoIds);
     }
@@ -109,10 +110,10 @@ public class TarefaService {
             anexo.setArquivoTamanho(arquivo.getSize());
             anexo.setArquivoCaminho(caminho);
 
-            if (tarefa.getTar_anexos() == null) {
-                tarefa.setTar_anexos(new java.util.ArrayList<>());
+            if (tarefa.getTarAnexos() == null) {
+                tarefa.setTarAnexos(new java.util.ArrayList<>());
             }
-            tarefa.getTar_anexos().add(anexo);
+            tarefa.getTarAnexos().add(anexo);
             tarefaRepository.save(tarefa);
 
             return anexo;
