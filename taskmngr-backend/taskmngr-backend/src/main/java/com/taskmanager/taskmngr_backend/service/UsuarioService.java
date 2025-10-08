@@ -25,6 +25,14 @@ public class UsuarioService {
         return usuarioRepository.findById(id);
     }
 
+    public Optional<UsuarioModel> buscarPorEmail(String email) {
+        return usuarioRepository.findByEmail(email);
+    }
+
+    public List<UsuarioModel> buscarPorEmails(List<String> emails) {
+        return usuarioRepository.findAllByEmails(emails);
+    }
+
     public UsuarioModel salvar(UsuarioModel usuario) {
         usuario.setUsuSenha(encoder.encode(usuario.getUsuSenha()));
         return usuarioRepository.save(usuario);

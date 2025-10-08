@@ -17,4 +17,5 @@ public class EquipeDTO extends RepresentationModel<EquipeDTO> {
     private List<UsuarioDTO> equMembros;
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private List<String> usuarioIds;
+    private List<String> usuarioEmails;
 }

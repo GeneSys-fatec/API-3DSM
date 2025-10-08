@@ -8,19 +8,18 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.taskmanager.taskmngr_backend.service.EquipeService;
-
+import com.taskmanager.taskmngr_backend.service.Equipe.ExcluiEquipeService;
 
 @RestController
 @RequestMapping("/equipe")
 @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*")
 public class ExcluiEquipeController {
     @Autowired
-    private EquipeService equipeService;
+    private ExcluiEquipeService excluiEquipeService;
 
-    @DeleteMapping("/apagar/{equ_id}")
-    public ResponseEntity<String> apagarEquipe(@PathVariable String equ_id) {
-        equipeService.deleteEquipe(equ_id);
+    @DeleteMapping("/apagar/{equId}")
+    public ResponseEntity<String> apagarEquipe(@PathVariable String equId) {
+        excluiEquipeService.deleteEquipe(equId);
         return ResponseEntity.ok("Equipe apagada com sucesso!");
     }
 }

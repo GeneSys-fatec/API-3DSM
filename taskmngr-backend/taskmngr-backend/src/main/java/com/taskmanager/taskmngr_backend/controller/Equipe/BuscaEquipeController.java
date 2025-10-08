@@ -15,15 +15,13 @@ import com.taskmanager.taskmngr_backend.model.AdicionadorLinkEquipe;
 import com.taskmanager.taskmngr_backend.model.converter.EquipeConverter;
 import com.taskmanager.taskmngr_backend.model.dto.EquipeDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.EquipeModel;
-import com.taskmanager.taskmngr_backend.service.EquipeService;
+import com.taskmanager.taskmngr_backend.service.Equipe.BuscaEquipeService;
 
 
 @RestController
 @RequestMapping("/equipe")
 @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*")
 public class BuscaEquipeController {
-    @Autowired
-    private EquipeService equipeService;
 
     @Autowired
     private EquipeConverter equipeConverterService;
@@ -31,9 +29,12 @@ public class BuscaEquipeController {
     @Autowired
     private AdicionadorLinkEquipe adicionadorLink;
 
+    @Autowired
+    private BuscaEquipeService buscaEquipeService;
+
     @GetMapping("/listar")
     public ResponseEntity<List<EquipeDTO>> listarEquipes() {
-        List<EquipeModel> equipes = equipeService.getAllEquipes();
+        List<EquipeModel> equipes = buscaEquipeService.getAllEquipes();
         List<EquipeDTO> dtos = equipes.stream()
                 .map(equipeConverterService::modelParaDto)
                 .collect(Collectors.toList());
@@ -41,9 +42,9 @@ public class BuscaEquipeController {
         return ResponseEntity.ok(dtos);
     }
 
-    @GetMapping("/{equ_id}")
-    public ResponseEntity<EquipeDTO> getEquipeById(@PathVariable String equ_id) {
-        EquipeModel equipe = equipeService.getEquipeById(equ_id);
+    @GetMapping("/{equId}")
+    public ResponseEntity<EquipeDTO> getEquipeById(@PathVariable String equId) {
+        EquipeModel equipe = buscaEquipeService.getEquipeById(equId);
         EquipeDTO dto = equipeConverterService.modelParaDto(equipe);
         adicionadorLink.adicionarLink(dto);
         return ResponseEntity.ok(dto);

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.taskmanager.taskmngr_backend.model.converter.EquipeConverter;
 import com.taskmanager.taskmngr_backend.model.dto.EquipeDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.EquipeModel;
-import com.taskmanager.taskmngr_backend.service.EquipeService;
+import com.taskmanager.taskmngr_backend.service.Equipe.CriaEquipeService;
 
 import jakarta.validation.Valid;
 
@@ -21,18 +21,17 @@ import jakarta.validation.Valid;
 @RequestMapping("/equipe")
 @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*")
 public class CriaEquipeController {
-    @Autowired
-    private EquipeService equipeService;
 
     @Autowired
     private EquipeConverter equipeConverter;
 
+    @Autowired
+    private CriaEquipeService criaEquipeService;
+
     @PostMapping("/cadastrar")
     public ResponseEntity<EquipeDTO> cadastrarEquipe(@Valid @RequestBody EquipeDTO dto) {
 
-        EquipeModel equipe = equipeConverter.dtoParaModel(dto);
-
-        EquipeModel equipeSalva = equipeService.createEquipe(equipe); 
+        EquipeModel equipeSalva = criaEquipeService.createEquipe(dto); 
 
         EquipeDTO dtoDeResposta = equipeConverter.modelParaDto(equipeSalva);
 

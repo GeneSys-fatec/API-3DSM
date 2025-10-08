@@ -36,6 +36,16 @@ export type Projeto = {
   projDataCriacao?: string;
 };
 
+export type Equipe = {
+  equId: string;
+  equNome: string;
+  equDescricao?: string;
+  equDataCriacao?: string;
+  equDataAtualizacao?: string;
+  equMembros?: Usuario[];
+  usuarioIds?: string[];
+}
+
 export type Anexo = {
     arquivoNome: string;
     arquivoCaminho: string;

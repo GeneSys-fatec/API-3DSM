@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.EquipeSemInformacaoException;
 import com.taskmanager.taskmngr_backend.model.dto.EquipeDTO;
-import com.taskmanager.taskmngr_backend.service.EquipeService;
+import com.taskmanager.taskmngr_backend.service.Equipe.EditaEquipeService;
 
 import jakarta.validation.Valid;
 
@@ -19,18 +19,19 @@ import jakarta.validation.Valid;
 @RequestMapping("/equipe")
 @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*")
 public class EditaEquipeController {
-    @Autowired
-    private EquipeService equipeService;
 
-    @PutMapping("/atualizar/{equ_id}")
-    public ResponseEntity<String> atualizarEquipe(@PathVariable String equ_id, @Valid @RequestBody EquipeDTO dto) {
+    @Autowired
+    private EditaEquipeService editaEquipeService;
+
+    @PutMapping("/atualizar/{equId}")
+    public ResponseEntity<String> atualizarEquipe(@PathVariable String equId, @Valid @RequestBody EquipeDTO dto) {
         if (dto.getEquNome() == null || dto.getEquNome().isBlank()) {
             throw new EquipeSemInformacaoException(
                     "Erro ao atualizar equipe",
                     "O nome da equipe não pode ser nulo ou vazio.");
         }
 
-        equipeService.updateEquipe(equ_id, dto);
+        editaEquipeService.updateEquipe(equId, dto);
         return ResponseEntity.ok("Equipe atualizada com sucesso!");
     }
 }
