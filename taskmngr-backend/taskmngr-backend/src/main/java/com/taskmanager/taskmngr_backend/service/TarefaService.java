@@ -1,8 +1,8 @@
 package com.taskmanager.taskmngr_backend.service;
 
-import com.taskmanager.taskmngr_backend.model.AnexoTarefaModel;
-import com.taskmanager.taskmngr_backend.model.ProjetoModel;
-import com.taskmanager.taskmngr_backend.model.TarefaModel;
+import com.taskmanager.taskmngr_backend.model.entidade.AnexoTarefaModel;
+import com.taskmanager.taskmngr_backend.model.entidade.ProjetoModel;
+import com.taskmanager.taskmngr_backend.model.entidade.TarefaModel;
 import com.taskmanager.taskmngr_backend.repository.TarefaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,7 +36,7 @@ public class TarefaService {
             return Collections.emptyList();
         }
         List<String> projetoIds = projetos.stream()
-                .map(ProjetoModel::getProj_id)
+                .map(ProjetoModel::getProjId)
                 .collect(Collectors.toList());
         return tarefaRepository.findByProjIdIn(projetoIds);
     }
@@ -101,10 +101,10 @@ public class TarefaService {
             anexo.setArquivoTamanho(arquivo.getSize());
             anexo.setArquivoCaminho(caminho);
 
-            if (tarefa.getTar_anexos() == null) {
-                tarefa.setTar_anexos(new java.util.ArrayList<>());
+            if (tarefa.getTarAnexos() == null) {
+                tarefa.setTarAnexos(new java.util.ArrayList<>());
             }
-            tarefa.getTar_anexos().add(anexo);
+            tarefa.getTarAnexos().add(anexo);
             tarefaRepository.save(tarefa);
 
             return anexo;

@@ -1,4 +1,4 @@
-package com.taskmanager.taskmngr_backend.model;
+package com.taskmanager.taskmngr_backend.model.entidade;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -11,5 +11,5 @@ public class ColunaModel {
     private String colId;
     private String colTitulo;
     private Integer colOrdem;
-    private String proj_id;
+    private String projId;
 }

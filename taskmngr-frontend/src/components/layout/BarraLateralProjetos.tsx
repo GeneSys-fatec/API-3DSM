@@ -5,21 +5,17 @@ import type { Projeto } from "@/types/types";
 import { useOptionsMenu } from "@/hooks/useOptionsMenu";
 
 type ProjetoDaAPI = {
-  proj_id?: string | number;
-  id?: string | number;
-  proj_nome?: string;
-  nome?: string;
-  proj_descricao?: string;
-  descricao?: string;
-  proj_dataCriacao?: string;
-  dataCriacao?: string;
+  projId?: string | number;
+  projNome?: string;
+  projDescricao?: string;
+  projDataCriacao?: string;
 };
 
 interface BarraLateralProjetosProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenModal: () => void;
-  onProjectSelect: (projectId: string | null) => void;
+  onProjectSelect: (projId: string | null) => void;
 }
 
 export default function BarraLateralProjetos({
@@ -48,17 +44,17 @@ export default function BarraLateralProjetos({
 
       const normalized: Projeto[] = (Array.isArray(data) ? data : []).map(
         (d: ProjetoDaAPI) => ({
-          id: String(d.proj_id ?? d.id ?? ""),
-          nome: String(d.proj_nome ?? d.nome ?? ""),
-          descricao: String(d.proj_descricao ?? d.descricao ?? ""),
-          dataCriacao: String(d.proj_dataCriacao ?? d.dataCriacao ?? ""),
+          projId: String(d.projId ?? d.projId ?? ""),
+          projNome: String(d.projNome ?? d.projNome ?? ""),
+          projDescricao: String(d.projDescricao ?? d.projDescricao ?? ""),
+          projDataCriacao: String(d.projDataCriacao ?? d.projDataCriacao ?? ""),
         })
       );
 
       setProjetos(normalized);
 
       if (normalized.length > 0 && !activeProjectId) {
-        const firstProjectId = normalized[0].id;
+        const firstProjectId = normalized[0].projId;
         setActiveProjectId(firstProjectId);
         onProjectSelect(firstProjectId);
       } else if (normalized.length === 0) {
@@ -85,7 +81,7 @@ export default function BarraLateralProjetos({
   const handleEdit = () => {
     if (!optionsMenu.selectedId) return;
     const projeto =
-      projetos.find((p) => p.id === optionsMenu.selectedId) ?? null;
+      projetos.find((p) => p.projId === optionsMenu.selectedId) ?? null;
     setProjetoParaEditar(projeto);
     setIsEditModalOpen(true);
     optionsMenu.close();
@@ -171,13 +167,13 @@ export default function BarraLateralProjetos({
         </div>
         <div className="flex flex-col gap-1">
           {projetos.map((p) => {
-            const isActive = activeProjectId === p.id;
+            const isActive = activeProjectId === p.projId;
             return (
               <div
-                key={p.id}
+                key={p.projId}
                 onClick={() => {
-                  setActiveProjectId(p.id);
-                  onProjectSelect(p.id);
+                  setActiveProjectId(p.projId);
+                  onProjectSelect(p.projId);
                   if (isOpen) onClose();
                 }}
                 className={`flex items-center justify-between w-full rounded-md p-2 text-md cursor-pointer transition-colors duration-150 ${
@@ -201,7 +197,7 @@ export default function BarraLateralProjetos({
                       isOpen ? "opacity-100" : "opacity-0"
                     } lg:opacity-0 lg:group-hover:opacity-100`}
                   >
-                    {p.nome}
+                    {p.projNome}
                   </p>
                 </div>
                 <i
@@ -209,7 +205,7 @@ export default function BarraLateralProjetos({
                   aria-label="Mais opções"
                   title="Mais opções"
                   tabIndex={0}
-                  onClick={(e) => optionsMenu.open(e, p.id)}
+                  onClick={(e) => optionsMenu.open(e, p.projId)}
                   className={`fa-solid fa-ellipsis-vertical cursor-pointer p-2 rounded-full flex-shrink-0 transition-opacity duration-200 
                               ${isOpen ? "opacity-100" : "opacity-0"} 
                               lg:opacity-0 lg:group-hover:opacity-100 

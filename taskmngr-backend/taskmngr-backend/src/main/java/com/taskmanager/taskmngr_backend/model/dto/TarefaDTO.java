@@ -6,21 +6,21 @@ import java.util.List;
 
 import org.springframework.hateoas.RepresentationModel;
 
-import com.taskmanager.taskmngr_backend.model.AnexoTarefaModel;
+import com.taskmanager.taskmngr_backend.model.entidade.AnexoTarefaModel;
 
 @Data
 public class TarefaDTO extends RepresentationModel<TarefaDTO>{
-    private String tar_id;
-    private String tar_titulo;
-    private String tar_descricao;
-    private String tar_prazo;
-    private String tar_status;
-    private String tar_prioridade;
-    private List<AnexoTarefaModel> tar_anexos;
-    private String tar_dataCriacao;
-    private String tar_dataAtualizacao;
-    private String usu_id;
-    private String usu_nome;
-    private String proj_id;
-    private String proj_nome;
+    private String tarId;
+    private String tarTitulo;
+    private String tarDescricao;
+    private String tarPrazo;
+    private String tarStatus;
+    private String tarPrioridade;
+    private List<AnexoTarefaModel> tarAnexos;
+    private String tarDataCriacao;
+    private String tarDataAtualizacao;
+    private String usuId;
+    private String usuNome;
+    private String projId;
+    private String projNome;
 }

@@ -1,8 +1,8 @@
 package com.taskmanager.taskmngr_backend.service;
 
-import com.taskmanager.taskmngr_backend.model.EquipeModel;
-import com.taskmanager.taskmngr_backend.model.UsuarioModel;
 import com.taskmanager.taskmngr_backend.model.dto.EquipeDTO;
+import com.taskmanager.taskmngr_backend.model.entidade.EquipeModel;
+import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.EquipeRepository;
 import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.EquipeNaoEncontradaException;
@@ -21,15 +21,7 @@ public class EquipeService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    public EquipeModel createEquipe(EquipeDTO equipeDTO) {
-        EquipeModel equipe = new EquipeModel();
-        equipe.setNome(equipeDTO.getEqu_nome());
-        equipe.setDescricao(equipeDTO.getEqu_descricao());
-        if (equipeDTO.getUsuarioIds() != null && !equipeDTO.getUsuarioIds().isEmpty()) {
-            List<UsuarioModel> usuarios = (List<UsuarioModel>) usuarioRepository.findAllById(equipeDTO.getUsuarioIds());
-            equipe.setUsuarios(new HashSet<>(usuarios));
-        }
-
+    public EquipeModel createEquipe(EquipeModel equipe) {
         return equipeRepository.save(equipe);
     }
 
@@ -47,8 +39,8 @@ public class EquipeService {
 
     public EquipeModel updateEquipe(String id, EquipeDTO equipeDTO) {
         EquipeModel equipe = getEquipeById(id);
-        equipe.setNome(equipeDTO.getEqu_nome());
-        equipe.setDescricao(equipeDTO.getEqu_descricao());
+        equipe.setEquNome(equipeDTO.getEquNome());
+        equipe.setEquDescricao(equipeDTO.getEquDescricao());
 
         equipe.getUsuarios().clear();
         if (equipeDTO.getUsuarioIds() != null && !equipeDTO.getUsuarioIds().isEmpty()) {

@@ -3,6 +3,7 @@ import { ModalContext } from "@/context/ModalContext";
 import { toast } from "react-toastify";
 import FormularioTarefa from "./FormularioTarefa";
 import type { Tarefa, Usuario } from "@/types/types";
+import { authFetch } from "@/utils/api";
 
 interface ModalCriarTarefasProps {
   onSuccess: () => void;
@@ -11,12 +12,12 @@ interface ModalCriarTarefasProps {
 }
 
 const estadoInicial: Partial<Tarefa> = {
-  tar_titulo: "",
-  tar_descricao: "",
-  usu_id: "",
-  usu_nome: "Selecione um membro",
-  tar_prioridade: "Média",
-  tar_prazo: "",
+  tarTitulo: "",
+  tarDescricao: "",
+  usuId: "",
+  usuNome: "Selecione um membro",
+  tarPrioridade: "Média",
+  tarPrazo: "",
 };
 
 export default function ModalCriarTarefas({
@@ -27,13 +28,13 @@ export default function ModalCriarTarefas({
   const modalContext = useContext(ModalContext);
   const [tarefa, setTarefa] = useState<Partial<Tarefa>>({
     ...estadoInicial,
-    tar_status: statusInicial,
+    tarStatus: statusInicial,
   });
   const [anexos, setAnexos] = useState<File[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:8080/usuario/listar")
+    authFetch("http://localhost:8080/usuario/listar")
       .then((res) => res.json())
       .then((data) => setUsuarios(data))
       .catch((err) => console.error("Erro ao buscar usuários:", err));
@@ -56,10 +57,10 @@ export default function ModalCriarTarefas({
     }
 
     try {
-      const res = await fetch("http://localhost:8080/tarefa/cadastrar", {
+      const res = await authFetch("http://localhost:8080/tarefa/cadastrar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...tarefa, proj_id: selectedProjectId }),
+        body: JSON.stringify({ ...tarefa, projId: selectedProjectId }),
       });
 
       if (!res.ok) throw new Error(await res.text());
@@ -69,8 +70,8 @@ export default function ModalCriarTarefas({
       for (const arquivo of anexos) {
         const formData = new FormData();
         formData.append("file", arquivo);
-        await fetch(
-          `http://localhost:8080/tarefa/${tarefaCriada.tar_id}/upload`,
+        await authFetch(
+          `http://localhost:8080/tarefa/${tarefaCriada.tarId}/upload`,
           {
             method: "POST",
             body: formData,

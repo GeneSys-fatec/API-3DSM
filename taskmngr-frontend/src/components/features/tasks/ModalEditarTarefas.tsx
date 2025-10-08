@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import FormularioTarefa from "./FormularioTarefa";
 import { getFileIcon } from "@/utils/fileUtils.tsx";
 import type { Tarefa, Usuario, Anexo } from "@/types/types.ts";
+import { authFetch } from "@/utils/api";
 
 interface ModalEditarTarefasProps {
   tarefa: Tarefa;
@@ -21,16 +22,16 @@ export default function ModalEditarTarefas({
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:8080/usuario/listar")
+    authFetch("http://localhost:8080/usuario/listar")
       .then((res) => res.json())
       .then(setUsuarios)
       .catch((err) => console.error("Erro ao buscar usuários:", err));
 
-    fetch(`http://localhost:8080/tarefa/${tarefaInicial.tar_id}/anexos`)
+    authFetch(`http://localhost:8080/tarefa/${tarefaInicial.tarId}/anexos`)
       .then((res) => res.json())
       .then(setAnexosExistentes)
       .catch((err) => console.error("Erro ao buscar anexos:", err));
-  }, [tarefaInicial.tar_id]);
+  }, [tarefaInicial.tarId]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNovosAnexos((prev) => [...prev, ...Array.from(e.target.files || [])]);
@@ -44,9 +45,8 @@ export default function ModalEditarTarefas({
   const handleRemoverAnexoExistente = async (nomeArquivo: string) => {
     if (!window.confirm(`Remover anexo "${nomeArquivo}"?`)) return;
     try {
-      await fetch(
-        `http://localhost:8080/tarefa/${
-          tarefa.tar_id
+      await authFetch(
+        `http://localhost:8080/tarefa/${tarefa.tarId
         }/anexos/${encodeURIComponent(nomeArquivo)}`,
         { method: "DELETE" }
       );
@@ -63,7 +63,7 @@ export default function ModalEditarTarefas({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await fetch(`http://localhost:8080/tarefa/atualizar/${tarefa.tar_id}`, {
+      await authFetch(`http://localhost:8080/tarefa/atualizar/${tarefa.tarId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(tarefa),
@@ -72,7 +72,7 @@ export default function ModalEditarTarefas({
       for (const arquivo of novosAnexos) {
         const formData = new FormData();
         formData.append("file", arquivo);
-        await fetch(`http://localhost:8080/tarefa/${tarefa.tar_id}/upload`, {
+        await authFetch(`http://localhost:8080/tarefa/${tarefa.tarId}/upload`, {
           method: "POST",
           body: formData,
         });
@@ -127,9 +127,8 @@ export default function ModalEditarTarefas({
                       <div className="flex items-center gap-2 truncate">
                         {getFileIcon(anexo.arquivoTipo || "")}
                         <a
-                          href={`http://localhost:8080/tarefa/${
-                            tarefa.tar_id
-                          }/anexos/${encodeURIComponent(anexo.arquivoNome)}`}
+                          href={`http://localhost:8080/tarefa/${tarefa.tarId
+                            }/anexos/${encodeURIComponent(anexo.arquivoNome)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="truncate text-blue-600 hover:underline"

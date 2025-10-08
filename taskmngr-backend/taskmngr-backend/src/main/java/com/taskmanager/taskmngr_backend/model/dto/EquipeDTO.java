@@ -9,12 +9,12 @@ import lombok.Data;
 @Data
 public class EquipeDTO extends RepresentationModel<EquipeDTO> {
 
-    private String equ_id;
-    private String equ_nome;
-    private String equ_descricao;
-    private String equ_dataCriacao;
-    private String equ_dataAtualizacao;
-    private List<UsuarioDTO> equ_membros;
+    private String equId;
+    private String equNome;
+    private String equDescricao;
+    private String equDataCriacao;
+    private String equDataAtualizacao;
+    private List<UsuarioDTO> equMembros;
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private List<String> usuarioIds;
 }

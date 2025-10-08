@@ -25,7 +25,7 @@ export default function CardTarefa(props: CardTarefaProps) {
     transition,
     isDragging,
   } = useSortable({
-    id: tarefa.tar_id,
+    id: tarefa.tarId,
     data: { type: "task", tarefa },
     disabled: !isDesktop,
   });
@@ -44,8 +44,8 @@ export default function CardTarefa(props: CardTarefaProps) {
     Baixa: "bg-green-100 text-green-700",
   };
 
-  const classePrioridade = tarefa.tar_prioridade
-    ? prioridadeEstilo[tarefa.tar_prioridade]
+  const classePrioridade = tarefa.tarPrioridade
+    ? prioridadeEstilo[tarefa.tarPrioridade]
     : "bg-gray-100 text-gray-800";
 
   const classesDinamicas = isOverlay
@@ -60,7 +60,7 @@ export default function CardTarefa(props: CardTarefaProps) {
     ? "hover:cursor-grab active-cursor-grabbing"
     : "cursor-pointer";
 
-  const inicialResponsavel = tarefa.usu_nome?.charAt(0)?.toUpperCase() || "?";
+  const inicialResponsavel = tarefa.usuNome?.charAt(0)?.toUpperCase() || "?";
 
   return (
     <div
@@ -79,15 +79,15 @@ export default function CardTarefa(props: CardTarefaProps) {
       <div className="flex justify-between h-full">
         <div className="flex flex-col justify-between truncate">
           <h2 className="font-semibold text-gray-800 pr-2 truncate">
-            {tarefa.tar_titulo}
+            {tarefa.tarTitulo}
           </h2>
           <div className="flex items-center gap-3 mt-2">
             <span
               className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${classePrioridade}`}
             >
-              {tarefa.tar_prioridade}
+              {tarefa.tarPrioridade}
             </span>
-            <span className="text-sm text-gray-500 ">{tarefa.tar_prazo}</span>
+            <span className="text-sm text-gray-500 ">{tarefa.tarPrazo}</span>
           </div>
         </div>
         <div className="flex flex-col justify-between items-center gap-2">
@@ -105,7 +105,7 @@ export default function CardTarefa(props: CardTarefaProps) {
             <Trash className="h-4" />
           </button>
           <div
-            title={tarefa.usu_nome}
+            title={tarefa.usuNome}
             className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold"
           >
             {inicialResponsavel}

@@ -36,7 +36,7 @@ export default function ProjetoItem({
             isExpanded ? "opacity-100" : "opacity-0"
           }`}
         >
-          {projeto.nome}
+          {projeto.projNome}
         </p>
       </div>
       <i

@@ -1,6 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import type { Projeto } from "@/types/types";
+import { authFetch } from '@/utils/api';
 
 type ModalProps = {
   isOpen: boolean;
@@ -10,10 +11,10 @@ type ModalProps = {
 };
 
 type ModalState = {
-  projectName: string;
-  description: string;
-  dataCriacao: string;
-  dataAtualizacao: string;
+  projNome: string;
+  projDescricao: string;
+  projDataCriacao: string;
+  projDataAtualizacao: string;
   saving: boolean;
   error?: string | null;
 };
@@ -24,10 +25,10 @@ export default class ModalEditarProjetos extends React.Component<ModalProps, Mod
   constructor(props: ModalProps) {
     super(props);
     this.state = {
-      projectName: props.projeto?.nome || '',
-      description: props.projeto?.descricao || '',
-      dataCriacao: props.projeto?.dataCriacao || '',
-      dataAtualizacao: new Date().toISOString().slice(0, 10),
+      projNome: props.projeto?.projNome || '',
+      projDescricao: props.projeto?.projDescricao || '',
+      projDataCriacao: props.projeto?.projDataCriacao || '',
+      projDataAtualizacao: new Date().toISOString().slice(0, 10),
       saving: false,
       error: null,
     };
@@ -44,23 +45,23 @@ export default class ModalEditarProjetos extends React.Component<ModalProps, Mod
       document.addEventListener('mousedown', this.handleOutsideClick);
       const { projeto } = this.props;
       this.setState({
-        projectName: projeto?.nome || '',
-        description: projeto?.descricao || '',
-        dataCriacao: projeto?.dataCriacao || '',
-        dataAtualizacao: new Date().toISOString().slice(0, 10),
+        projNome: projeto?.projNome || '',
+        projDescricao: projeto?.projDescricao || '',
+        projDataCriacao: projeto?.projDataCriacao || '',
+        projDataAtualizacao: new Date().toISOString().slice(0, 10),
         error: null,
       });
     } else if (!this.props.isOpen && prevProps.isOpen) {
       document.removeEventListener('mousedown', this.handleOutsideClick);
     }
 
-    if (this.props.projeto?.id !== prevProps.projeto?.id && this.props.isOpen) {
+    if (this.props.projeto?.projId !== prevProps.projeto?.projId && this.props.isOpen) {
       const { projeto } = this.props;
       this.setState({
-        projectName: projeto?.nome || '',
-        description: projeto?.descricao || '',
-        dataCriacao: projeto?.dataCriacao || '',
-        dataAtualizacao: new Date().toISOString().slice(0, 10),
+        projNome: projeto?.projNome || '',
+        projDescricao: projeto?.projDescricao || '',
+        projDataCriacao: projeto?.projDataCriacao || '',
+        projDataAtualizacao: new Date().toISOString().slice(0, 10),
         error: null,
       });
     }
@@ -84,23 +85,22 @@ export default class ModalEditarProjetos extends React.Component<ModalProps, Mod
 
   atualizarProjeto = () => {
     const { projeto } = this.props;
-    const { projectName, description, dataCriacao, dataAtualizacao } = this.state;
+    const { projNome, projDescricao, projDataCriacao, projDataAtualizacao } = this.state;
 
     this.setState({ saving: true, error: null });
 
     const token = localStorage.getItem('token');
 
-    fetch(`http://localhost:8080/projeto/atualizar/${projeto.id}`, {
+    authFetch(`http://localhost:8080/projeto/atualizar/${projeto.projId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify({
-        proj_nome: projectName,
-        proj_descricao: description,
-        proj_dataCriacao: dataCriacao || null,
-        proj_dataAtualizacao: dataAtualizacao || new Date().toISOString().slice(0, 10),
+        projNome: projNome,
+        projDescricao: projDescricao,
+        projDataCriacao: projDataCriacao || null,
+        projDataAtualizacao: projDataAtualizacao || new Date().toISOString().slice(0, 10),
       }),
     })
       .then(async (response) => {
@@ -109,10 +109,10 @@ export default class ModalEditarProjetos extends React.Component<ModalProps, Mod
           throw new Error(`Erro ao atualizar projeto: ${response.statusText}. Resposta do servidor: ${errorBody}`);
         }
         this.props.onSaved?.({
-          id: projeto.id,
-          nome: projectName,
-          descricao: description,
-          dataCriacao,
+          projId: projeto.projId,
+          projNome: projNome,
+          projDescricao: projDescricao,
+          projDataCriacao,
         });
         this.props.onClose();
       })
@@ -127,7 +127,7 @@ export default class ModalEditarProjetos extends React.Component<ModalProps, Mod
   handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!this.state.projectName.trim()) {
+    if (!this.state.projNome.trim()) {
       console.log('Por favor, insira o nome do projeto.');
       return;
     }
@@ -154,26 +154,26 @@ export default class ModalEditarProjetos extends React.Component<ModalProps, Mod
 
           <form onSubmit={this.handleSubmit} className='flex flex-col gap-y-5'>
             <div>
-              <label htmlFor="projectName" className="block text-sm font-medium text-gray-700 mb-1">Nome do Projeto</label>
+              <label htmlFor="projNome" className="block text-sm font-medium text-gray-700 mb-1">Nome do Projeto</label>
               <input
                 type="text"
-                id="projectName"
-                name="projectName"
+                id="projNome"
+                name="projNome"
                 placeholder="Nome do Projeto"
-                value={this.state.projectName}
+                value={this.state.projNome}
                 onChange={this.handleChange}
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
               />
             </div>
 
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+              <label htmlFor="projDescricao" className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
               <textarea
-                id="description"
-                name="description"
+                id="projDescricao"
+                name="projDescricao"
                 rows={3}
                 placeholder=""
-                value={this.state.description}
+                value={this.state.projDescricao}
                 onChange={this.handleChange}
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
               ></textarea>

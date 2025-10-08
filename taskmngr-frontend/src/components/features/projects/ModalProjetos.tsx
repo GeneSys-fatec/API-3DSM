@@ -3,7 +3,7 @@ import { authFetch } from "@/utils/api";
 import { toast } from "react-toastify";
 
 type NovoProjeto = {
-  nome: string;
+  projNome: string;
 };
 
 type ModalProps = {
@@ -13,8 +13,8 @@ type ModalProps = {
 };
 
 type ModalState = {
-  projectName: string;
-  description: string;
+  projNome: string;
+  projDescricao: string;
   team: string;
   erros?: { [campo: string]: string };
 };
@@ -25,8 +25,8 @@ export default class ModalProjetos extends React.Component<
 > {
   private modalRef = React.createRef<HTMLDivElement>();
   state: ModalState = {
-    projectName: "",
-    description: "",
+    projNome: "",
+    projDescricao: "",
     team: "Selecione a equipe",
     erros: {},
   };
@@ -80,11 +80,11 @@ export default class ModalProjetos extends React.Component<
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            proj_nome: this.state.projectName,
-            proj_descricao: this.state.description,
-            proj_status: "Ativo",
-            proj_dataCriacao: new Date().toISOString().slice(0, 10),
-            proj_dataAtualizacao: new Date().toISOString().slice(0, 10),
+            projNome: this.state.projNome,
+            projDescricao: this.state.projDescricao,
+            projStatus: "Ativo",
+            projDataCriacao: new Date().toISOString().slice(0, 10),
+            projDataAtualizacao: new Date().toISOString().slice(0, 10),
             equ_id: "1",
             equ_nome: this.state.team,
           }),
@@ -101,8 +101,8 @@ export default class ModalProjetos extends React.Component<
       window.dispatchEvent(new CustomEvent("projeto:created"));
 
       this.setState({
-        projectName: "",
-        description: "",
+        projNome: "",
+        projDescricao: "",
         team: "Selecione a equipe",
       });
       this.props.onClose();
@@ -115,11 +115,11 @@ export default class ModalProjetos extends React.Component<
   handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!this.state.projectName.trim()) {
+    if (!this.state.projNome.trim()) {
       toast.error("Por favor, insira o nome do projeto.");
       console.log("Por favor, insira o nome do projeto.");
       return;
-    } else if (!this.state.description.trim()) {
+    } else if (!this.state.projDescricao.trim()) {
       toast.error("Por favor, insira a descrição do projeto.");
       console.log("Por favor, insira a descrição do projeto.");
       return;
@@ -156,17 +156,17 @@ export default class ModalProjetos extends React.Component<
           <form onSubmit={this.handleSubmit} className="flex flex-col gap-y-5">
             <div>
               <label
-                htmlFor="Nome do Projeto"
+                htmlFor="projNome"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
                 Nome do Projeto
               </label>
               <input
                 type="text"
-                id="projectName"
-                name="projectName"
+                id="projNome"
+                name="projNome"
                 placeholder="Nome do Projeto"
-                value={this.state.projectName}
+                value={this.state.projNome}
                 onChange={this.handleChange}
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
               />
@@ -174,17 +174,17 @@ export default class ModalProjetos extends React.Component<
 
             <div>
               <label
-                htmlFor="description"
+                htmlFor="projDescricao"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
                 Descrição
               </label>
               <textarea
-                id="description"
-                name="description"
+                id="projDescricao"
+                name="projDescricao"
                 rows={3}
                 placeholder=""
-                value={this.state.description}
+                value={this.state.projDescricao}
                 onChange={this.handleChange}
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
               ></textarea>
