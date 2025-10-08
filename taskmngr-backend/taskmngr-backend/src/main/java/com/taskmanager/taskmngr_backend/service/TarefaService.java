@@ -1,5 +1,6 @@
 package com.taskmanager.taskmngr_backend.service;
 
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.AnexoTamanhoExcedente;
 import com.taskmanager.taskmngr_backend.model.entidade.AnexoTarefaModel;
 import com.taskmanager.taskmngr_backend.model.entidade.ProjetoModel;
 import com.taskmanager.taskmngr_backend.model.entidade.TarefaModel;

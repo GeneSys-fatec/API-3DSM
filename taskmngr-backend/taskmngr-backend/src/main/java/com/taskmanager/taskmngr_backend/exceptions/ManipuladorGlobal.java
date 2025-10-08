@@ -108,4 +108,18 @@ public class ManipuladorGlobal {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
     }
 
+    // AnexoTamanhoExcedente
+    @ExceptionHandler(AnexoTamanhoExcedente.class)
+    public ResponseEntity<ErroRespostaDTO> manipularAnexoTamanhoExcedente(AnexoTamanhoExcedente ex) {
+        ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(erro);
+    }
+
+    // Quando o limite do multipart do servidor é excedido (antes do controller)
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErroRespostaDTO> manipularUploadExcedido(MaxUploadSizeExceededException ex) {
+        ErroRespostaDTO erro = new ErroRespostaDTO("Tamanho de upload excedente", "Arquivos devem ter no máximo 2 MB.");
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(erro);
+    }
+
 }
