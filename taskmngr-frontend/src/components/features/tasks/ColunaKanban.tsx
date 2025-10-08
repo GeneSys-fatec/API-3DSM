@@ -40,7 +40,7 @@ export default function ColunaKanban(props: ColunaKanbanProps) {
 
   const { setNodeRef } = useDroppable({ id });
 
-  const tarefasIds = tarefas.map((t) => t.tar_id);
+  const tarefasIds = tarefas.map((t) => t.tarId);
 
   const [tempTitle, setTempTitle] = useState(titulo);
 
@@ -118,7 +118,7 @@ export default function ColunaKanban(props: ColunaKanbanProps) {
         >
           {tarefas.map((tarefa) => (
             <CardTarefa
-              key={tarefa.tar_id}
+              key={tarefa.tarId}
               tarefa={tarefa}
               onAbrirModalEdicao={onAbrirModalEdicao}
               corClasse={corClasse}

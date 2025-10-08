@@ -1,4 +1,4 @@
-package com.taskmanager.taskmngr_backend.model;
+package com.taskmanager.taskmngr_backend.model.entidade;
 
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
@@ -16,13 +16,13 @@ import java.util.Set;
 @Document(collection = "equipes")
 public class EquipeModel {
     @Id
-    private String id;
-    private String nome;
-    private String descricao;
+    private String equId;
+    private String equNome;
+    private String equDescricao;
     @CreatedDate
-    private LocalDateTime dataCriacao;
+    private LocalDateTime equDataCriacao;
     @LastModifiedDate
-    private LocalDateTime dataAtualizacao;
+    private LocalDateTime equDataAtualizacao;
     @DBRef
     private Set<UsuarioModel> usuarios = new HashSet<>();
 }

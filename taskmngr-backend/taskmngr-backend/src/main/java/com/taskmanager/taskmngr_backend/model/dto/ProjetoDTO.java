@@ -5,12 +5,12 @@ import lombok.Data;
 
 @Data
 public class ProjetoDTO extends RepresentationModel<ProjetoDTO>{
-    private String proj_id;
-    private String proj_nome;
-    private String proj_descricao;
-    private String proj_status;
-    private String proj_dataCriacao;
-    private String proj_dataAtualizacao;
+    private String projId;
+    private String projNome;
+    private String projDescricao;
+    private String projStatus;
+    private String projDataCriacao;
+    private String projDataAtualizacao;
     private String equ_id;
     private String equ_nome;
 

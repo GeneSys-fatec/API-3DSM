@@ -15,8 +15,8 @@ export const agruparTarefasPorColuna = (
   });
 
   tarefas.forEach((tarefa) => {
-    if (tarefasAgrupadas[tarefa.tar_status]) {
-      tarefasAgrupadas[tarefa.tar_status].push(tarefa);
+    if (tarefasAgrupadas[tarefa.tarStatus]) {
+      tarefasAgrupadas[tarefa.tarStatus].push(tarefa);
     }
   });
   return tarefasAgrupadas;
@@ -45,7 +45,7 @@ export const encontrarColunaDaTarefa = (
 ): string | null => {
   if (!tarefaId) return null;
   for (const colunaTitulo in tarefas) {
-    if (tarefas[colunaTitulo].some((tarefa) => tarefa.tar_id === tarefaId)) {
+    if (tarefas[colunaTitulo].some((tarefa) => tarefa.tarId === tarefaId)) {
       return colunaTitulo;
     }
   }

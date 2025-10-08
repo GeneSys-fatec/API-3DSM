@@ -47,7 +47,7 @@ export default function Home() {
     const activeId = event.active.id as string;
     const colunaTitulo = encontrarColunaDaTarefa(activeId, tarefas);
     if (colunaTitulo) {
-      const tarefa = tarefas[colunaTitulo].find((t) => t.tar_id === activeId);
+      const tarefa = tarefas[colunaTitulo].find((t) => t.tarId === activeId);
       if (tarefa) setActiveTask(tarefa);
     }
   };
@@ -70,7 +70,7 @@ export default function Home() {
       return;
 
     const tarefaMovida = tarefas[activeContainer]?.find(
-      (t) => t.tar_id === activeId
+      (t) => t.tarId === activeId
     );
     if (!tarefaMovida) return;
 
@@ -78,11 +78,11 @@ export default function Home() {
       const newTarefas = JSON.parse(JSON.stringify(prev));
       const activeItems = newTarefas[activeContainer];
       const activeIndex = activeItems.findIndex(
-        (item: Tarefa) => item.tar_id === activeId
+        (item: Tarefa) => item.tarId === activeId
       );
 
       const [movedItem] = activeItems.splice(activeIndex, 1);
-      movedItem.tar_status = overContainer;
+      movedItem.tarStatus = overContainer;
 
       const overItems = newTarefas[overContainer];
       overItems.push(movedItem);
@@ -95,7 +95,7 @@ export default function Home() {
         `http://localhost:8080/tarefa/atualizar/${activeId}`,
         {
           method: "PUT",
-          body: JSON.stringify({ ...tarefaMovida, tar_status: overContainer }),
+          body: JSON.stringify({ ...tarefaMovida, tarStatus: overContainer }),
         }
       );
       if (!response.ok)
@@ -118,7 +118,7 @@ export default function Home() {
           method: "POST",
           body: JSON.stringify({
             titulo: "Nova Coluna",
-            proj_id: selectedProjectId,
+            projId: selectedProjectId,
           }),
         }
       );
@@ -179,7 +179,7 @@ export default function Home() {
     const { type, data } = itemParaExcluir;
     const url =
       type === "tarefa"
-        ? `http://localhost:8080/tarefa/apagar/${(data as Tarefa).tar_id}`
+        ? `http://localhost:8080/tarefa/apagar/${(data as Tarefa).tarId}`
         : `http://localhost:8080/colunas/deletar/${(data as Coluna).id}`;
 
     try {
@@ -275,7 +275,7 @@ export default function Home() {
               {itemParaExcluir.type === "tarefa" ? 'A tarefa "' : 'A coluna "'}
               <span className="font-bold">
                 {itemParaExcluir.type === "tarefa"
-                  ? (itemParaExcluir.data as Tarefa).tar_titulo
+                  ? (itemParaExcluir.data as Tarefa).tarTitulo
                   : (itemParaExcluir.data as Coluna).titulo}
               </span>
               {'" será excluída permanentemente.'}

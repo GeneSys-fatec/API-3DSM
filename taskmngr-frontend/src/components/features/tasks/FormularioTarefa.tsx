@@ -26,16 +26,16 @@ export default function FormularioTarefa({
     };
 
     const handleUsuarioChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const usu_id = e.target.value;
-        const usuario = usuarios.find(u => u.usu_id === usu_id);
+        const usuId = e.target.value;
+        const usuario = usuarios.find(u => u.usuId === usuId);
         if (usuario) {
             setTarefa(prev => ({
                 ...prev,
-                usu_id: usuario.usu_id,
-                usu_nome: usuario.usu_nome
+                usuId: usuario.usuId,
+                usuNome: usuario.usuNome
             }));
         } else {
-            setTarefa(prev => ({...prev, usu_id: '', usu_nome: 'Selecione um membro'}));
+            setTarefa(prev => ({...prev, usuId: '', usuNome: 'Selecione um membro'}));
         }
     };
     
@@ -44,10 +44,10 @@ export default function FormularioTarefa({
             <div className="flex flex-col gap-y-6">
                 
                 <div>
-                    <label htmlFor="tar_titulo" className="py-2 block text-sm font-medium text-gray-700">Título da Tarefa</label>
+                    <label htmlFor="tarTitulo" className="py-2 block text-sm font-medium text-gray-700">Título da Tarefa</label>
                     <input
-                        type="text" id="tar_titulo" name="tar_titulo"
-                        value={tarefa.tar_titulo || ''} onChange={handleChange}
+                        type="text" id="tarTitulo" name="tarTitulo"
+                        value={tarefa.tarTitulo || ''} onChange={handleChange}
                         placeholder="Título da Tarefa"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
                     />
@@ -81,10 +81,10 @@ export default function FormularioTarefa({
                 
                 
                 <div>
-                    <label htmlFor="tar_descricao" className="block text-sm font-medium text-gray-700">Descrição</label>
+                    <label htmlFor="tarDescricao" className="block text-sm font-medium text-gray-700">Descrição</label>
                     <textarea
-                        id="tar_descricao" name="tar_descricao"
-                        value={tarefa.tar_descricao || ''} onChange={handleChange}
+                        id="tarDescricao" name="tarDescricao"
+                        value={tarefa.tarDescricao || ''} onChange={handleChange}
                         rows={3} className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 min-h-24 p-2"
                     ></textarea>
                 </div>
@@ -99,11 +99,11 @@ export default function FormularioTarefa({
                             <label className="block text-sm font-medium text-gray-700">Responsável</label>
                             <select
                                 className="block w-full rounded-md border-gray-300 shadow-sm p-2"
-                                name="usu_id" value={tarefa.usu_id || ''} onChange={handleUsuarioChange}
+                                name="usuId" value={tarefa.usuId || ''} onChange={handleUsuarioChange}
                             >
                                 <option value="">Selecione um membro</option>
                                 {usuarios.map(usuario => (
-                                    <option key={usuario.usu_id} value={usuario.usu_id}>{usuario.usu_nome}</option>
+                                    <option key={usuario.usuId} value={usuario.usuId}>{usuario.usuNome}</option>
                                 ))}
                             </select>
                         </div>
@@ -112,7 +112,7 @@ export default function FormularioTarefa({
                             <label className="block text-sm font-medium text-gray-700">Prioridade</label>
                             <select
                                 className="block w-full rounded-md border-gray-400 shadow-sm p-2"
-                                name="tar_prioridade" value={tarefa.tar_prioridade || 'Média'} onChange={handleChange}
+                                name="tarPrioridade" value={tarefa.tarPrioridade || 'Média'} onChange={handleChange}
                             >
                                 <option>Alta</option>
                                 <option>Média</option>
@@ -125,7 +125,7 @@ export default function FormularioTarefa({
                             <input
                                 type="date"
                                 className="block w-full rounded-md border-gray-300 shadow-sm p-2 text-gray-500"
-                                name="tar_prazo" value={tarefa.tar_prazo || ''} onChange={handleChange}
+                                name="tarPrazo" value={tarefa.tarPrazo || ''} onChange={handleChange}
                             />
                         </div>
                     </div>

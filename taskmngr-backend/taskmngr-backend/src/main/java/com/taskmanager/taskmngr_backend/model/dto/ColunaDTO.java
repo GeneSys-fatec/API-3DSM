@@ -13,5 +13,5 @@ public class ColunaDTO extends RepresentationModel<ColunaDTO>{
     private String Id;
     private String Titulo;
     private Integer Ordem;
-    private String proj_id;
+    private String projId;
 }

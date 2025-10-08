@@ -8,9 +8,9 @@ interface CadastroProps {
 }
  
 interface CadastroState {
-    nome: string;
-    email: string;
-    senha: string;
+    usuNome: string;
+    usuEmail: string;
+    usuSenha: string;
     erros: { [campo: string]: string };
 }
  
@@ -18,9 +18,9 @@ class FormularioCadastro extends React.Component<CadastroProps, CadastroState> {
     constructor(props: CadastroProps) {
         super(props);
         this.state = {
-            nome: "",
-            email: "",
-            senha: "",
+            usuNome: "",
+            usuEmail: "",
+            usuSenha: "",
             erros: {},
         };
     }
@@ -42,11 +42,11 @@ class FormularioCadastro extends React.Component<CadastroProps, CadastroState> {
     handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
  
-        const { nome, email, senha } = this.state;
+        const { usuNome, usuEmail, usuSenha } = this.state;
         const novoUsuario = {
-            usu_nome: nome,
-            usu_email: email,
-            usu_senha: senha
+            usuNome: usuNome,
+            usuEmail: usuEmail,
+            usuSenha: usuSenha
         };
  
         try {
@@ -57,12 +57,12 @@ class FormularioCadastro extends React.Component<CadastroProps, CadastroState> {
             });
  
             const data = await response.json();
-            const campos = ["nome", "email", "senha"];
+            const campos = ["usuNome", "usuEmail", "usuSenha"];
             const errosMap: { [campo: string]: string } = {};
  
             if (response.ok) {
                 toast.success("Usuário cadastrado com sucesso!");
-                this.setState({ nome: "", email: "", senha: "", erros: {} });
+                this.setState({ usuNome: "", usuEmail: "", usuSenha: "", erros: {} });
                 setTimeout(() => {
                     this.props.navigate("/login");
                 }, 1500);
@@ -92,7 +92,7 @@ class FormularioCadastro extends React.Component<CadastroProps, CadastroState> {
     };
  
     render() {
-        const { nome, email, senha, erros } = this.state;
+        const { usuNome, usuEmail, usuSenha, erros } = this.state;
  
         return (
             <div className="flex flex-col md:flex-row justify-center bg-gray-100 items-center min-h-screen p-4">
@@ -113,7 +113,7 @@ class FormularioCadastro extends React.Component<CadastroProps, CadastroState> {
                         <div className="relative w-full max-w-xs">
                             <div className="relative">
                                 <i className="fa-solid fa-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                <input type="text" name="nome" value={nome} onChange={this.handleChange} placeholder="Nome" className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm" required />
+                                <input type="text" name="nome" value={usuNome} onChange={this.handleChange} placeholder="Nome" className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm" required />
                             </div>
                             {erros.nome && <p className="text-red-500 text-xs mt-1">{erros.nome}</p>}
                         </div>
@@ -121,7 +121,7 @@ class FormularioCadastro extends React.Component<CadastroProps, CadastroState> {
                         <div className="relative w-full max-w-xs">
                             <div className="relative">
                                 <i className="fa-solid fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                <input type="email" name="email" value={email} onChange={this.handleChange} placeholder="E-mail" className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm" required />
+                                <input type="email" name="email" value={usuEmail} onChange={this.handleChange} placeholder="E-mail" className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm" required />
                             </div>
                             {erros.email && <p className="text-red-500 text-xs mt-1">{erros.email}</p>}
                         </div>
@@ -129,7 +129,7 @@ class FormularioCadastro extends React.Component<CadastroProps, CadastroState> {
                         <div className="relative w-full max-w-xs">
                             <div className="relative">
                                 <i className="fa-solid fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                <input type="password" name="senha" value={senha} onChange={this.handleChange} placeholder="Senha" className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm" required />
+                                <input type="password" name="senha" value={usuSenha} onChange={this.handleChange} placeholder="Senha" className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm" required />
                             </div>
                             {erros.senha && <p className="text-red-500 text-xs mt-1">{erros.senha}</p>}
                         </div>
