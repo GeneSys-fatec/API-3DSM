@@ -42,3 +42,15 @@ export type Anexo = {
     arquivoTipo: string;
     arquivoTamanho?: number;
 };
+
+export type Comentario = {
+  comId: string;
+  usuId: string;
+  usuNome: string;
+  comMensagem: string;
+  comDataCriacao: string;
+  comDataAtualizacao: string;
+  comResposta?: string | null;
+  tarId: string;
+  replies?: Comentario[];
+}

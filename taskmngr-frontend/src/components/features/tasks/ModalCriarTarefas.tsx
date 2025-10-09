@@ -107,14 +107,16 @@ export default function ModalCriarTarefas({
           onSubmit={handleSubmit}
           className="flex flex-col flex-grow overflow-hidden"
         >
-          <FormularioTarefa
-            tarefa={tarefa}
-            setTarefa={setTarefa}
-            usuarios={usuarios}
-            anexos={anexos}
-            handleFileChange={handleFileChange}
-            handleRemoveAnexo={handleRemoveAnexo}
-          />
+          <div className="px-8 flex-grow overflow-y-auto">
+            <FormularioTarefa
+              tarefa={tarefa}
+              setTarefa={setTarefa}
+              usuarios={usuarios}
+              anexos={anexos}
+              handleFileChange={handleFileChange}
+              handleRemoveAnexo={handleRemoveAnexo}
+            />
+          </div>
           <div className="p-8 pt-4 flex justify-end gap-x-4">
             <button
               type="button"
