@@ -73,7 +73,7 @@ export default function FormularioTarefa({
     const totalAnexosCount = (anexosExistentes?.length || 0) + (anexos?.length || 0);
 
     return (
-        <div className="px-8 flex-grow overflow-y-auto">
+        <div className="flex-grow overflow-y-auto">
             <div className="flex flex-col gap-y-6">
 
                 <div>
