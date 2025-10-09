@@ -9,6 +9,7 @@ interface ModalCriarTarefasProps {
   onSuccess: () => void;
   statusInicial: string;
   selectedProjectId: string | null;
+  tarPrazo?: Date | string; 
 }
 
 const estadoInicial: Partial<Tarefa> = {
@@ -24,11 +25,17 @@ export default function ModalCriarTarefas({
   onSuccess,
   statusInicial,
   selectedProjectId,
+  tarPrazo,
 }: ModalCriarTarefasProps) {
   const modalContext = useContext(ModalContext);
   const [tarefa, setTarefa] = useState<Partial<Tarefa>>({
     ...estadoInicial,
     tarStatus: statusInicial,
+    tarPrazo: tarPrazo
+      ? typeof tarPrazo === "string"
+        ? tarPrazo.slice(0, 10)
+        : tarPrazo.toISOString().slice(0, 10)
+      : "", //transforma a data do slot (calendario) em yyyy-mm-dd
   });
   const [anexos, setAnexos] = useState<File[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);

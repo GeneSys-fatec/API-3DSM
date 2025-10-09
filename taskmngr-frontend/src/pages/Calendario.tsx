@@ -1,11 +1,14 @@
-import React from "react";
+import React from 'react';
+import CalendarioTarefas from '../components/features/tasks/CalendarioTarefas';
 
-export default class Calendario extends React.Component {
-    render() {
-        return (
-            <>
-            
-            </>
-        )
-    }
-}
+const Calendario: React.FC = () => {
+    return (
+            <div className="flex-1 p-4 md:p-6 overflow-hidden">
+                <div className="mx-2 md:mx-4 h-full">
+                    <CalendarioTarefas />
+                </div>
+            </div>
+    );
+};
+
+export default Calendario;

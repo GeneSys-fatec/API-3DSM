@@ -44,10 +44,10 @@ public class CriaTarefaController {
                     "Título, descrição e data são obrigatórios.");
         }
         TarefaModel tarefa = tarefaConverterService.dtoParaModel(dto);
-        if (usuarioLogado != null) {
-            tarefa.setUsuId(usuarioLogado.getUsuId());
-            tarefa.setUsuNome(usuarioLogado.getUsuNome());
-        }
+        // if (usuarioLogado != null) {
+        //     tarefa.setUsuId(usuarioLogado.getUsuId());
+        //     tarefa.setUsuNome(usuarioLogado.getUsuNome());
+        // }
         TarefaModel salva = tarefaService.salvar(tarefa);
         tarefaService.salvar(tarefa);
         return ResponseEntity.status(HttpStatus.CREATED).body(salva);
