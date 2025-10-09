@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.comentário.ComentarioEmBrancoException;
 import com.taskmanager.taskmngr_backend.model.converter.ComentarioConverter;
 import com.taskmanager.taskmngr_backend.model.entidade.ComentarioModel;
 import com.taskmanager.taskmngr_backend.repository.ComentarioRepository;
@@ -19,6 +20,7 @@ public class ComentarioService {
     @Autowired ComentarioConverter converter;
 
     public ComentarioModel adicionarComentario(ComentarioModel comentario) {
+        validarComentario(comentario);
         return repository.save(comentario);
     }
 
@@ -37,6 +39,7 @@ public class ComentarioService {
     }
 
     public ComentarioModel atualizarComentario(ComentarioModel comentario) {
+        validarComentario(comentario);
         return repository.save(comentario);
     }
 
@@ -48,5 +51,11 @@ public class ComentarioService {
             }
         }
         repository.deleteById(comId);
+    }
+
+    private void validarComentario(ComentarioModel comentario) {
+        if (comentario.getComMensagem() == null || comentario.getComMensagem().trim().isEmpty()) {
+            throw new ComentarioEmBrancoException("Mensagem do comentário em branco", "A mensagem não pode estar em branco!");
+        }
     }
 }
