@@ -1,14 +1,37 @@
 import React from 'react';
-import { getFileIcon, formatFileSize } from '@/utils/fileUtils';
-import type { Tarefa, Usuario } from '@/types/types'; 
+import { getFileIcon } from '@/utils/fileUtils';
+import type { Tarefa, Usuario, Anexo } from '@/types/types';
+import { authFetch } from '@/utils/api';
 
 interface FormularioTarefaProps {
-    tarefa: Partial<Tarefa>; 
+    tarefa: Partial<Tarefa>;
     setTarefa: React.Dispatch<React.SetStateAction<Partial<Tarefa>>>;
     usuarios: Usuario[];
     anexos: File[];
+    anexosExistentes?: Anexo[];
     handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleRemoveAnexo: (file: File) => void;
+    handleRemoverAnexoExistente?: (nomeArquivo: string) => void;
+}
+
+async function baixarAnexo(tarefaId: string, nomeArquivo: string) {
+    try {
+        const res = await authFetch(
+            `http://localhost:8080/tarefa/${tarefaId}/anexos/${encodeURIComponent(nomeArquivo)}`
+        );
+        if (!res.ok) throw new Error("Erro ao baixar anexo");
+
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = nomeArquivo;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    } catch (err) {
+        console.error(err);
+        alert("Falha ao baixar o anexo.");
+    }
 }
 
 export default function FormularioTarefa({
@@ -16,13 +39,21 @@ export default function FormularioTarefa({
     setTarefa,
     usuarios,
     anexos,
+    anexosExistentes,
     handleFileChange,
-    handleRemoveAnexo
+    handleRemoveAnexo,
+    handleRemoverAnexoExistente
 }: FormularioTarefaProps) {
-    
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setTarefa(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const arquivos = Array.from(e.target.files || []);
+        console.log("Arquivos selecionados:", arquivos);
+        handleFileChange(e);
     };
 
     const handleUsuarioChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -35,14 +66,16 @@ export default function FormularioTarefa({
                 usuNome: usuario.usuNome
             }));
         } else {
-            setTarefa(prev => ({...prev, usuId: '', usuNome: 'Selecione um membro'}));
+            setTarefa(prev => ({ ...prev, usuId: '', usuNome: 'Selecione um membro' }));
         }
     };
-    
+
+    const totalAnexosCount = (anexosExistentes?.length || 0) + (anexos?.length || 0);
+
     return (
         <div className="px-8 flex-grow overflow-y-auto">
             <div className="flex flex-col gap-y-6">
-                
+
                 <div>
                     <label htmlFor="tarTitulo" className="py-2 block text-sm font-medium text-gray-700">Título da Tarefa</label>
                     <input
@@ -53,24 +86,50 @@ export default function FormularioTarefa({
                     />
                 </div>
 
-                
                 <div>
                     <label htmlFor="file-upload" className="cursor-pointer bg-white p-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                        
-                        <span>Anexar Arquivos ({anexos.length})</span>
-                        <input id="file-upload" name="anexo" type="file" className="sr-only" onChange={handleFileChange} multiple />
+                        <span>Anexar Arquivos ({totalAnexosCount})</span>
+                        <input id="file-upload" name="anexo" type="file" className="sr-only" onChange={handleInputChange} multiple />
                     </label>
                 </div>
-                {anexos.length > 0 && (
+
+                {((anexosExistentes && anexosExistentes.length > 0) || (anexos && anexos.length > 0)) && (
                     <div className="mt-2 p-4 border border-dashed rounded-md bg-gray-50 max-h-40 overflow-y-auto">
-                        <h4 className="text-sm font-semibold text-gray-700 mb-2">Anexos ({anexos.length}):</h4>
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2">Anexos ({totalAnexosCount}):</h4>
                         <ul className="space-y-2">
-                            {anexos.map((file, index) => (
-                                <li key={index} className="flex items-center justify-between text-sm">
+                            {anexosExistentes?.map((anexo) => (
+                                <li key={`existente-${anexo.arquivoNome}`} className="flex items-center justify-between text-sm">
                                     <div className="flex items-center gap-2 truncate pr-2">
-                                        {getFileIcon(file.type)}
+                                        {getFileIcon(anexo.arquivoTipo || "")}
+                                        {tarefa?.tarId ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => baixarAnexo(tarefa.tarId!, anexo.arquivoNome)}
+                                                className="truncate text-blue-600 hover:underline text-left"
+                                            >
+                                                {anexo.arquivoNome}
+                                            </button>
+                                        ) : (
+                                            <span className="truncate">{anexo.arquivoNome}</span>
+                                        )}
+                                    </div>
+                                    {handleRemoverAnexoExistente && (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoverAnexoExistente(anexo.arquivoNome)}
+                                            className="text-red-500 hover:text-red-700 ml-2"
+                                        >
+                                            &times;
+                                        </button>
+                                    )}
+                                </li>
+                            ))}
+
+                            {anexos.map((file, index) => (
+                                <li key={`novo-${file.name}-${index}`} className="flex items-center justify-between text-sm">
+                                    <div className="flex items-center gap-2 truncate pr-2">
+                                        {getFileIcon(file.type || file.name.split('.').pop() || '')}
                                         <span className="truncate" title={file.name}>{file.name}</span>
-                                        <span className="text-xs text-gray-400">({formatFileSize(file.size)})</span>
                                     </div>
                                     <button type="button" onClick={() => handleRemoveAnexo(file)} className="text-red-500 hover:text-red-700 ml-2">&times;</button>
                                 </li>
@@ -78,8 +137,7 @@ export default function FormularioTarefa({
                         </ul>
                     </div>
                 )}
-                
-                
+
                 <div>
                     <label htmlFor="tarDescricao" className="block text-sm font-medium text-gray-700">Descrição</label>
                     <textarea
@@ -89,12 +147,11 @@ export default function FormularioTarefa({
                     ></textarea>
                 </div>
 
-                
                 <div className="bg-white border mt-2 flex flex-col gap-6 p-4 rounded-md">
                     <h3 className="text-lg font-semibold text-gray-800">Detalhes</h3>
                     <hr />
                     <div className="grid grid-cols-1 gap-6">
-                        
+
                         <div className="flex flex-col gap-2">
                             <label className="block text-sm font-medium text-gray-700">Responsável</label>
                             <select
@@ -107,7 +164,7 @@ export default function FormularioTarefa({
                                 ))}
                             </select>
                         </div>
-                        
+
                         <div className="flex flex-col gap-2">
                             <label className="block text-sm font-medium text-gray-700">Prioridade</label>
                             <select
@@ -119,7 +176,7 @@ export default function FormularioTarefa({
                                 <option>Baixa</option>
                             </select>
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Data de entrega</label>
                             <input

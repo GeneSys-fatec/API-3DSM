@@ -41,10 +41,11 @@ export default function ModalCriarTarefas({
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAnexos((prev) => [...prev, ...Array.from(e.target.files || [])]);
-    e.target.value = "";
+  const arquivos = Array.from(e.target.files || []);
+  console.log("Arquivos no Modal:", arquivos);
+  setAnexos((prev) => [...prev, ...arquivos]);
+  e.target.value = "";
   };
-
   const handleRemoveAnexo = (fileToRemove: File) => {
     setAnexos((prev) => prev.filter((file) => file !== fileToRemove));
   };
