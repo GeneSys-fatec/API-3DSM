@@ -1,42 +1,36 @@
 package com.taskmanager.taskmngr_backend.service.Equipe;
 
-import java.util.HashSet;
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.taskmanager.taskmngr_backend.model.dto.EquipeDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.EquipeModel;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.EquipeRepository;
-import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class EditaEquipeService {
-
     @Autowired
     private EquipeRepository equipeRepository;
-
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-
     @Autowired
     private BuscaEquipeService buscaEquipeService;
+    @Autowired
+    private ValidacaoEquipeService validacaoEquipeService;
 
-    public EquipeModel updateEquipe(String id, EquipeDTO equipeDTO) {
-        
+    public EquipeModel editar(String id, EquipeDTO dto, UsuarioModel usuarioLogado) {
         EquipeModel equipe = buscaEquipeService.getEquipeById(id);
-        equipe.setEquNome(equipeDTO.getEquNome());
-        equipe.setEquDescricao(equipeDTO.getEquDescricao());
+        validacaoEquipeService.validarNomeUnico(dto.getEquNome(), id);
 
-        equipe.getUsuarios().clear();
+        if (dto.getMembrosEmails() != null) {
+            validacaoEquipeService.verificarSeUsuarioECriador(equipe, usuarioLogado, "alterar a lista de membros");
 
-        // Adiciona Membros na Equipe por E-mail 
-        if (equipeDTO.getUsuarioEmails() != null && !equipeDTO.getUsuarioEmails().isEmpty()) {
-            List<UsuarioModel> usuarios = (List<UsuarioModel>) usuarioRepository.findAllByEmails(equipeDTO.getUsuarioEmails());
-            equipe.setUsuarios(new HashSet<>(usuarios));
+            Set<UsuarioModel> novosMembros = validacaoEquipeService.buscarEValidarMembrosPorEmails(dto.getMembrosEmails());
+            equipe.setUsuarios(novosMembros);
         }
+
+        equipe.setEquNome(dto.getEquNome());
+        equipe.setEquDescricao(dto.getEquDescricao());
 
         return equipeRepository.save(equipe);
     }
