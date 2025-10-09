@@ -4,6 +4,9 @@ import { toast } from "react-toastify";
 import FormularioTarefa from "./FormularioTarefa";
 import type { Tarefa, Usuario } from "@/types/types";
 import { authFetch } from "@/utils/api";
+import { showErrorToastFromResponse, showValidationToast } from "@/utils/errorUtils";
+import { uploadTaskAttachments } from "@/utils/taskUtils";
+import { validateAttachments } from "@/utils/fileUtils";
 
 interface ModalCriarTarefasProps {
   onSuccess: () => void;
@@ -41,10 +44,10 @@ export default function ModalCriarTarefas({
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const arquivos = Array.from(e.target.files || []);
-  console.log("Arquivos no Modal:", arquivos);
-  setAnexos((prev) => [...prev, ...arquivos]);
-  e.target.value = "";
+    const arquivos = Array.from(e.target.files || []);
+    console.log("Arquivos no Modal:", arquivos);
+    setAnexos((prev) => [...prev, ...arquivos]);
+    e.target.value = "";
   };
   const handleRemoveAnexo = (fileToRemove: File) => {
     setAnexos((prev) => prev.filter((file) => file !== fileToRemove));
@@ -52,32 +55,64 @@ export default function ModalCriarTarefas({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Coleta de erros de validação (um único toast no final)
+    const validationErrors: string[] = [];
+
     if (!selectedProjectId) {
-      toast.error("ID do projeto não encontrado.");
+      validationErrors.push("ID do projeto não encontrado.");
+    }
+    if (!tarefa.tarTitulo?.trim()) {
+      validationErrors.push("O título da tarefa é obrigatório.");
+    }
+    if (!tarefa.usuId) {
+      validationErrors.push("Selecione um responsável pela tarefa.");
+    }
+    if (!tarefa.tarPrazo) {
+      validationErrors.push("Informe um prazo para a tarefa.");
+    }
+
+    // Validação dos anexos
+    if (anexos.length > 0) {
+      const { valid, errors } = validateAttachments(anexos, {
+        maxFiles: 10,
+        maxFileSizeMB: 2,
+        maxTotalSizeMB: 20,
+        allowedMimeTypes: [
+          "application/pdf",
+          "image/*",
+          "text/plain",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ],
+        allowedExtensions: ["pdf", "png", "jpg", "jpeg", "txt", "docx"],
+      });
+      if (!valid) validationErrors.push(...errors);
+    }
+
+    if (validationErrors.length > 0) {
+      showValidationToast(validationErrors, "Erros de validação");
       return;
     }
 
     try {
+      // Criação da tarefa só após todas as validações
       const res = await authFetch("http://localhost:8080/tarefa/cadastrar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...tarefa, projId: selectedProjectId }),
       });
 
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        await showErrorToastFromResponse(res, "Erro ao criar a tarefa");
+        return;
+      }
 
       const tarefaCriada = await res.json();
 
-      for (const arquivo of anexos) {
-        const formData = new FormData();
-        formData.append("file", arquivo);
-        await authFetch(
-          `http://localhost:8080/tarefa/${tarefaCriada.tarId}/upload`,
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
+      // Upload de anexos (só se todos válidos)
+      if (anexos.length > 0) {
+        const ok = await uploadTaskAttachments(tarefaCriada.tarId, anexos);
+        if (!ok) return;
       }
 
       toast.success("Tarefa criada com sucesso!");
@@ -85,7 +120,7 @@ export default function ModalCriarTarefas({
       modalContext?.closeModal();
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao criar a tarefa.");
+      toast.error("Erro inesperado ao criar a tarefa.");
     }
   };
 

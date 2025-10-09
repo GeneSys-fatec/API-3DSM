@@ -116,7 +116,7 @@ public class TarefaService {
                 if (compressedSize > MAX_FILE_SIZE) {
                     try { comprimido.delete(); } catch (Exception ignored) {}
                     throw new AnexoTamanhoExcedente(
-                        "Impossível comprimir PDF para <= 2MB.",
+                        "Impossível comprimir PDF.",
                         "Tente reduzir a qualidade ou remover páginas do arquivo original."
                     );
                 }

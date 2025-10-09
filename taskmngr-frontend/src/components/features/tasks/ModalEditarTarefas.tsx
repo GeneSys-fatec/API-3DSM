@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import FormularioTarefa from "./FormularioTarefa";
 import type { Tarefa, Usuario, Anexo } from "@/types/types";
 import { authFetch } from "@/utils/api";
+import { getFileIcon } from "@/utils/fileUtils";
 import ListaComentarios from "./ListaComentarios";
 
 interface ModalEditarTarefasProps {
