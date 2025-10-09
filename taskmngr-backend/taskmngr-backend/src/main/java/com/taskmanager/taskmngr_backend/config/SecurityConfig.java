@@ -33,6 +33,7 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.POST,"/auth/login").permitAll()
             .requestMatchers(HttpMethod.POST,"/auth/cadastrar").permitAll()
+            .requestMatchers("/tarefa/**").permitAll()
             .anyRequest().authenticated())
         .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

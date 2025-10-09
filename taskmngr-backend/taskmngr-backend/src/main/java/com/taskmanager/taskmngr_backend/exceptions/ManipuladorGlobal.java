@@ -118,7 +118,7 @@ public class ManipuladorGlobal {
     // Quando o limite do multipart do servidor é excedido (antes do controller)
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ErroRespostaDTO> manipularUploadExcedido(MaxUploadSizeExceededException ex) {
-        ErroRespostaDTO erro = new ErroRespostaDTO("Tamanho de upload excedente", "Arquivos devem ter no máximo 2 MB.");
+        ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), "O tamanho do arquivo excede o limite permitido.");
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(erro);
     }
 
