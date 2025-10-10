@@ -2,7 +2,6 @@ package com.taskmanager.taskmngr_backend.exceptions;
 
 import java.util.stream.Collectors;
 
-import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -12,6 +11,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.CredenciaisInvalidasException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.TokenCriacaoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.TokenInvalidoException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.comentário.ComentarioEmBrancoException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.AcessoNaoAutorizadoException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.CriadorNaoPodeSairException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.EquipeNaoEncontradaException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.EquipeSemInformacaoException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.NomeDeEquipeJaExisteException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.UsuarioNaoEMembroException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.projetos.ProjetoNaoEncontradoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.projetos.ProjetoSemInformacaoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.InvalidTaskDataException;
@@ -129,4 +135,10 @@ public class ManipuladorGlobal {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
     }
 
+    // ComentarioEmBrancoException
+    @ExceptionHandler(ComentarioEmBrancoException.class)
+    public ResponseEntity<ErroRespostaDTO> manipularComentarioEmBranco(ComentarioEmBrancoException ex) {
+        ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
+    }
 }
