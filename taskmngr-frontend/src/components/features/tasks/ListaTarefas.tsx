@@ -5,6 +5,7 @@ import ModalEditarTarefas from "./ModalEditarTarefas";
 import { ModalContext } from "@/context/ModalContext";
 import type { Tarefa } from "@/types/types";
 import { authFetch } from "@/utils/api";
+import { formatDateToDDMMYYYY } from "@/utils/dateUtils";
 
 const getStatusClass = (status: string | null | undefined) => {
   if (!status) {
@@ -169,79 +170,67 @@ export default function ListaTarefas() {
   return (
     <>
       <div className="bg-white md:p-4 md:rounded-lg md:shadow-md overflow-hidden relative min-w-full">
-        {/* A renderização para Desktop (hidden md:block) */}
         <div className="hidden md:block">
-          <div className="max-h-[500px] overflow-y-auto">
-            <div className="grid grid-cols-12 gap-3 py-3 px-2 text-xs font-semibold text-gray-500 border-b sticky top-0 bg-white">
-              {/* Cabeçalho da Tabela */}
-              <div className="col-span-1 text-center">ID</div>
-              <div className="col-span-3">
+          <div className="max-h-[700px] overflow-y-auto">
+            <div className="grid grid-cols-7 gap-4 py-3 px-2 text-xs font-semibold text-gray-500 border-b sticky top-0 bg-white">
+              <div className="text-center">ID</div>
+              <div className="text-center">
                 <i className="fa-solid fa-bars-staggered pr-2" />
                 Título
               </div>
-              <div className="col-span-2 text-center">
+              <div className="text-center">
                 <i className="fa-solid fa-user pr-1" />
                 Responsável
               </div>
-              <div className="col-span-2 text-center">
+              <div className="text-center">
                 <i className="fa-solid fa-tag pr-1" />
                 Entrega
               </div>
-              <div className="col-span-1 text-center">
+              <div className="text-center">
                 <i className="fa-solid fa-arrow-up pr-1" />
                 Prioridade
               </div>
-              <div className="col-span-1 text-center">
+              <div className="text-center">
                 <i className="fa-solid fa-arrow-right pr-1" />
                 Status
               </div>
-              <div className="col-span-1 text-center">
-                <i className="fa-solid fa-pencil pr-1" />
-                Editar
-              </div>
-              <div className="col-span-1">
-                <i className="fa-solid fa-trash pr-1" />
-                Excluir
+              <div className="text-center">
+                <i className="fa-solid fa-cog pr-1" />
+                Ações
               </div>
             </div>
             <div>
               {tarefas.map((tarefa, index) => (
                 <div
                   key={tarefa.tarId}
-                  className="grid grid-cols-12 gap-3 p-3 items-center hover:bg-gray-100 transition-all duration-100 ease-in-out"
+                  className="grid grid-cols-7 gap-4 p-3 items-center hover:bg-gray-100 transition-all duration-100 ease-in-out"
                 >
-                  <div
-                    className="col-span-1 text-sm font-medium text-gray-800 text-center"
-                    title={tarefa.tarId}
-                  >
+                  <div className="text-sm font-medium text-gray-800 text-center">
                     {index + 1}
                   </div>
-                  <div
-                    className="col-span-3 text-sm text-gray-800 truncate"
-                    title={tarefa.tarTitulo}
-                  >
-                    <span className="truncate">{tarefa.tarTitulo}</span>
+                  <div className="text-sm text-gray-800 text-center truncate">
+                    {tarefa.tarTitulo}
                   </div>
-                  <div className="col-span-2 text-sm text-gray-800 text-center">
+                  <div className="text-sm text-gray-800 text-center">
                     {tarefa.usuNome}
                   </div>
-                  <div className="col-span-2 flex justify-center">
-                    <span className="text-xs font-semibold bg-gray-200 text-gray-700 px-2 py-1 rounded-md hover:bg-gray-300 transition-colors">
-                      {tarefa.tarPrazo}
+                  <div className="flex justify-center">
+                    <span className="text-xs font-semibold bg-gray-200 text-gray-700 px-2 py-1 rounded-md hover:bg-gray-300 transition-colors whitespace-nowrap">
+                      {formatDateToDDMMYYYY(tarefa.tarPrazo)}
                     </span>
                   </div>
-                  <div className="col-span-1 flex justify-center">
+                  <div className="flex justify-center">
                     <span
-                      className={`px-2 py-1 text-xs font-bold rounded-md uppercase ${getPrioridadeClass(
+                      className={`px-2 py-1 text-xs font-bold rounded-md uppercase whitespace-nowrap ${getPrioridadeClass(
                         tarefa.tarPrioridade
                       )}`}
                     >
                       {tarefa.tarPrioridade}
                     </span>
                   </div>
-                  <div className="col-span-1 overflow-hidden flex justify-center">
+                  <div className="flex justify-center">
                     <span
-                      className={`px-2 py-1 text-xs font-bold rounded-md uppercase truncate ${getStatusClass(
+                      className={`px-2 py-1 text-xs font-bold rounded-md uppercase whitespace-nowrap ${getStatusClass(
                         tarefa.tarStatus
                       )}`}
                       title={tarefa.tarStatus}
@@ -249,35 +238,36 @@ export default function ListaTarefas() {
                       {tarefa.tarStatus}
                     </span>
                   </div>
-                  <div className="col-span-1 flex justify-center">
+                  <div className="flex justify-center gap-2">
                     <button
                       onClick={() => abrirModalEdicao(tarefa)}
-                      className="text-xs font-semibold bg-gray-200 text-gray-700 px-2 py-1 rounded-md hover:bg-gray-300 transition-colors"
+                      className="text-blue-600 hover:text-blue-800 p-1"
+                      title="Editar"
                     >
-                      Editar
+                      <i className="fa-solid fa-pencil text-sm"></i>
                     </button>
-                  </div>
-                  <div className="col-span-1 flex justify-center">
                     <button
-                      className="text-xs font-semibold bg-gray-200 text-gray-700 px-2 py-1 rounded-md hover:bg-gray-300 transition-colors"
+                      className="text-red-600 hover:text-red-800 p-1"
                       onClick={() => setTarefaParaExcluir(tarefa.tarId)}
+                      title="Excluir"
                     >
-                      Excluir
+                      <i className="fa-solid fa-trash text-sm"></i>
                     </button>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-          <button
-            onClick={abrirModalCriacao}
-            className="text-sm font-semibold text-blue-600 hover:text-blue-800 pt-4 cursor-pointer"
-          >
-            <i className="fa-solid fa-plus mr-2"></i>Adicionar Nova Tarefa
-          </button>
+          <div className="pt-4">
+            <button
+              onClick={abrirModalCriacao}
+              className="text-sm font-semibold text-blue-600 hover:text-blue-800 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
+            >
+              <i className="fa-solid fa-plus mr-2"></i>Adicionar Nova Tarefa
+            </button>
+          </div>
         </div>
 
-        {/* A renderização para Mobile (block md:hidden) */}
         <div className="block md:hidden relative w-screen -ml-1">
           <div className="max-h-[calc(100vh-280px)] overflow-y-auto pb-20 px-1 -mt-2">
             <div className="space-y-4">
@@ -341,7 +331,7 @@ export default function ListaTarefas() {
                             Entrega:
                           </span>
                           <span className="text-gray-800 font-medium pl-2">
-                            {tarefa.tarPrazo}
+                            {formatDateToDDMMYYYY(tarefa.tarPrazo)}
                           </span>
                         </div>
                       </div>
@@ -358,7 +348,7 @@ export default function ListaTarefas() {
             <div className="bg-white border-t border-gray-200 p-3 rounded-lg shadow-lg">
               <button
                 onClick={abrirModalCriacao}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-4 rounded-lg transition-colors flex items-center justify-center text-lg"
+                className="w-full bg-blue-300 hover:bg-blue-600 text-white hover:text-white font-semibold py-4 px-4 rounded-lg transition-colors flex items-center justify-center text-lg"
                 title="Adicionar Nova Tarefa"
               >
                 <i className="fa-solid fa-plus mr-2 text-lg"></i>Adicionar Nova
@@ -369,10 +359,15 @@ export default function ListaTarefas() {
         </div>
       </div>
 
-      {/* Modal de confirmação para exclusão */}
       {tarefaParaExcluir && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl">
+        <div
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+          onClick={() => setTarefaParaExcluir(null)}
+        >
+          <div
+            className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="text-center">
               <i className="fa-solid fa-triangle-exclamation text-red-500 text-4xl mb-4"></i>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
