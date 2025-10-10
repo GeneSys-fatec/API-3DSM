@@ -10,6 +10,7 @@ import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,14 +36,14 @@ public class ValidacaoEquipeService {
         }
     }
 
-    public Set<UsuarioModel> buscarEValidarMembrosPorEmails(List<String> emails) {
+    public List<UsuarioModel> buscarEValidarMembrosPorEmails(List<String> emails) {
         if (emails == null || emails.isEmpty()) {
-            return new HashSet<>();
+            return new ArrayList<>();
         }
         List<UsuarioModel> usuariosEncontrados = usuarioRepository.findAllByEmails(emails);
         if (usuariosEncontrados.size() != new HashSet<>(emails).size()) {
             throw new UsuarioNaoEncontradoException("Usuário Não Encontrado", "Um ou mais emails fornecidos não correspondem a usuários existentes.");
         }
-        return new HashSet<>(usuariosEncontrados);
+        return new ArrayList<>(usuariosEncontrados);
     }
 }

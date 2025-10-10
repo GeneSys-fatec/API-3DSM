@@ -8,6 +8,7 @@ import com.taskmanager.taskmngr_backend.repository.EquipeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -26,7 +27,7 @@ public class SairDaEquipeService {
             throw new CriadorNaoPodeSairException("Ação Inválida", "O criador não pode sair da própria equipe. Considere excluir a equipe ou transferir a propriedade.");
         }
 
-        Set<UsuarioModel> membros = equipe.getUsuarios();
+        List<UsuarioModel> membros = equipe.getUsuarios();
         boolean foiRemovido = membros.removeIf(membro -> membro.getUsuId().equals(usuarioLogado.getUsuId()));
         if (!foiRemovido) {
             throw new UsuarioNaoEMembroException("Ação Inválida", "Você não pode sair de uma equipe da qual não é membro.");

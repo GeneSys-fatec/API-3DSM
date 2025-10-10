@@ -160,7 +160,9 @@ export default function BarraLateralProjetos({
               isOpen ? "opacity-100" : "opacity-0"
             } lg:opacity-0 lg:group-hover:opacity-100`}
           >
-            <p className="text-slate-500 text-sm mt-4">Nenhuma equipe encontrada.</p>
+            <p className="text-slate-500 text-sm mt-4">
+              Nenhuma equipe encontrada.
+            </p>
           </div>
         )}
 

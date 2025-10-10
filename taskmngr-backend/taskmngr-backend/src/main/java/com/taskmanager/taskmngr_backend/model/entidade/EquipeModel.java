@@ -29,7 +29,7 @@ public class EquipeModel {
     @LastModifiedDate
     private LocalDateTime equDataAtualizacao;
     @DBRef
-    private Set<UsuarioModel> usuarios = new HashSet<>();
+    private List<UsuarioModel> usuarios = new ArrayList<>();
     @DBRef
     private List<ProjetoModel> projetos = new ArrayList<>();
 }

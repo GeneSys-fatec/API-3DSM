@@ -6,6 +6,8 @@ import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.EquipeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -25,7 +27,7 @@ public class EditaEquipeService {
         if (dto.getMembrosEmails() != null) {
             validacaoEquipeService.verificarSeUsuarioECriador(equipe, usuarioLogado, "alterar a lista de membros");
 
-            Set<UsuarioModel> novosMembros = validacaoEquipeService.buscarEValidarMembrosPorEmails(dto.getMembrosEmails());
+            List<UsuarioModel> novosMembros = validacaoEquipeService.buscarEValidarMembrosPorEmails(dto.getMembrosEmails());
             equipe.setUsuarios(novosMembros);
         }
 

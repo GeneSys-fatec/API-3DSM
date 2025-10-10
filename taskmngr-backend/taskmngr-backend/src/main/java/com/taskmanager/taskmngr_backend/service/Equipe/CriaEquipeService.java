@@ -6,6 +6,9 @@ import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.EquipeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -17,7 +20,12 @@ public class CriaEquipeService {
 
     public EquipeModel criar(EquipeDTO dto, UsuarioModel criador) {
         validacaoEquipeService.validarNomeUnico(dto.getEquNome(), null);
-        Set<UsuarioModel> membros = validacaoEquipeService.buscarEValidarMembrosPorEmails(dto.getMembrosEmails());
+        List<UsuarioModel> outrosMembros = validacaoEquipeService.buscarEValidarMembrosPorEmails(dto.getMembrosEmails());
+        outrosMembros.remove(criador);
+
+        List<UsuarioModel> membros = new ArrayList<>();
+        membros.add(criador);
+        membros.addAll(outrosMembros);
 
         EquipeModel equipe = new EquipeModel();
         equipe.setEquNome(dto.getEquNome());

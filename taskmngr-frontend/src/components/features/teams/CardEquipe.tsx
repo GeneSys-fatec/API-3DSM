@@ -1,7 +1,4 @@
-interface Usuario {
-    usuNome?: string;
-    usuEmail?: string;
-}
+import { Usuario } from "@/types/types";
 
 interface TeamCardProps {
     id: string;
@@ -39,7 +36,7 @@ export default function TeamCard({ id, equNome, equDescricao, usuarios, corClass
                 </div>
 
                 <div className="flex justify-between items-center pt-4 mt-4 border-t border-gray-100">
-                    {/* Avatares dos membros */}
+
                     <div className="flex -space-x-6 relative">
                         {usuarios.slice(0, 3).map((u, i) => (
                             <div

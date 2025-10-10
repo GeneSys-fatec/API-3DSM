@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
-import { createEquipe } from "./teamService"; 
+import { createEquipe } from "./teamService";
 
 interface ModalCriarEquipeProps {
   isOpen: boolean;
@@ -83,38 +83,52 @@ export default function ModalCriarEquipe({
     try {
       const successMessage = await createEquipe(payload);
       toast.success(successMessage);
-      
+
       window.dispatchEvent(new CustomEvent("equipe:created"));
       onClose();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Ocorreu um erro inesperado.";
+      const message =
+        error instanceof Error ? error.message : "Ocorreu um erro inesperado.";
       toast.error(message);
     } finally {
       setIsSaving(false);
     }
   };
-  
+
   return (
     <div className="fixed inset-0 bg-gray-600/60 flex items-center justify-center z-50 p-4">
-      <div ref={modalRef} className="bg-white rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh] overflow-y-auto">
+      <div
+        ref={modalRef}
+        className="bg-white rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh] overflow-y-auto"
+      >
         <div className="p-8 pb-4 flex justify-between">
           <h2 className="text-2xl font-bold text-gray-800">
             Criar Nova Equipe
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-3xl">
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-3xl"
+          >
             &times;
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col flex-grow overflow-hidden"
+        >
           <div className="px-8 flex-grow overflow-y-auto">
             <div className="flex flex-col gap-y-6 text-left">
               <p className="flex justify-center text-sm text-gray-500 mb-8">
-                Organize sua equipe convidando membros para colaborar em projetos.
+                Organize sua equipe convidando membros para colaborar em
+                projetos.
               </p>
 
               <div>
-                <label htmlFor="teamName" className="block text-sm font-medium text-gray-800 mb-1">
+                <label
+                  htmlFor="teamName"
+                  className="block text-sm font-medium text-gray-800 mb-1"
+                >
                   Nome da Equipe
                 </label>
                 <input
@@ -129,7 +143,10 @@ export default function ModalCriarEquipe({
               </div>
 
               <div>
-                <label htmlFor="newMemberEmail" className="block text-sm font-medium text-gray-800 mb-1">
+                <label
+                  htmlFor="newMemberEmail"
+                  className="block text-sm font-medium text-gray-800 mb-1"
+                >
                   Adicionar Membros
                 </label>
                 <input
@@ -154,13 +171,27 @@ export default function ModalCriarEquipe({
                       <div
                         key={email}
                         className="flex justify-between items-center p-3 rounded-xl text-sm"
-                        style={{ background: "linear-gradient(90deg, #e0f2fe 0%, #c3dafe 100%)", border: "1px solid #bfdbfe", }}
+                        style={{
+                          background:
+                            "linear-gradient(90deg, #e0f2fe 0%, #c3dafe 100%)",
+                          border: "1px solid #bfdbfe",
+                        }}
                       >
                         <div className="flex items-center gap-2 text-gray-900">
-                          <div className="w-4 h-4 rounded-full" style={{ background: "radial-gradient(circle, #3b82f6 0%, #1d4ed8 100%)", }}></div>
+                          <div
+                            className="w-4 h-4 rounded-full"
+                            style={{
+                              background:
+                                "radial-gradient(circle, #3b82f6 0%, #1d4ed8 100%)",
+                            }}
+                          ></div>
                           {email}
                         </div>
-                        <button type="button" onClick={() => handleRemoveMember(email)} className="text-gray-500 hover:text-gray-800 text-2xl ml-2 leading-none">
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveMember(email)}
+                          className="text-gray-500 hover:text-gray-800 text-2xl ml-2 leading-none"
+                        >
                           &times;
                         </button>
                       </div>
@@ -170,7 +201,10 @@ export default function ModalCriarEquipe({
               )}
 
               <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-800 mb-1">
+                <label
+                  htmlFor="description"
+                  className="block text-sm font-medium text-gray-800 mb-1"
+                >
                   Descrição <span className="text-gray-500">(Opcional)</span>
                 </label>
                 <textarea
@@ -187,15 +221,19 @@ export default function ModalCriarEquipe({
           </div>
 
           <div className="p-8 pt-4 flex justify-end gap-x-4">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+            >
               Cancelar
             </button>
-            <button 
+            <button
               type="submit"
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSaving}
             >
-              {isSaving ? 'Criando...' : 'Criar Equipe'}
+              {isSaving ? "Criando..." : "Criar Equipe"}
             </button>
           </div>
         </form>
