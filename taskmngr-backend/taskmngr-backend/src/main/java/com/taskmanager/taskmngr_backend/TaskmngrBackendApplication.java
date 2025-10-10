@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.config.EnableMongoAuditing;
 
 @SpringBootApplication
 @EnableMongoAuditing
-public class TaskmngrBackendApplication {
+public class  TaskmngrBackendApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(TaskmngrBackendApplication.class, args);

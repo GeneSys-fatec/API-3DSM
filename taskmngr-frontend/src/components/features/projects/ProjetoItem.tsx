@@ -33,8 +33,8 @@ export default function ProjetoItem({
         />
         <p
           className={`leading-none truncate transition-opacity duration-200 ${
-            isExpanded ? "opacity-100" : "opacity-0"
-          }`}
+            isExpanded ? "opacity-100" : "opacity-0" 
+          } lg:opacity-0 lg:group-hover:opacity-100`}
         >
           {projeto.projNome}
         </p>

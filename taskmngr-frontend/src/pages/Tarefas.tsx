@@ -1,7 +1,6 @@
 import React from "react";
 import ListaTarefas from "../components/features/tasks/ListaTarefas";
-import type { Projeto } from "../components/layout/BarraLateralProjetos";
-
+import type { Projeto } from "@/types/types";
 type HomeState = {
   projetos: Projeto[];
   isModalOpen: boolean;

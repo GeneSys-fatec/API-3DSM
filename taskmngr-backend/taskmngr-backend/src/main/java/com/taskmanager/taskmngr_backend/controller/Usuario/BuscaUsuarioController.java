@@ -39,6 +39,18 @@ public class BuscaUsuarioController {
         }
     } 
 
+    @GetMapping("/buscar/{usuEmail}")
+    public ResponseEntity<UsuarioDTO> buscarPorEmail(@PathVariable String usuEmail) {
+        Optional<UsuarioModel> usuarioOpt = usuarioService.buscarPorEmail(usuEmail);
+        if (usuarioOpt.isPresent()) {
+            UsuarioDTO dto = usuarioConverterService.modelParaDto(usuarioOpt.get());
+            adicionadorLink.adicionarLink(dto);
+            return ResponseEntity.ok(dto);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
     @GetMapping("/listar")
     public ResponseEntity<List<UsuarioDTO>> listarUsuario() {
         List<UsuarioModel> usuarios = usuarioService.listarTodas();
@@ -48,4 +60,5 @@ public class BuscaUsuarioController {
         adicionadorLink.adicionarLink(dtos);
         return ResponseEntity.ok(dtos);
     }
+
 }
