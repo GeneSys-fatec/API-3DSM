@@ -7,7 +7,7 @@ export interface Tarefa {
   tarPrazo: string;
   tarPrioridade: "Alta" | "Média" | "Baixa";
   tarDescricao: string;
-  tarAnexo?: File | null; 
+  tarAnexo?: File | null;
 }
 
 export type NovaTarefa = Omit<Tarefa, "tarId">;
@@ -48,15 +48,26 @@ export type Equipe = {
   equDataAtualizacao?: string;
   equMembros?: Usuario[];
   usuarioIds?: string[];
-}
-
-export type Anexo = {
-    arquivoNome: string;
-    arquivoCaminho: string;
-    arquivoTipo: string;
-    arquivoTamanho?: number;
 };
 
+export type Anexo = {
+  arquivoNome: string;
+  arquivoCaminho: string;
+  arquivoTipo: string;
+  arquivoTamanho?: number;
+};
+
+export type Comentario = {
+  comId: string;
+  usuId: string;
+  usuNome: string;
+  comMensagem: string;
+  comDataCriacao: string;
+  comDataAtualizacao: string;
+  comResposta?: string | null;
+  tarId: string;
+  replies?: Comentario[];
+};
 export interface EquipeComProjetos extends Equipe {
   projetos: Projeto[];
 }
