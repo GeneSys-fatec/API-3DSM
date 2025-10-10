@@ -3,7 +3,7 @@ import { CSS } from "@dnd-kit/utilities";
 import useMediaQuery from "@/hooks/MediaQuerie";
 import type { Tarefa } from "@/types/types";
 import { Trash } from "lucide-react";
-
+import { formatDateToDDMMYYYY } from "@/utils/dateUtils";
 interface CardTarefaProps {
   tarefa: Tarefa;
   onAbrirModalEdicao?: (tarefa: Tarefa) => void;
@@ -87,7 +87,7 @@ export default function CardTarefa(props: CardTarefaProps) {
             >
               {tarefa.tarPrioridade}
             </span>
-            <span className="text-sm text-gray-500 ">{tarefa.tarPrazo}</span>
+            <span className="text-sm text-gray-500 ">{formatDateToDDMMYYYY(tarefa.tarPrazo)}</span>
           </div>
         </div>
         <div className="flex flex-col justify-between items-center gap-2">
