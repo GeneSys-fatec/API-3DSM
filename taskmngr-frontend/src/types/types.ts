@@ -33,7 +33,11 @@ export type Projeto = {
   projId: string;
   projNome: string;
   projDescricao?: string;
+  projStatus?: string;
   projDataCriacao?: string;
+  projDataAtualizacao?: string;
+  equId?: string;
+  equNome?: string;
 };
 
 export type Equipe = {
@@ -52,3 +56,7 @@ export type Anexo = {
     arquivoTipo: string;
     arquivoTamanho?: number;
 };
+
+export interface EquipeComProjetos extends Equipe {
+  projetos: Projeto[];
+}

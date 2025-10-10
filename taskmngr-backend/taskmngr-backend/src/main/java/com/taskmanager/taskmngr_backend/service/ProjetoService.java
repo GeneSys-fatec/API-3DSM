@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ProjetoService {
@@ -44,11 +45,18 @@ public class ProjetoService {
         if (usuario == null) {
             return Collections.emptyList();
         }
-        List<EquipeModel> equipesDoUsuario = equipeRepository.findByUsuariosContaining(usuario);
+
+        List<EquipeModel> equipesDoUsuario = equipeRepository.findByUsuariosUsuId(usuario.getUsuId());
+
         if (equipesDoUsuario.isEmpty()) {
             return Collections.emptyList();
         }
-        return projetoRepository.findByEquipeIn(equipesDoUsuario);
+
+        List<String> idsDasEquipes = equipesDoUsuario.stream()
+                .map(EquipeModel::getEquId)
+                .collect(Collectors.toList());
+
+        return projetoRepository.findByEquipeEquIdIn(idsDasEquipes);
     }
 
     public List<ProjetoModel> listarTodas() { return projetoRepository.findAll(); }

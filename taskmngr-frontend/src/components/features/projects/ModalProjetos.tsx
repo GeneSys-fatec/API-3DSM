@@ -9,6 +9,7 @@ type NovoProjeto = {
 type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  equipeId: string | null;
   onAddProject?: (projeto: NovoProjeto) => void;
 };
 
@@ -71,41 +72,34 @@ export default class ModalProjetos extends React.Component<
   };
 
   adicionarProjeto = async () => {
+    if (!this.props.equipeId) {
+      toast.error("Nenhuma equipe selecionada para adicionar o projeto.");
+      return;
+    }
+
     try {
       const response = await authFetch(
         "http://localhost:8080/projeto/cadastrar",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
+
           body: JSON.stringify({
             projNome: this.state.projNome,
             projDescricao: this.state.projDescricao,
-            projStatus: "Ativo",
-            projDataCriacao: new Date().toISOString().slice(0, 10),
-            projDataAtualizacao: new Date().toISOString().slice(0, 10),
-            equ_id: "1",
-            equ_nome: this.state.team,
+            equipeId: this.props.equipeId,
           }),
         }
       );
 
       const data = await response.text();
-
       if (response.ok) {
         toast.success(data);
+        window.dispatchEvent(new CustomEvent("projeto:created"));
+        this.props.onClose();
       } else {
         toast.error(data);
       }
-      window.dispatchEvent(new CustomEvent("projeto:created"));
-
-      this.setState({
-        projNome: "",
-        projDescricao: "",
-        team: "Selecione a equipe",
-      });
-      this.props.onClose();
     } catch (error) {
       toast.error("Não foi possível adicionar o projeto.");
       console.error("Erro:", error);

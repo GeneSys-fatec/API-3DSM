@@ -9,18 +9,28 @@ import ModalProjetos from "../components/features/projects/ModalProjetos";
 import NavbarProjetos from "../components/NavbarProjetos";
 
 export default function LayoutPrincipal() {
-
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalProjetosOpen, setIsModalProjetosOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     null
   );
+
+  const [targetEquipeId, setTargetEquipeId] = useState<string | null>(null);
+
   const navigate = useNavigate();
   const location = useLocation();
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-  const handleOpenModal = () => setIsModalProjetosOpen(true);
-  const handleCloseModal = () => setIsModalProjetosOpen(false);
+
+  const handleOpenModal = (equipeId: string) => {
+    setTargetEquipeId(equipeId);
+    setIsModalProjetosOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalProjetosOpen(false);
+    setTargetEquipeId(null);
+  };
 
   const isEquipesPage = location.pathname.startsWith("/equipes");
 
@@ -31,7 +41,6 @@ export default function LayoutPrincipal() {
       <div className="flex flex-1 overflow-hidden">
         <div className="hidden lg:flex">
           {" "}
-
           <BarraLateral />
           {!isEquipesPage && (
             <BarraLateralProjetos
@@ -42,7 +51,6 @@ export default function LayoutPrincipal() {
             />
           )}
         </div>
-
 
         <div className="lg:hidden">
           {!isEquipesPage && (
@@ -68,7 +76,13 @@ export default function LayoutPrincipal() {
         </main>
       </div>
 
-      {!isEquipesPage && <ModalProjetos isOpen={isModalProjetosOpen} onClose={handleCloseModal} />}
+      {!isEquipesPage && (
+        <ModalProjetos
+          isOpen={isModalProjetosOpen}
+          onClose={handleCloseModal}
+          equipeId={targetEquipeId}
+        />
+      )}
       {!isEquipesPage && <BottomNavbar />}
     </div>
   );
