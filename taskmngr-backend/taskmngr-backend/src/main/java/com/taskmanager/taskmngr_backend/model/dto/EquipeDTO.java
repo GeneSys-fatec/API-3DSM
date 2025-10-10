@@ -17,6 +17,9 @@ public class EquipeDTO extends RepresentationModel<EquipeDTO> {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private List<UsuarioDTO> equMembros;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private List<ProjetoDTO> projetos; // Campo para carregar os projetos da equipe
+
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private List<String> membrosEmails;
 }

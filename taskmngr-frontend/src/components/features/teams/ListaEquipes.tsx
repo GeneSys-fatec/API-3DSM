@@ -75,10 +75,11 @@ export default function ListaEquipes() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 p-8">
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 px-4">
-                <div className="mb-4 md:mb-0">
+        <div className="min-h-screen bg-gray-50 p-8 overflow-y-auto">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center pb-2 px-4">
+                <div className="mb-4 md:mb-0 flex flex-col gap-2">
                     <h1 className="text-3xl font-extrabold text-gray-900">Equipes</h1>
+                    <hr className="text-gray-400"/>
                     <p className="text-gray-500 mt-1">
                         Acesse e gerencie todas as suas equipes em um só lugar.
                     </p>
@@ -99,7 +100,7 @@ export default function ListaEquipes() {
                         usuarios={equipe.equMembros ?? []}
                         corClasse={cores[i % cores.length]}
                         onDelete={() => confirmarExclusao(equipe)}
-                        onEdit={() => toast.warn("Funcionalidade de edição ainda não implementada.")} // Temporário!
+                        onEdit={() => toast.warn("Funcionalidade de edição ainda não implementada.")}
                     />
                 ))}
             </div>
