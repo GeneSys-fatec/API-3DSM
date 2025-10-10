@@ -113,7 +113,7 @@ class FormularioCadastro extends React.Component<CadastroProps, CadastroState> {
                         <div className="relative w-full max-w-xs">
                             <div className="relative">
                                 <i className="fa-solid fa-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                <input type="text" name="nome" value={usuNome} onChange={this.handleChange} placeholder="Nome" className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm" required />
+                                <input type="text" name="usuNome" value={usuNome} onChange={this.handleChange} placeholder="Nome" className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm" required />
                             </div>
                             {erros.nome && <p className="text-red-500 text-xs mt-1">{erros.nome}</p>}
                         </div>
@@ -121,7 +121,7 @@ class FormularioCadastro extends React.Component<CadastroProps, CadastroState> {
                         <div className="relative w-full max-w-xs">
                             <div className="relative">
                                 <i className="fa-solid fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                <input type="email" name="email" value={usuEmail} onChange={this.handleChange} placeholder="E-mail" className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm" required />
+                                <input type="email" name="usuEmail" value={usuEmail} onChange={this.handleChange} placeholder="E-mail" className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm" required />
                             </div>
                             {erros.email && <p className="text-red-500 text-xs mt-1">{erros.email}</p>}
                         </div>
@@ -129,7 +129,7 @@ class FormularioCadastro extends React.Component<CadastroProps, CadastroState> {
                         <div className="relative w-full max-w-xs">
                             <div className="relative">
                                 <i className="fa-solid fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                <input type="password" name="senha" value={usuSenha} onChange={this.handleChange} placeholder="Senha" className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm" required />
+                                <input type="password" name="usuSenha" value={usuSenha} onChange={this.handleChange} placeholder="Senha" className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm" required />
                             </div>
                             {erros.senha && <p className="text-red-500 text-xs mt-1">{erros.senha}</p>}
                         </div>

@@ -6,7 +6,7 @@ export async function authFetch(url: string, options: RequestInit = {}): Promise
         headers.append('Authorization', `Bearer ${token}`);
     }
 
-    if (options.body && !headers.has('Content-Type')) {
+    if (options.body && !(options.body instanceof FormData) && !headers.has('Content-Type')) {
         headers.append('Content-Type', 'application/json');
     }
 

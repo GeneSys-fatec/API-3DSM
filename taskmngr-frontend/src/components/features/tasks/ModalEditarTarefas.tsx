@@ -2,9 +2,9 @@ import React, { useState, useEffect, useContext } from "react";
 import { ModalContext } from "@/context/ModalContext.tsx";
 import { toast } from "react-toastify";
 import FormularioTarefa from "./FormularioTarefa";
-import { getFileIcon } from "@/utils/fileUtils.tsx";
-import type { Tarefa, Usuario, Anexo } from "@/types/types.ts";
+import type { Tarefa, Usuario, Anexo } from "@/types/types";
 import { authFetch } from "@/utils/api";
+import { getFileIcon } from "@/utils/fileUtils";
 import ListaComentarios from "./ListaComentarios";
 
 interface ModalEditarTarefasProps {
@@ -35,7 +35,8 @@ export default function ModalEditarTarefas({
   }, [tarefaInicial.tarId]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNovosAnexos((prev) => [...prev, ...Array.from(e.target.files || [])]);
+    const novos = Array.from(e.target.files || []);
+    setNovosAnexos((prev) => [...prev, ...novos]);
     e.target.value = "";
   };
 
@@ -47,8 +48,7 @@ export default function ModalEditarTarefas({
     if (!window.confirm(`Remover anexo "${nomeArquivo}"?`)) return;
     try {
       await authFetch(
-        `http://localhost:8080/tarefa/${tarefa.tarId
-        }/anexos/${encodeURIComponent(nomeArquivo)}`,
+        `http://localhost:8080/tarefa/${tarefa.tarId}/anexos/${encodeURIComponent(nomeArquivo)}`,
         { method: "DELETE" }
       );
       setAnexosExistentes((prev) =>
@@ -111,6 +111,7 @@ export default function ModalEditarTarefas({
               setTarefa={setTarefa}
               usuarios={usuarios}
               anexos={novosAnexos}
+              anexosExistentes={anexosExistentes} // <-- passa os existentes pra dentro do form
               handleFileChange={handleFileChange}
               handleRemoveAnexo={handleRemoveNovoAnexo}
           />
