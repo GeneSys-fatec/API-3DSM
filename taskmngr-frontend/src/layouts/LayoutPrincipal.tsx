@@ -33,6 +33,7 @@ export default function LayoutPrincipal() {
   };
 
   const isEquipesPage = location.pathname.startsWith("/equipes");
+  const isCalendarioPage = location.pathname.startsWith("/calendario");
 
   return (
     <div className="bg-slate-50 h-screen flex flex-col">
@@ -71,7 +72,7 @@ export default function LayoutPrincipal() {
         )}
 
         <main className="p-2 md:p-4 flex-1 flex flex-col min-w-0 h-full">
-          {!isEquipesPage && <NavbarProjetos />}
+          {!isEquipesPage && !isCalendarioPage && <NavbarProjetos />}
           <Outlet context={{ selectedProjectId }} />
         </main>
       </div>
