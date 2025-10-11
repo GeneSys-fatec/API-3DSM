@@ -71,3 +71,10 @@ export type Comentario = {
 export interface EquipeComProjetos extends Equipe {
   projetos: Projeto[];
 }
+export interface Notificacao {
+  id: string;
+  tipo: 'expirado' | 'comentario' | 'atribuido';
+  tarNome: string;
+  data: string;
+  usuNome?: string; 
+}
