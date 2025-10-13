@@ -5,6 +5,7 @@ import FormularioTarefa from "./FormularioTarefa";
 import { getFileIcon } from "@/utils/fileUtils.tsx";
 import type { Tarefa, Usuario, Anexo } from "@/types/types.ts";
 import { authFetch } from "@/utils/api";
+import ListaComentarios from "./ListaComentarios";
 
 interface ModalEditarTarefasProps {
   tarefa: Tarefa;
@@ -112,7 +113,15 @@ export default function ModalEditarTarefas({
               anexos={novosAnexos}
               handleFileChange={handleFileChange}
               handleRemoveAnexo={handleRemoveNovoAnexo}
-            />
+          />
+          <div className="flex-grow overflow-y-auto pt-4">
+            <div className="flex flex-col gap-2">
+              <h3 className="text-lg font-semibold text-gray-800">Comentários</h3>
+              {tarefa.tarId && (
+                  <ListaComentarios tarId={tarefa.tarId} />
+              )}
+            </div>
+          </div>
             {anexosExistentes.length > 0 && (
               <div className="mt-4 p-3 border rounded-md bg-gray-50">
                 <h4 className="font-semibold text-sm mb-2">

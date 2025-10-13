@@ -9,6 +9,7 @@ interface ModalCriarTarefasProps {
   onSuccess: () => void;
   statusInicial: string;
   selectedProjectId: string | null;
+  tarPrazo?: Date | string; 
 }
 
 const estadoInicial: Partial<Tarefa> = {
@@ -24,11 +25,17 @@ export default function ModalCriarTarefas({
   onSuccess,
   statusInicial,
   selectedProjectId,
+  tarPrazo,
 }: ModalCriarTarefasProps) {
   const modalContext = useContext(ModalContext);
   const [tarefa, setTarefa] = useState<Partial<Tarefa>>({
     ...estadoInicial,
     tarStatus: statusInicial,
+    tarPrazo: tarPrazo
+      ? typeof tarPrazo === "string"
+        ? tarPrazo.slice(0, 10)
+        : tarPrazo.toISOString().slice(0, 10)
+      : "",
   });
   const [anexos, setAnexos] = useState<File[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -107,6 +114,7 @@ export default function ModalCriarTarefas({
           onSubmit={handleSubmit}
           className="flex flex-col flex-grow overflow-hidden"
         >
+          <div className="px-8 flex-grow overflow-y-auto">
           <FormularioTarefa
             tarefa={tarefa}
             setTarefa={setTarefa}
@@ -115,6 +123,7 @@ export default function ModalCriarTarefas({
             handleFileChange={handleFileChange}
             handleRemoveAnexo={handleRemoveAnexo}
           />
+          </div>
           <div className="p-8 pt-4 flex justify-end gap-x-4">
             <button
               type="button"

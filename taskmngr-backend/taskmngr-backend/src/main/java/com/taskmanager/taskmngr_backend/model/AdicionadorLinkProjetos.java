@@ -24,8 +24,7 @@ public class AdicionadorLinkProjetos {
                 .withSelfRel();
 
         Link cadastrarLink = WebMvcLinkBuilder
-
-                .linkTo(WebMvcLinkBuilder.methodOn(CriaProjetoController.class).cadastrarProjeto(dto, null))
+                .linkTo(WebMvcLinkBuilder.methodOn(CriaProjetoController.class).cadastrarProjeto(dto, null)) // Adicionado 'null'
                 .withRel("cadastrar");
 
         Link allLink = WebMvcLinkBuilder
@@ -34,12 +33,12 @@ public class AdicionadorLinkProjetos {
                 .withRel("listar");
 
         Link updateLink = WebMvcLinkBuilder
-                .linkTo(WebMvcLinkBuilder.methodOn(EditaProjetoController.class).atualizar(id, dto))
+                .linkTo(WebMvcLinkBuilder.methodOn(EditaProjetoController.class).atualizar(id, dto, null)) // Adicionado 'null'
                 .withRel("atualizar");
 
         Link deleteLink = WebMvcLinkBuilder
-                .linkTo(WebMvcLinkBuilder.methodOn(ExcluiProjetoController.class).apagarProjeto(id))
-                .withRel("excluir");
+                .linkTo(WebMvcLinkBuilder.methodOn(ExcluiProjetoController.class).apagarProjeto(id, null)) // Adicionado 'null'
+                .withRel("apagar");
 
         dto.add(selfLink, cadastrarLink, allLink, updateLink, deleteLink);
     }

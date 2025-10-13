@@ -10,6 +10,7 @@ interface LoginState {
   usuEmail: string;
   usuSenha: string;
   erros: { [campo: string]: string };
+  mostrarSenha: boolean;
 }
 
 class FormularioLogin extends React.Component<LoginProps, LoginState> {
@@ -19,6 +20,7 @@ class FormularioLogin extends React.Component<LoginProps, LoginState> {
       usuEmail: "",
       usuSenha: "",
       erros: {},
+      mostrarSenha: false,
     };
   }
 
@@ -35,6 +37,12 @@ class FormularioLogin extends React.Component<LoginProps, LoginState> {
       },
     }));
   };
+
+  toggleMostrarSenha = () => {
+    this.setState((prev) => ({
+      mostrarSenha: !prev.mostrarSenha
+    }))
+  }
 
   handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -79,8 +87,7 @@ class FormularioLogin extends React.Component<LoginProps, LoginState> {
   };
 
   render() {
-    const { usuEmail, usuSenha, erros } = this.state;
-
+    const { usuEmail, usuSenha, erros, mostrarSenha } = this.state;
     return (
       <div className="flex flex-col md:flex-row justify-center bg-gray-100 items-center min-h-screen p-4">
         <div className="absolute top-0 left-0 w-full md:hidden">
@@ -117,7 +124,7 @@ class FormularioLogin extends React.Component<LoginProps, LoginState> {
               <div className="relative">
                 <i className="fa-solid fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                 <input
-                  type="password"
+                  type={mostrarSenha ? "text" : "password"}
                   placeholder="Senha"
                   name="usuSenha"
                   className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm"
@@ -125,6 +132,10 @@ class FormularioLogin extends React.Component<LoginProps, LoginState> {
                   onChange={this.handleChange}
                   required
                 />
+                <i
+                  onClick={this.toggleMostrarSenha}
+                  className={`fa-solid ${mostrarSenha ? "fa-eye-slash" : "fa-eye"} absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer`}
+                ></i>
               </div>
               {erros.usuSenha && (
                 <p className="text-red-500 text-xs mt-1">{erros.usuSenha}</p>

@@ -40,7 +40,7 @@ export default function FormularioTarefa({
     };
     
     return (
-        <div className="px-8 flex-grow overflow-y-auto">
+        <div className="flex-grow overflow-y-auto">
             <div className="flex flex-col gap-y-6">
                 
                 <div>

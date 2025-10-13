@@ -12,6 +12,14 @@ interface CadastroState {
     usuEmail: string;
     usuSenha: string;
     erros: { [campo: string]: string };
+    forcaSenha: number;
+    criteriosSenha: {
+        tamanho: boolean;
+        maiuscula: boolean;
+        numero: boolean;
+        caractere: boolean;
+    }
+    mostrarSenha: boolean;
 }
  
 class FormularioCadastro extends React.Component<CadastroProps, CadastroState> {
@@ -21,7 +29,15 @@ class FormularioCadastro extends React.Component<CadastroProps, CadastroState> {
             usuNome: "",
             usuEmail: "",
             usuSenha: "",
-            erros: {},
+            erros: {},     
+            forcaSenha: 0,
+            mostrarSenha: false,
+            criteriosSenha: {
+                tamanho: false,
+                maiuscula: false,
+                numero: false,
+                caractere: false,
+            }
         };
     }
  
@@ -37,8 +53,34 @@ class FormularioCadastro extends React.Component<CadastroProps, CadastroState> {
                 [name]: "" 
             }
         }));
+
+        if (name === "usuSenha") {
+            this.updateCriteriosSenha(value)
+        }
     };
  
+    updateCriteriosSenha = (senha: string) => {
+        const criterios = {
+            tamanho: senha.length >= 8,
+            maiuscula: /[A-Z]/.test(senha),
+            numero: /\d/.test(senha),
+            caractere: /[^A-Za-z0-9]/.test(senha),
+        }
+
+        const forca = Object.values(criterios).filter(Boolean).length;
+
+        this.setState({
+            criteriosSenha: criterios,
+            forcaSenha: forca
+        })
+    }
+
+    toggleMostrarSenha = () => {
+        this.setState((prev) => ({
+        mostrarSenha: !prev.mostrarSenha
+        }))
+    }
+
     handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
  
@@ -92,8 +134,13 @@ class FormularioCadastro extends React.Component<CadastroProps, CadastroState> {
     };
  
     render() {
-        const { usuNome, usuEmail, usuSenha, erros } = this.state;
- 
+        const { usuNome, usuEmail, usuSenha, erros, criteriosSenha, forcaSenha, mostrarSenha } = this.state;
+        const forcaCores = ["text-red-500", "text-orange-500", "text-yellow-500", "text-green-500"];
+        const forcaTextos = ["Muito fraca", "Fraca", "Média", "Forte"];
+        const barraCores = ["bg-red-500", "bg-orange-500", "bg-yellow-500", "bg-green-500"];
+        const cor = forcaCores[forcaSenha - 1]
+        const barraCor = barraCores[forcaSenha - 1]
+
         return (
             <div className="flex flex-col md:flex-row justify-center bg-gray-100 items-center min-h-screen p-4">
                 <div className="absolute top-0 left-0 w-full md:hidden">
@@ -113,7 +160,7 @@ class FormularioCadastro extends React.Component<CadastroProps, CadastroState> {
                         <div className="relative w-full max-w-xs">
                             <div className="relative">
                                 <i className="fa-solid fa-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                <input type="text" name="nome" value={usuNome} onChange={this.handleChange} placeholder="Nome" className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm" required />
+                                <input type="text" name="usuNome" value={usuNome} onChange={this.handleChange} placeholder="Nome" className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm" required />
                             </div>
                             {erros.nome && <p className="text-red-500 text-xs mt-1">{erros.nome}</p>}
                         </div>
@@ -121,7 +168,7 @@ class FormularioCadastro extends React.Component<CadastroProps, CadastroState> {
                         <div className="relative w-full max-w-xs">
                             <div className="relative">
                                 <i className="fa-solid fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                <input type="email" name="email" value={usuEmail} onChange={this.handleChange} placeholder="E-mail" className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm" required />
+                                <input type="email" name="usuEmail" value={usuEmail} onChange={this.handleChange} placeholder="E-mail" className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm" required />
                             </div>
                             {erros.email && <p className="text-red-500 text-xs mt-1">{erros.email}</p>}
                         </div>
@@ -129,9 +176,40 @@ class FormularioCadastro extends React.Component<CadastroProps, CadastroState> {
                         <div className="relative w-full max-w-xs">
                             <div className="relative">
                                 <i className="fa-solid fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                <input type="password" name="senha" value={usuSenha} onChange={this.handleChange} placeholder="Senha" className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm" required />
+                                <input type={mostrarSenha ? "text" : "password"} name="usuSenha" value={usuSenha} onChange={this.handleChange} placeholder="Senha" className="w-full bg-white pl-10 pr-3 py-2 border border-gray-300 outline-none rounded-sm" required />
+                                <i
+                                onClick={this.toggleMostrarSenha}
+                                className={`fa-solid ${mostrarSenha ? "fa-eye-slash" : "fa-eye"} absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer`}
+                                ></i>
                             </div>
                             {erros.senha && <p className="text-red-500 text-xs mt-1">{erros.senha}</p>}
+                            {usuSenha && (
+                                <div className="pt-3">
+                                    <div className="w-full bg-gray-200 h-2 rounded-full">
+                                        <div
+                                            className={`h-2 rounded-full transition-all duration-300 ${barraCor}`}
+                                            style={{ width: `${(forcaSenha / 4) * 100}%` }}
+                                        ></div>
+                                    </div>
+                                    <p className={`mt-1 text-gray-600 ${cor}`}>
+                                        {forcaTextos[forcaSenha - 1]}
+                                    </p>
+                                    <ul className="text-xs pt-2 space-y-1 text-gray-600">
+                                        <li className={criteriosSenha.tamanho ? "text-green-600" : ""}>
+                                        {criteriosSenha.tamanho ? "✓" : "•"} Mínimo de 8 caracteres
+                                        </li>
+                                        <li className={criteriosSenha.maiuscula ? "text-green-600" : ""}>
+                                        {criteriosSenha.maiuscula ? "✓" : "•"} Pelo menos uma letra maiúscula
+                                        </li>
+                                        <li className={criteriosSenha.numero ? "text-green-600" : ""}>
+                                        {criteriosSenha.numero ? "✓" : "•"} Pelo menos um número
+                                        </li>
+                                        <li className={criteriosSenha.caractere ? "text-green-600" : ""}>
+                                        {criteriosSenha.caractere ? "✓" : "•"} Pelo menos um caractere especial
+                                        </li>
+                                    </ul>
+                                </div>
+                            )}
                         </div>
  
                         <button type="submit" className="w-full max-w-xs bg-indigo-950 text-white rounded-sm outline-none cursor-pointer p-2 m-2">
