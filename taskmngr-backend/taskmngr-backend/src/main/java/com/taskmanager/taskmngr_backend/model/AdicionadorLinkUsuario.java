@@ -6,7 +6,6 @@ import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.stereotype.Component;
 
-import com.taskmanager.taskmngr_backend.controller.Auth.CriaUsuarioController;
 import com.taskmanager.taskmngr_backend.controller.Usuario.BuscaUsuarioController;
 import com.taskmanager.taskmngr_backend.controller.Usuario.EditaUsuarioController;
 import com.taskmanager.taskmngr_backend.controller.Usuario.ExcluiUsuarioController;
@@ -20,10 +19,6 @@ public class AdicionadorLinkUsuario {
         Link selfLink = WebMvcLinkBuilder
             .linkTo(WebMvcLinkBuilder.methodOn(BuscaUsuarioController.class).buscarPorId(id))
             .withSelfRel();
-
-        // Link cadastrarLink = WebMvcLinkBuilder
-        //     .linkTo(WebMvcLinkBuilder.methodOn(CriaUsuarioController.class).cadastrarUsuario(dto))
-        //     .withRel("cadastrar");
 
         Link allLink = WebMvcLinkBuilder
             .linkTo(WebMvcLinkBuilder.methodOn(BuscaUsuarioController.class).listarUsuario())

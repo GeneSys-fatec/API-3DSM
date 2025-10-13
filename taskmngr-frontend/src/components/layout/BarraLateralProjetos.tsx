@@ -1,20 +1,21 @@
 import { useState, useEffect, useCallback } from "react";
 import ModalEditarProjetos from "../features/projects/ModalEditarProjetos";
 import { authFetch } from "@/utils/api";
-import type { Projeto } from "@/types/types";
+import type { Projeto, Equipe } from "@/types/types";
 import { useOptionsMenu } from "@/hooks/useOptionsMenu";
+import ProjetoItem from "../features/projects/ProjetoItem";
+import { toast } from "react-toastify";
 
-type ProjetoDaAPI = {
-  projId?: string | number;
-  projNome?: string;
-  projDescricao?: string;
-  projDataCriacao?: string;
-};
+import { getMinhasEquipes } from "../features/teams/teamService";
+
+interface EquipeComProjetos extends Equipe {
+  projetos: Projeto[];
+}
 
 interface BarraLateralProjetosProps {
   isOpen: boolean;
   onClose: () => void;
-  onOpenModal: () => void;
+  onOpenModal: (equipeId: string) => void;
   onProjectSelect: (projId: string | null) => void;
 }
 
@@ -25,63 +26,62 @@ export default function BarraLateralProjetos({
   onProjectSelect,
 }: BarraLateralProjetosProps) {
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
-  const [projetos, setProjetos] = useState<Projeto[]>([]);
+  const [equipesComProjetos, setEquipesComProjetos] = useState<
+    EquipeComProjetos[]
+  >([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [projetoParaEditar, setProjetoParaEditar] = useState<Projeto | null>(
     null
   );
-
   const optionsMenu = useOptionsMenu();
 
-  const fetchProjetos = useCallback(async () => {
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
     try {
-      const response = await authFetch(
-        "http://localhost:8080/projeto/meus-projetos"
-      );
-      if (!response.ok) throw new Error("Erro ao buscar projetos");
-      const data = await response.json();
+      const equipesComProjetosDoBackend = await getMinhasEquipes();
 
-      const normalized: Projeto[] = (Array.isArray(data) ? data : []).map(
-        (d: ProjetoDaAPI) => ({
-          projId: String(d.projId ?? d.projId ?? ""),
-          projNome: String(d.projNome ?? d.projNome ?? ""),
-          projDescricao: String(d.projDescricao ?? d.projDescricao ?? ""),
-          projDataCriacao: String(d.projDataCriacao ?? d.projDataCriacao ?? ""),
-        })
+      console.log(
+        "DADOS RECEBIDOS DO BACKEND (JÁ COM PROJETOS):",
+        equipesComProjetosDoBackend
       );
 
-      setProjetos(normalized);
+      setEquipesComProjetos(equipesComProjetosDoBackend);
 
-      if (normalized.length > 0 && !activeProjectId) {
-        const firstProjectId = normalized[0].projId;
+      const primeiroProjeto = equipesComProjetosDoBackend[0]?.projetos[0];
+      if (primeiroProjeto && !activeProjectId) {
+        const firstProjectId = primeiroProjeto.projId;
         setActiveProjectId(firstProjectId);
         onProjectSelect(firstProjectId);
-      } else if (normalized.length === 0) {
+      } else if (!primeiroProjeto) {
         onProjectSelect(null);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error);
+      toast.error(
+        (error as Error).message || "Erro ao carregar dados da barra lateral."
+      );
+    } finally {
+      setIsLoading(false);
     }
   }, [activeProjectId, onProjectSelect]);
-
   useEffect(() => {
-    fetchProjetos();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    const handleProjetoCreated = () => fetchProjetos();
-    window.addEventListener("projeto:created", handleProjetoCreated);
+    fetchData();
+    const handleDataChange = () => fetchData();
+    window.addEventListener("projeto:created", handleDataChange);
+    window.addEventListener("equipe:updated", handleDataChange);
     return () => {
-      window.removeEventListener("projeto:created", handleProjetoCreated);
+      window.removeEventListener("projeto:created", handleDataChange);
+      window.removeEventListener("equipe:updated", handleDataChange);
     };
-  }, [fetchProjetos]);
+  }, [fetchData]);
 
   const handleEdit = () => {
     if (!optionsMenu.selectedId) return;
+    const todosProjetos = equipesComProjetos.flatMap((e) => e.projetos);
     const projeto =
-      projetos.find((p) => p.projId === optionsMenu.selectedId) ?? null;
+      todosProjetos.find((p) => p.projId === optionsMenu.selectedId) ?? null;
     setProjetoParaEditar(projeto);
     setIsEditModalOpen(true);
     optionsMenu.close();
@@ -101,7 +101,7 @@ export default function BarraLateralProjetos({
         onProjectSelect(null);
         setActiveProjectId(null);
       }
-      await fetchProjetos();
+      await fetchData();
       optionsMenu.close();
     } catch (err) {
       console.error(err);
@@ -110,115 +110,116 @@ export default function BarraLateralProjetos({
     }
   };
 
+  if (isLoading) {
+    return (
+      <div
+        className={`fixed lg:static h-full bg-white border-r border-slate-200 flex flex-col z-40 transition-transform lg:transition-all duration-300 ease-in-out ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0 lg:w-16 lg:hover:w-64`}
+      >
+        <div className="p-4 text-center text-slate-400">
+          <i className="fa-solid fa-spinner fa-spin"></i>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`group fixed lg:static h-full bg-white border-r border-slate-200 flex flex-col
-                  z-40 transition-transform lg:transition-all duration-300 ease-in-out
-                  ${isOpen ? "translate-x-0" : "-translate-x-full"}
-                  lg:translate-x-0 lg:w-16 lg:hover:w-64`}
+      className={`group fixed lg:static h-full bg-white border-r border-slate-200 flex flex-col z-40 transition-transform lg:transition-all duration-300 ease-in-out ${
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      } lg:translate-x-0 lg:w-16 lg:hover:w-64`}
     >
+      {/* Ícone de expandir/recolher */}
       <div
-        className="
-          hidden lg:flex items-center justify-center w-6 h-6 rounded-full absolute -right-1 top-1/2 -translate-y-1/2
-          cursor-pointer group-hover:bg-indigo-100 transition-all duration-300
-        "
+        onClick={onClose}
+        className="hidden lg:flex items-center justify-center w-6 h-6 rounded-full absolute -right-3 top-1/2 -translate-y-1/2 cursor-pointer bg-white border border-slate-200 hover:bg-indigo-100 group-hover:bg-indigo-100 transition-all duration-300"
       >
-       <i className="fa-solid fa-angles-right text-slate-500 text-lg 
-      group-hover:text-indigo-600 
-      transition-all duration-300
-      group-hover:rotate-180"></i>
+        <i
+          className={`fa-solid fa-angles-right text-slate-500 text-base group-hover:text-indigo-600 transition-all duration-300 ${
+            isOpen ? "" : "lg:group-hover:rotate-180"
+          }`}
+        ></i>
       </div>
 
-      
       <div className="p-4 border-b border-slate-200 flex items-center gap-3 overflow-hidden">
         <i className="fa-solid fa-folder-open text-indigo-600 text-2xl"></i>
         <h2
-          className={`text-xl font-bold text-slate-800 whitespace-nowrap transition-opacity duration-200
-                       ${
-                         isOpen ? "opacity-100" : "opacity-0"
-                       } lg:opacity-0 lg:group-hover:opacity-100`}
+          className={`text-xl font-bold text-slate-800 whitespace-nowrap transition-opacity duration-200 ${
+            isOpen ? "opacity-100" : "opacity-0"
+          } lg:opacity-0 lg:group-hover:opacity-100`}
         >
           Projetos
         </h2>
       </div>
-      <div className="p-4 overflow-hidden">
-        <div className="flex justify-between items-center mb-4 pb-3">
-          <h1
-            className={`font-bold text-slate-500 text-sm tracking-wider uppercase whitespace-nowrap transition-opacity
-                         ${
-                           isOpen ? "opacity-100" : "opacity-0"
-                         } lg:opacity-0 lg:group-hover:opacity-100`}
+
+      <div className="p-4 overflow-y-auto flex-1">
+        {equipesComProjetos.length === 0 && !isLoading && (
+          <div
+            className={`text-center p-4 t-9 transition-opacity duration-200 ${
+              isOpen ? "opacity-100" : "opacity-0"
+            } lg:opacity-0 lg:group-hover:opacity-100`}
           >
-            Workspaces
-          </h1>
-          <button
-            onClick={onOpenModal}
-            className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-semibold text-sm transition-colors"
-          >
-            <i className="fa-solid fa-plus"></i>
-            <span
-              className={`whitespace-nowrap ${
-                isOpen ? "opacity-100" : "opacity-0"
-              } lg:opacity-0 lg:group-hover:opacity-100`}
-            >
-              Add
-            </span>
-          </button>
-        </div>
-        <div className="flex flex-col gap-1">
-          {projetos.map((p) => {
-            const isActive = activeProjectId === p.projId;
-            return (
-              <div
-                key={p.projId}
-                onClick={() => {
-                  setActiveProjectId(p.projId);
-                  onProjectSelect(p.projId);
-                  if (isOpen) onClose();
-                }}
-                className={`flex items-center justify-between w-full rounded-md p-2 text-md cursor-pointer transition-colors duration-150 ${
-                  isActive
-                    ? `font-bold ${
-                        isOpen
-                          ? "bg-indigo-100 text-indigo-700"
-                          : "text-slate-800"
-                      } lg:group-hover:bg-indigo-100 lg:group-hover:text-indigo-700`
-                    : "text-slate-600 hover:bg-slate-100"
-                }`}
-              >
-                <div className="flex items-center gap-2 truncate">
+            <p className="text-slate-500 text-sm mt-4">
+              Nenhuma equipe encontrada.
+            </p>
+          </div>
+        )}
+
+        <div>
+          {equipesComProjetos.map((equipe) => (
+            <div key={equipe.equId} className="pb-6">
+              <div className="flex justify-between items-center mb-4 pb-1 border-b border-slate-100 gap-2">
+                <h1
+                  className={`font-bold text-slate-500 text-sm tracking-wider uppercase whitespace-nowrap transition-opacity ${
+                    isOpen ? "opacity-100" : "opacity-0"
+                  } lg:opacity-0 lg:group-hover:opacity-100`}
+                >
+                  {equipe.equNome}
+                </h1>
+                <button
+                  onClick={() => onOpenModal(equipe.equId)}
+                  className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-semibold text-sm transition-colors"
+                  title={`Adicionar projeto em ${equipe.equNome}`}
+                >
+                  <i className="fa-solid fa-plus"></i>
                   <span
-                    className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                      isActive ? "bg-indigo-500" : "bg-slate-300"
-                    }`}
-                  />
-                  <p
-                    className={`leading-none truncate transition-opacity duration-200 ${
+                    className={`whitespace-nowrap ${
                       isOpen ? "opacity-100" : "opacity-0"
                     } lg:opacity-0 lg:group-hover:opacity-100`}
                   >
-                    {p.projNome}
-                  </p>
-                </div>
-                <i
-                  role="button"
-                  aria-label="Mais opções"
-                  title="Mais opções"
-                  tabIndex={0}
-                  onClick={(e) => optionsMenu.open(e, p.projId)}
-                  className={`fa-solid fa-ellipsis-vertical cursor-pointer p-2 rounded-full flex-shrink-0 transition-opacity duration-200 
-                              ${isOpen ? "opacity-100" : "opacity-0"} 
-                              lg:opacity-0 lg:group-hover:opacity-100 
-                              ${
-                                isActive
-                                  ? "text-indigo-600"
-                                  : "text-slate-400 hover:bg-slate-200"
-                              }
-                              focus:outline-none focus:ring-2 focus:ring-indigo-400`}
-                />
+                    Add
+                  </span>
+                </button>
               </div>
-            );
-          })}
+
+              <div className="flex flex-col gap-3 py-2">
+                {equipe.projetos.length === 0 && (
+                  <p
+                    className={`text-slate-400 text-xs px-2 transition-opacity duration-200 ${
+                      isOpen ? "opacity-100" : "opacity-0"
+                    } lg:opacity-0 lg:group-hover:opacity-100`}
+                  >
+                    Nenhum projeto aqui.
+                  </p>
+                )}
+                {equipe.projetos.map((p) => (
+                  <ProjetoItem
+                    key={p.projId}
+                    projeto={p}
+                    isActive={activeProjectId === p.projId}
+                    isExpanded={isOpen}
+                    onClick={() => {
+                      setActiveProjectId(p.projId);
+                      onProjectSelect(p.projId);
+                      if (isOpen) onClose();
+                    }}
+                    onOpenOptions={(e) => optionsMenu.open(e, p.projId)}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -259,7 +260,7 @@ export default function BarraLateralProjetos({
           onClose={() => setIsEditModalOpen(false)}
           projeto={projetoParaEditar}
           onSaved={() => {
-            fetchProjetos();
+            fetchData();
             setIsEditModalOpen(false);
           }}
         />

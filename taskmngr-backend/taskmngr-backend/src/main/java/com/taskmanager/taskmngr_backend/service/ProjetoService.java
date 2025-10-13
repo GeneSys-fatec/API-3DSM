@@ -1,18 +1,19 @@
 package com.taskmanager.taskmngr_backend.service;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.EquipeNaoEncontradaException;
 import com.taskmanager.taskmngr_backend.model.entidade.ColunaModel;
+import com.taskmanager.taskmngr_backend.model.entidade.EquipeModel;
 import com.taskmanager.taskmngr_backend.model.entidade.ProjetoModel;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
-import com.taskmanager.taskmngr_backend.repository.ColunaRepository;
+import com.taskmanager.taskmngr_backend.repository.EquipeRepository;
+import com.taskmanager.taskmngr_backend.repository.ProjetoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.taskmanager.taskmngr_backend.repository.ProjetoRepository;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ProjetoService {
@@ -20,57 +21,63 @@ public class ProjetoService {
     private ProjetoRepository projetoRepository;
 
     @Autowired
-    private ColunaRepository colunaRepository;
+    private ColunaService colunaService;
 
-    public ProjetoModel criarNovoProjeto(ProjetoModel projeto) {
+    @Autowired
+    private EquipeRepository equipeRepository;
+
+    public ProjetoModel criarNovoProjeto(ProjetoModel projeto, String equipeId) {
+        EquipeModel equipe = equipeRepository.findById(equipeId)
+                .orElseThrow(() -> new EquipeNaoEncontradaException("Equipe não encontrada", "A equipe com ID " + equipeId + " não existe."));
+
+        projeto.setEquipe(equipe);
         ProjetoModel projetoSalvo = projetoRepository.save(projeto);
-        String novoProjetoId = projetoSalvo.getProjId();
 
-        // Logica de criação das colunas padrão
-        ColunaModel pendente = new ColunaModel();
-        pendente.setColTitulo("Pendente");
-        pendente.setColOrdem(0);
-        pendente.setProjId(novoProjetoId);
+        equipe.getProjetos().add(projetoSalvo);
+        equipeRepository.save(equipe);
 
-        ColunaModel emDesenvolvimento = new ColunaModel();
-        emDesenvolvimento.setColTitulo("Em Desenvolvimento");
-        emDesenvolvimento.setColOrdem(1);
-        emDesenvolvimento.setProjId(novoProjetoId);
-
-        ColunaModel concluida = new ColunaModel();
-        concluida.setColTitulo("Concluída");
-        concluida.setColOrdem(2);
-        concluida.setProjId(novoProjetoId);
-
-        List<ColunaModel> colunasPadrao = Arrays.asList(pendente, emDesenvolvimento, concluida);
-        colunaRepository.saveAll(colunasPadrao);
+        criarColunasPadraoParaProjeto(projetoSalvo.getProjId());
 
         return projetoSalvo;
     }
 
-    public List<ProjetoModel> listarTodas() {
-        return projetoRepository.findAll();
-    }
-
     public List<ProjetoModel> listarPorUsuario(UsuarioModel usuario) {
-        if (usuario == null || usuario.getUsuId() == null) {
+        if (usuario == null) {
             return Collections.emptyList();
         }
-        return projetoRepository.findByUsuarioIdsContaining(usuario.getUsuId());}
 
-    public Optional<ProjetoModel> buscarPorId(String id) {
-        return projetoRepository.findById(id);
+        List<EquipeModel> equipesDoUsuario = equipeRepository.findByUsuariosUsuId(usuario.getUsuId());
+
+        if (equipesDoUsuario.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<String> idsDasEquipes = equipesDoUsuario.stream()
+                .map(EquipeModel::getEquId)
+                .collect(Collectors.toList());
+
+        return projetoRepository.findByEquipeEquIdIn(idsDasEquipes);
     }
 
-    public ProjetoModel salvar(ProjetoModel tarefa) {
-        return projetoRepository.save(tarefa);
-    }
+    public List<ProjetoModel> listarTodas() { return projetoRepository.findAll(); }
+    public Optional<ProjetoModel> buscarPorId(String id) { return projetoRepository.findById(id); }
+    public ProjetoModel salvar(ProjetoModel projeto) { return projetoRepository.save(projeto); }
+    public void deletar(String id) { projetoRepository.deleteById(id); }
 
-    public ProjetoModel atualizar(ProjetoModel tarefa) {
-        return projetoRepository.save(tarefa);
-    }
+    private void criarColunasPadraoParaProjeto(String projetoId) {
+        ColunaModel pendente = new ColunaModel();
+        pendente.setColTitulo("Pendente");
+        pendente.setProjId(projetoId);
+        colunaService.criarColuna(pendente);
 
-    public void deletar(String id) {
-        projetoRepository.deleteById(id);
+        ColunaModel emDesenvolvimento = new ColunaModel();
+        emDesenvolvimento.setColTitulo("Em Desenvolvimento");
+        emDesenvolvimento.setProjId(projetoId);
+        colunaService.criarColuna(emDesenvolvimento);
+
+        ColunaModel concluida = new ColunaModel();
+        concluida.setColTitulo("Concluída");
+        concluida.setProjId(projetoId);
+        colunaService.criarColuna(concluida);
     }
 }

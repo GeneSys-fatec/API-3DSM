@@ -7,7 +7,7 @@ export interface Tarefa {
   tarPrazo: string;
   tarPrioridade: "Alta" | "Média" | "Baixa";
   tarDescricao: string;
-  tarAnexo?: File | null; 
+  tarAnexo?: File | null;
 }
 
 export type NovaTarefa = Omit<Tarefa, "tarId">;
@@ -33,14 +33,28 @@ export type Projeto = {
   projId: string;
   projNome: string;
   projDescricao?: string;
+  projStatus?: string;
   projDataCriacao?: string;
+  projDataAtualizacao?: string;
+  equId?: string;
+  equNome?: string;
+};
+
+export type Equipe = {
+  equId: string;
+  equNome: string;
+  equDescricao?: string;
+  equDataCriacao?: string;
+  equDataAtualizacao?: string;
+  equMembros?: Usuario[];
+  usuarioIds?: string[];
 };
 
 export type Anexo = {
-    arquivoNome: string;
-    arquivoCaminho: string;
-    arquivoTipo: string;
-    arquivoTamanho?: number;
+  arquivoNome: string;
+  arquivoCaminho: string;
+  arquivoTipo: string;
+  arquivoTamanho?: number;
 };
 
 export type Comentario = {
@@ -53,4 +67,14 @@ export type Comentario = {
   comResposta?: string | null;
   tarId: string;
   replies?: Comentario[];
+};
+export interface EquipeComProjetos extends Equipe {
+  projetos: Projeto[];
+}
+export interface Notificacao {
+  id: string;
+  tipo: 'expirado' | 'comentario' | 'atribuido';
+  tarNome: string;
+  data: string;
+  usuNome?: string; 
 }
