@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.AnexoTamanhoExcedente;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.InvalidTaskDataException;
 import com.taskmanager.taskmngr_backend.model.converter.TarefaConverter;
+import com.taskmanager.taskmngr_backend.model.dto.ColunaDTO;
 import com.taskmanager.taskmngr_backend.model.dto.TarefaDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.AnexoTarefaModel;
 import com.taskmanager.taskmngr_backend.model.entidade.TarefaModel;
@@ -39,16 +40,16 @@ public class CriaTarefaController {
             @AuthenticationPrincipal UsuarioModel usuarioLogado) {
 
         if (dto.getTarTitulo() == null || dto.getTarTitulo().isBlank() ||
-                dto.getTarDescricao() == null || dto.getTarDescricao().isBlank() ||
-                dto.getTarPrazo() == null || dto.getTarPrazo().isBlank()) {
+            dto.getTarDescricao() == null || dto.getTarDescricao().isBlank() ||
+            dto.getTarPrazo() == null || dto.getTarPrazo().isBlank()) {
 
             throw new InvalidTaskDataException("Erro ao cadastrar tarefa",
                     "Título, descrição e data são obrigatórios.");
         }
         TarefaModel tarefa = tarefaConverterService.dtoParaModel(dto);
         TarefaModel salva = tarefaService.salvar(tarefa);
-        tarefaService.salvar(tarefa);
-        return ResponseEntity.status(HttpStatus.CREATED).body(salva);
+        TarefaDTO dtoDeResposta = tarefaConverterService.modelParaDto(salva);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dtoDeResposta);
     }
 
     @PostMapping("/{tarId}/upload")

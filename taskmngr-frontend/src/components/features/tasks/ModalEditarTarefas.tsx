@@ -23,6 +23,11 @@ export default function ModalEditarTarefas({
   const [novosAnexos, setNovosAnexos] = useState<File[]>([]);
   const [anexosExistentes, setAnexosExistentes] = useState<Anexo[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const lastSubmitRef = React.useRef<number>(0);
+  const submittingRef = React.useRef<boolean>(false);
+  const lastPayloadKeyRef = React.useRef<string>("");
+  const lastPayloadAtRef = React.useRef<number>(0);
 
   useEffect(() => {
     authFetch("http://localhost:8080/usuario/listar")
@@ -66,26 +71,41 @@ export default function ModalEditarTarefas({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Coleta de erros de validação (um único toast no final)
+    if (submittingRef.current) return;
+
+    const now = Date.now();
+    if (now - lastSubmitRef.current < 2000) return;
+    lastSubmitRef.current = now;
+
     const validationErrors: string[] = [];
-
-    if (!tarefa.tarTitulo?.trim()) {
-      validationErrors.push("O título da tarefa é obrigatório.");
-    }
-    if (!tarefa.usuId) {
-      validationErrors.push("Selecione um responsável pela tarefa.");
-    }
-    if (!tarefa.tarPrazo) {
-      validationErrors.push("Informe um prazo para a tarefa.");
-    }
-
-    // Removido: validação de anexos no front (limites ficam no backend)
-    // if (novosAnexos.length > 0) { ... validateAttachments ... }
+    if (!tarefa.tarTitulo?.trim()) validationErrors.push("O título da tarefa é obrigatório.");
+    if (!tarefa.usuId) validationErrors.push("Selecione um responsável pela tarefa.");
+    if (!tarefa.tarPrazo) validationErrors.push("Informe um prazo para a tarefa.");
 
     if (validationErrors.length > 0) {
       showValidationToast(validationErrors, "Erros de validação");
       return;
     }
+
+    const payloadKey = [
+      tarefa.tarId,
+      tarefa.tarTitulo?.trim(),
+      tarefa.tarDescricao?.trim(),
+      tarefa.usuId,
+      tarefa.tarPrazo,
+      tarefa.tarPrioridade,
+      tarefa.tarStatus,
+    ].join("|");
+
+    if (payloadKey === lastPayloadKeyRef.current && now - lastPayloadAtRef.current < 10000) {
+      toast.info("Alteração já enviada. Aguarde um momento.");
+      return;
+    }
+
+    submittingRef.current = true;
+    setIsSubmitting(true);
+    lastPayloadKeyRef.current = payloadKey;
+    lastPayloadAtRef.current = now;
 
     try {
       const res = await authFetch(
@@ -102,11 +122,10 @@ export default function ModalEditarTarefas({
         return;
       }
 
-      // Upload de novos anexos (backend trata compressão e limites)
       if (novosAnexos.length > 0) {
         const ok = await uploadTaskAttachments(String(tarefa.tarId), novosAnexos);
         if (!ok) {
-          // toast.error("Falha ao anexar arquivos. Após a compressão, alguns anexos permanecem acima do limite esperado.");
+          toast.error("Falha ao anexar novos arquivos.");
           return;
         }
       }
@@ -117,6 +136,9 @@ export default function ModalEditarTarefas({
     } catch (error) {
       console.error("Falha ao atualizar tarefa:", error);
       toast.error("Erro ao atualizar a tarefa.");
+    } finally {
+      setIsSubmitting(false);
+      submittingRef.current = false;
     }
   };
 
@@ -204,9 +226,12 @@ export default function ModalEditarTarefas({
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              disabled={isSubmitting}
+              className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
+                isSubmitting ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+              }`}
             >
-              Salvar Alterações
+              {isSubmitting ? "Salvando..." : "Salvar Alterações"}
             </button>
           </div>
         </form>
