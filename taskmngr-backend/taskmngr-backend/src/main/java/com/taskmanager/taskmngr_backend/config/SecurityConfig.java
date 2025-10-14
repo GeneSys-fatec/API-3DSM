@@ -30,18 +30,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain rotas(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> {})
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST,"/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST,"/auth/cadastrar").permitAll()
-                        .anyRequest().authenticated())
-                .exceptionHandling(exception -> exception
-                        .accessDeniedHandler(customAccessDeniedHandler)
-                )
-                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
+        .cors(cors -> {})
+        .csrf(csrf -> csrf.disable())
+        .sessionManagement(session -> session
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers(HttpMethod.POST,"/auth/login").permitAll()
+            .requestMatchers(HttpMethod.POST,"/auth/cadastrar").permitAll()
+            .anyRequest().authenticated())
+        .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
