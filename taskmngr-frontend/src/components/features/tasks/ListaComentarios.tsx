@@ -42,7 +42,7 @@ export default function ListaComentarios({ tarId }: ListaComentariosProps) {
                 return
             }
 
-            await authFetch("http://localhost:8080/comentario/cadastrar", {
+            const response = await authFetch("http://localhost:8080/comentario/cadastrar", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -54,6 +54,13 @@ export default function ListaComentarios({ tarId }: ListaComentariosProps) {
                     comResposta: null
                 }),
             })
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                toast.error(errorData.message || "Comentário contém palavras proibidas.");
+                return;
+            }
+            
             toast.success("Comentário adicionado com sucesso!")
             setNovoComentario("")
             carregarComentarios()
@@ -71,7 +78,7 @@ export default function ListaComentarios({ tarId }: ListaComentariosProps) {
         }
 
         try {
-            await authFetch(`http://localhost:8080/comentario/atualizar/${comentario.comId}`, {
+            const response = await authFetch(`http://localhost:8080/comentario/atualizar/${comentario.comId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json"
@@ -82,6 +89,13 @@ export default function ListaComentarios({ tarId }: ListaComentariosProps) {
                     comDataAtualizacao: new Date().toISOString(),
                 }),
             })
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                toast.error(errorData.message || "Comentário contém palavras proibidas");
+                return;
+            }
+
             toast.success("Comentário atualizado com sucesso!")
             setComentarioEditandoId(null)
             carregarComentarios()
@@ -124,7 +138,7 @@ export default function ListaComentarios({ tarId }: ListaComentariosProps) {
                 return
             }
 
-            await authFetch("http://localhost:8080/comentario/cadastrar", {
+             const response = await authFetch("http://localhost:8080/comentario/cadastrar", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -136,6 +150,13 @@ export default function ListaComentarios({ tarId }: ListaComentariosProps) {
                     comResposta: respostaParaId
                 }),
             })
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                toast.error(errorData.message || "Comentário contém palavras proibidas");
+                return;
+            }
+
             toast.success("Resposta adicionada com sucesso!")
             setNovoComentario("")
             setComentarioRespondendoId(null)

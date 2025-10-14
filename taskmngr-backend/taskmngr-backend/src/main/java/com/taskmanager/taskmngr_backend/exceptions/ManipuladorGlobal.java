@@ -13,6 +13,7 @@ import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.TokenCriacaoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.TokenInvalidoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.comentário.ComentarioEmBrancoException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.comentário.ConteudoInapropriadoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.AcessoNaoAutorizadoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.CriadorNaoPodeSairException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.EquipeNaoEncontradaException;
@@ -154,6 +155,13 @@ public class ManipuladorGlobal {
     // ComentarioEmBrancoException
     @ExceptionHandler(ComentarioEmBrancoException.class)
     public ResponseEntity<ErroRespostaDTO> manipularComentarioEmBranco(ComentarioEmBrancoException ex) {
+        ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
+    }
+
+     // ConteudoInapropriadoException
+    @ExceptionHandler(ConteudoInapropriadoException.class)
+    public ResponseEntity<ErroRespostaDTO> manipularComentarioInapropriado(ConteudoInapropriadoException ex) {
         ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
     }
