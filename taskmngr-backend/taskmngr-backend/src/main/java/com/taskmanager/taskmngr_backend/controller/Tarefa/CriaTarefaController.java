@@ -1,6 +1,7 @@
 package com.taskmanager.taskmngr_backend.controller.Tarefa;
 
 import java.io.IOException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.AnexoTamanhoExcedente;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.InvalidTaskDataException;
 import com.taskmanager.taskmngr_backend.model.converter.TarefaConverter;
 import com.taskmanager.taskmngr_backend.model.dto.TarefaDTO;
@@ -44,10 +46,6 @@ public class CriaTarefaController {
                     "Título, descrição e data são obrigatórios.");
         }
         TarefaModel tarefa = tarefaConverterService.dtoParaModel(dto);
-//        if (usuarioLogado != null) {
-//            tarefa.setUsuId(usuarioLogado.getUsuId());
-//            tarefa.setUsuNome(usuarioLogado.getUsuNome());
-//        }
         TarefaModel salva = tarefaService.salvar(tarefa);
         tarefaService.salvar(tarefa);
         return ResponseEntity.status(HttpStatus.CREATED).body(salva);
@@ -58,6 +56,9 @@ public class CriaTarefaController {
         try {
             AnexoTarefaModel anexo = tarefaService.adicionarAnexo(tarId, file);
             return ResponseEntity.ok(anexo);
+        } catch (AnexoTamanhoExcedente e) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body("Arquivo excede 2MB após compressão: " + e.getMessage());
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Erro no upload: " + e.getMessage());
         } catch (Exception e) {

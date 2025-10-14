@@ -5,6 +5,8 @@ import FormularioTarefa from "./FormularioTarefa";
 import type { Tarefa, Usuario, Anexo } from "@/types/types";
 import { authFetch } from "@/utils/api";
 import { getFileIcon } from "@/utils/fileUtils";
+import { showErrorToastFromResponse, showValidationToast } from "@/utils/errorUtils";
+import { uploadTaskAttachments } from "@/utils/taskUtils";
 import ListaComentarios from "./ListaComentarios";
 
 interface ModalEditarTarefasProps {
@@ -63,20 +65,50 @@ export default function ModalEditarTarefas({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await authFetch(`http://localhost:8080/tarefa/atualizar/${tarefa.tarId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(tarefa),
-      });
 
-      for (const arquivo of novosAnexos) {
-        const formData = new FormData();
-        formData.append("file", arquivo);
-        await authFetch(`http://localhost:8080/tarefa/${tarefa.tarId}/upload`, {
-          method: "POST",
-          body: formData,
-        });
+    // Coleta de erros de validação (um único toast no final)
+    const validationErrors: string[] = [];
+
+    if (!tarefa.tarTitulo?.trim()) {
+      validationErrors.push("O título da tarefa é obrigatório.");
+    }
+    if (!tarefa.usuId) {
+      validationErrors.push("Selecione um responsável pela tarefa.");
+    }
+    if (!tarefa.tarPrazo) {
+      validationErrors.push("Informe um prazo para a tarefa.");
+    }
+
+    // Removido: validação de anexos no front (limites ficam no backend)
+    // if (novosAnexos.length > 0) { ... validateAttachments ... }
+
+    if (validationErrors.length > 0) {
+      showValidationToast(validationErrors, "Erros de validação");
+      return;
+    }
+
+    try {
+      const res = await authFetch(
+        `http://localhost:8080/tarefa/atualizar/${tarefa.tarId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(tarefa),
+        }
+      );
+
+      if (!res.ok) {
+        await showErrorToastFromResponse(res, "Erro ao atualizar a tarefa");
+        return;
+      }
+
+      // Upload de novos anexos (backend trata compressão e limites)
+      if (novosAnexos.length > 0) {
+        const ok = await uploadTaskAttachments(String(tarefa.tarId), novosAnexos);
+        if (!ok) {
+          // toast.error("Falha ao anexar arquivos. Após a compressão, alguns anexos permanecem acima do limite esperado.");
+          return;
+        }
       }
 
       toast.success("Tarefa atualizada com sucesso!");

@@ -6,7 +6,6 @@ import type { Tarefa, Usuario } from "@/types/types";
 import { authFetch } from "@/utils/api";
 import { showErrorToastFromResponse, showValidationToast } from "@/utils/errorUtils";
 import { uploadTaskAttachments } from "@/utils/taskUtils";
-import { validateAttachments } from "@/utils/fileUtils";
 
 interface ModalCriarTarefasProps {
   onSuccess: () => void;
@@ -63,7 +62,6 @@ export default function ModalCriarTarefas({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Coleta de erros de validação (um único toast no final)
     const validationErrors: string[] = [];
 
     if (!selectedProjectId) {
@@ -79,22 +77,8 @@ export default function ModalCriarTarefas({
       validationErrors.push("Informe um prazo para a tarefa.");
     }
 
-    // Validação dos anexos
-    if (anexos.length > 0) {
-      const { valid, errors } = validateAttachments(anexos, {
-        maxFiles: 10,
-        maxFileSizeMB: 2,
-        maxTotalSizeMB: 20,
-        allowedMimeTypes: [
-          "application/pdf",
-          "image/*",
-          "text/plain",
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        ],
-        allowedExtensions: ["pdf", "png", "jpg", "jpeg", "txt", "docx"],
-      });
-      if (!valid) validationErrors.push(...errors);
-    }
+    // Removido: validação de anexos no front (limites ficam no backend)
+    // if (anexos.length > 0) { ... validateAttachments ... }
 
     if (validationErrors.length > 0) {
       showValidationToast(validationErrors, "Erros de validação");
@@ -102,7 +86,6 @@ export default function ModalCriarTarefas({
     }
 
     try {
-      // Criação da tarefa só após todas as validações
       const res = await authFetch("http://localhost:8080/tarefa/cadastrar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -116,11 +99,14 @@ export default function ModalCriarTarefas({
 
       const tarefaCriada = await res.json();
 
-      // Upload de anexos (só se todos válidos)
-      if (anexos.length > 0) {
-        const ok = await uploadTaskAttachments(tarefaCriada.tarId, anexos);
-        if (!ok) return;
-      }
+      // Upload de anexos (backend trata compressão e limites)
+      // if (anexos.length > 0) {
+      //   const ok = await uploadTaskAttachments(tarefaCriada.tarId, anexos);
+      //   if (!ok) {
+      //     toast.error("Falha ao anexar arquivos. Após a compressão, alguns anexos permanecem acima do limite esperado.");
+      //     return;
+      //   }
+      // }
 
       toast.success("Tarefa criada com sucesso!");
       onSuccess();

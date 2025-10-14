@@ -56,7 +56,6 @@ export function validateAttachments(
   }
 
   const maxFileBytes = maxFileSizeMB * 1024 * 1024;
-  const maxTotalBytes = maxTotalSizeMB * 1024 * 1024;
 
   let total = 0;
   const allowedExts = (allowedExtensions || []).map((e) => e.toLowerCase());
