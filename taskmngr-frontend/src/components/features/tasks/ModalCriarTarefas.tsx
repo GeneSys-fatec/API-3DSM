@@ -100,13 +100,13 @@ export default function ModalCriarTarefas({
       const tarefaCriada = await res.json();
 
       // Upload de anexos (backend trata compressão e limites)
-      // if (anexos.length > 0) {
-      //   const ok = await uploadTaskAttachments(tarefaCriada.tarId, anexos);
-      //   if (!ok) {
-      //     toast.error("Falha ao anexar arquivos. Após a compressão, alguns anexos permanecem acima do limite esperado.");
-      //     return;
-      //   }
-      // }
+      if (anexos.length > 0) {
+        const ok = await uploadTaskAttachments(tarefaCriada.tarId, anexos);
+        if (!ok) {
+          toast.error("Falha ao anexar arquivos. Após a compressão, alguns anexos permanecem acima do limite esperado.");
+          return;
+        }
+      }
 
       toast.success("Tarefa criada com sucesso!");
       onSuccess();
