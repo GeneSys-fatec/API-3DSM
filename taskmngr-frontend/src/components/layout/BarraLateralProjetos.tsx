@@ -42,10 +42,10 @@ export default function BarraLateralProjetos({
     try {
       const equipesComProjetosDoBackend = await getMinhasEquipes();
 
-      console.log(
-        "DADOS RECEBIDOS DO BACKEND (JÁ COM PROJETOS):",
-        equipesComProjetosDoBackend
-      );
+      // console.log(
+      //   "DADOS RECEBIDOS DO BACKEND (JÁ COM PROJETOS):",
+      //   equipesComProjetosDoBackend
+      // );
 
       setEquipesComProjetos(equipesComProjetosDoBackend);
 

@@ -4,12 +4,15 @@ import { toast } from "react-toastify";
 import FormularioTarefa from "./FormularioTarefa";
 import type { Tarefa, Usuario } from "@/types/types";
 import { authFetch } from "@/utils/api";
+import {showErrorToastFromResponse,showValidationToast,} from "@/utils/errorUtils";
+import { uploadTaskAttachments } from "@/utils/taskUtils";
+import imageCompression from "browser-image-compression";
 
 interface ModalCriarTarefasProps {
   onSuccess: () => void;
   statusInicial: string;
   selectedProjectId: string | null;
-  tarPrazo?: Date | string; 
+  tarPrazo?: Date | string;
 }
 
 const estadoInicial: Partial<Tarefa> = {
@@ -39,16 +42,120 @@ export default function ModalCriarTarefas({
   });
   const [anexos, setAnexos] = useState<File[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const lastSubmitRef = React.useRef<number>(0);
+  const submittingRef = React.useRef<boolean>(false);
 
   useEffect(() => {
     authFetch("http://localhost:8080/usuario/listar")
       .then((res) => res.json())
-      .then((data) => setUsuarios(data))
+      .then(setUsuarios)
       .catch((err) => console.error("Erro ao buscar usuários:", err));
   }, []);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAnexos((prev) => [...prev, ...Array.from(e.target.files || [])]);
+  const MAX_FILES = 10;
+  const MAX_TOTAL_BYTES = 30 * 1024 * 1024;
+  const MAX_BYTES_COMPRESSIVE = 20 * 1024 * 1024;
+  const MAX_BYTES_NON_COMPRESSIVE = 2 * 1024 * 1024;
+
+  const isImage = (f: File) =>
+    f.type.match(/^image\/(jpeg|jpg|png)$/i) || /\.(jpe?g|png)$/i.test(f.name);
+  const isPdf = (f: File) =>
+    f.type === "application/pdf" || /\.pdf$/i.test(f.name);
+  const isDocx = (f: File) =>
+    f.type ===
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    /\.docx$/i.test(f.name);
+  const isXlsx = (f: File) =>
+    f.type ===
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+    /\.xlsx$/i.test(f.name);
+  const isAllowed = (f: File) => isImage(f) || isPdf(f) || isDocx(f) || isXlsx(f);
+
+  async function validateAndCompressFiles(
+    newFiles: File[],
+    currentFiles: File[] = []
+  ) {
+    const errors: string[] = [];
+    const accepted: File[] = [];
+
+    if (currentFiles.length + newFiles.length > MAX_FILES) {
+      errors.push(`Máximo de ${MAX_FILES} arquivos por tarefa.`);
+    }
+
+    const signature = (f: File) => `${f.name}|${f.size}|${f.lastModified}`;
+    const existingSign = new Set(currentFiles.map(signature));
+
+    for (const f of newFiles) {
+      if (!isAllowed(f)) {
+        errors.push(`Tipo não permitido: ${f.name}`);
+        continue;
+      }
+
+      const sizeLimit =
+        isImage(f) || isPdf(f)
+          ? MAX_BYTES_COMPRESSIVE
+          : MAX_BYTES_NON_COMPRESSIVE;
+
+      if (existingSign.has(signature(f))) {
+        errors.push(`Arquivo já adicionado: ${f.name}`);
+        continue;
+      }
+
+      let finalFile = f;
+
+      // Compress only images; PDFs are NOT compressible here
+      if (isImage(f) && f.size > MAX_BYTES_NON_COMPRESSIVE) {
+        try {
+          const compressed = await imageCompression(f, {
+            maxSizeMB: 2,
+            maxWidthOrHeight: 1920,
+            useWebWorker: true,
+          });
+
+          if (compressed.size > sizeLimit) {
+            errors.push(
+              `${f.name}: mesmo após compressão excede o limite de ${(
+                sizeLimit / (1024 * 1024)
+              ).toFixed(1)} MB`
+            );
+            continue;
+          }
+
+          // imageCompression já retorna um File
+          finalFile = new File([compressed], f.name, { type: f.type });
+        } catch (err) {
+          console.error("Erro ao comprimir arquivo:", err);
+          errors.push(`Falha ao comprimir ${f.name}`);
+          continue;
+        }
+      } else if (f.size > sizeLimit) {
+        // PDFs, DOCX e XLSX (e imagens pequenas) só passam na verificação de tamanho
+        errors.push(`${f.name}: tamanho excede o limite permitido`);
+        continue;
+      }
+
+      accepted.push(finalFile);
+    }
+
+    const totalBytes =
+      currentFiles.reduce((a, f) => a + f.size, 0) +
+      accepted.reduce((a, f) => a + f.size, 0);
+
+    if (totalBytes > MAX_TOTAL_BYTES) {
+      errors.push("Tamanho total dos anexos excede 30MB.");
+    }
+
+    return { accepted, errors };
+  }
+
+// handlers
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const novos = Array.from(e.target.files || []);
+    const { accepted, errors } = await validateAndCompressFiles(novos, anexos);
+    if (errors.length > 0) showValidationToast(errors, "Anexos inválidos");
+    if (accepted.length > 0)
+      setAnexos((prev) => [...prev, ...accepted]);
     e.target.value = "";
   };
 
@@ -58,10 +165,31 @@ export default function ModalCriarTarefas({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedProjectId) {
-      toast.error("ID do projeto não encontrado.");
+    if (submittingRef.current) return;
+    const now = Date.now();
+    if (now - lastSubmitRef.current < 800) return;
+    lastSubmitRef.current = now;
+
+    const validationErrors: string[] = [];
+    if (!selectedProjectId) validationErrors.push("ID do projeto não encontrado.");
+    if (!tarefa.tarTitulo?.trim())
+      validationErrors.push("O título da tarefa é obrigatório.");
+    if (!tarefa.usuId)
+      validationErrors.push("Selecione um responsável pela tarefa.");
+    if (!tarefa.tarPrazo)
+      validationErrors.push("Informe um prazo para a tarefa.");
+
+    // Valida anexos novamente antes do envio
+    const { errors: anexErrors } = await validateAndCompressFiles(anexos, []);
+    if (anexErrors.length > 0) validationErrors.push(...anexErrors);
+
+    if (validationErrors.length > 0) {
+      showValidationToast(validationErrors, "Erros de validação");
       return;
     }
+
+    submittingRef.current = true;
+    setIsSubmitting(true);
 
     try {
       const res = await authFetch("http://localhost:8080/tarefa/cadastrar", {
@@ -70,20 +198,16 @@ export default function ModalCriarTarefas({
         body: JSON.stringify({ ...tarefa, projId: selectedProjectId }),
       });
 
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        await showErrorToastFromResponse(res, "Erro ao criar a tarefa");
+        return;
+      }
 
       const tarefaCriada = await res.json();
 
-      for (const arquivo of anexos) {
-        const formData = new FormData();
-        formData.append("file", arquivo);
-        await authFetch(
-          `http://localhost:8080/tarefa/${tarefaCriada.tarId}/upload`,
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
+      if (anexos.length > 0) {
+        const ok = await uploadTaskAttachments(tarefaCriada.tarId, anexos);
+        if (!ok) return;
       }
 
       toast.success("Tarefa criada com sucesso!");
@@ -91,7 +215,10 @@ export default function ModalCriarTarefas({
       modalContext?.closeModal();
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao criar a tarefa.");
+      toast.error("Erro inesperado ao criar a tarefa.");
+    } finally {
+      setIsSubmitting(false);
+      submittingRef.current = false;
     }
   };
 
@@ -99,9 +226,7 @@ export default function ModalCriarTarefas({
     <div className="fixed inset-0 bg-gray-600/60 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
         <div className="p-8 pb-4 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-800">
-            Adicionar Nova Tarefa
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-800">Adicionar Nova Tarefa</h2>
           <button
             onClick={() => modalContext?.closeModal()}
             className="text-gray-400 hover:text-gray-600 text-3xl"
@@ -115,15 +240,16 @@ export default function ModalCriarTarefas({
           className="flex flex-col flex-grow overflow-hidden"
         >
           <div className="px-8 flex-grow overflow-y-auto">
-          <FormularioTarefa
-            tarefa={tarefa}
-            setTarefa={setTarefa}
-            usuarios={usuarios}
-            anexos={anexos}
-            handleFileChange={handleFileChange}
-            handleRemoveAnexo={handleRemoveAnexo}
-          />
+            <FormularioTarefa
+              tarefa={tarefa}
+              setTarefa={setTarefa}
+              usuarios={usuarios}
+              anexos={anexos}
+              handleFileChange={handleFileChange}
+              handleRemoveAnexo={handleRemoveAnexo}
+            />
           </div>
+
           <div className="p-8 pt-4 flex justify-end gap-x-4">
             <button
               type="button"
@@ -134,9 +260,14 @@ export default function ModalCriarTarefas({
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              disabled={isSubmitting}
+              className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
+                isSubmitting
+                  ? "bg-blue-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
             >
-              Criar Tarefa
+              {isSubmitting ? "Criando..." : "Criar Tarefa"}
             </button>
           </div>
         </form>
