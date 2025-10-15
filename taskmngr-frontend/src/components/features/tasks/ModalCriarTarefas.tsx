@@ -4,7 +4,9 @@ import { toast } from "react-toastify";
 import FormularioTarefa from "./FormularioTarefa";
 import type { Tarefa, Usuario } from "@/types/types";
 import { authFetch } from "@/utils/api";
-import { showErrorToastFromResponse, showValidationToast } from "@/utils/errorUtils";
+import {showErrorToastFromResponse,showValidationToast,} from "@/utils/errorUtils";
+import { uploadTaskAttachments } from "@/utils/taskUtils";
+import imageCompression from "browser-image-compression";
 
 interface ModalCriarTarefasProps {
   onSuccess: () => void;
@@ -42,56 +44,41 @@ export default function ModalCriarTarefas({
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const lastSubmitRef = React.useRef<number>(0);
-  const submittingRef = React.useRef<boolean>(false); // bloqueio imediato
-
+  const submittingRef = React.useRef<boolean>(false);
 
   useEffect(() => {
     authFetch("http://localhost:8080/usuario/listar")
       .then((res) => res.json())
-      .then((data) => setUsuarios(data))
+      .then(setUsuarios)
       .catch((err) => console.error("Erro ao buscar usuários:", err));
   }, []);
 
-  const MAX_FILE_BYTES = 2 * 1024 * 1024;
-  const ALLOWED_MIME = new Set<string>([
-    "application/pdf",
-    "text/plain",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  ]);
-
-
   const MAX_FILES = 10;
-  const MAX_TOTAL_BYTES = 30 * 1024 * 1024; 
+  const MAX_TOTAL_BYTES = 30 * 1024 * 1024;
   const MAX_BYTES_COMPRESSIVE = 20 * 1024 * 1024;
-  const MAX_BYTES_NON_COMPRESSIVE = 2 * 1024 * 1024; 
+  const MAX_BYTES_NON_COMPRESSIVE = 2 * 1024 * 1024;
 
   const isImage = (f: File) =>
-    f.type.startsWith("image/") ||
-    /\.(png|jpe?g|webp|gif|bmp|tiff?)$/i.test(f.name);
-
+    f.type.match(/^image\/(jpeg|jpg|png)$/i) || /\.(jpe?g|png)$/i.test(f.name);
   const isPdf = (f: File) =>
     f.type === "application/pdf" || /\.pdf$/i.test(f.name);
-
   const isDocx = (f: File) =>
-    f.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    f.type ===
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
     /\.docx$/i.test(f.name);
-
   const isXlsx = (f: File) =>
-    f.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+    f.type ===
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
     /\.xlsx$/i.test(f.name);
+  const isAllowed = (f: File) => isImage(f) || isPdf(f) || isDocx(f) || isXlsx(f);
 
-  const isTxt = (f: File) =>
-    f.type === "text/plain" || /\.txt$/i.test(f.name);
-
-  const isAllowed = (f: File) =>
-    isImage(f) || isPdf(f) || isDocx(f) || isXlsx(f) || isTxt(f);
-
-  function validateFiles(newFiles: File[], currentFiles: File[] = []) {
+  async function validateAndCompressFiles(
+    newFiles: File[],
+    currentFiles: File[] = []
+  ) {
     const errors: string[] = [];
     const accepted: File[] = [];
 
-    // quantidade
     if (currentFiles.length + newFiles.length > MAX_FILES) {
       errors.push(`Máximo de ${MAX_FILES} arquivos por tarefa.`);
     }
@@ -99,77 +86,106 @@ export default function ModalCriarTarefas({
     const signature = (f: File) => `${f.name}|${f.size}|${f.lastModified}`;
     const existingSign = new Set(currentFiles.map(signature));
 
-    // valida individuais
     for (const f of newFiles) {
       if (!isAllowed(f)) {
         errors.push(`Tipo não permitido: ${f.name}`);
         continue;
       }
 
-      const sizeLimit = isImage(f) || isPdf(f) ? MAX_BYTES_COMPRESSIVE : MAX_BYTES_NON_COMPRESSIVE;
-      if (f.size > sizeLimit) {
-        errors.push(
-          `${f.name}: tamanho  excede o limite permitido`
-        );
-        continue;
-      }
+      const sizeLimit =
+        isImage(f) || isPdf(f)
+          ? MAX_BYTES_COMPRESSIVE
+          : MAX_BYTES_NON_COMPRESSIVE;
 
-      // evita duplicado imediato
       if (existingSign.has(signature(f))) {
         errors.push(`Arquivo já adicionado: ${f.name}`);
         continue;
       }
 
-      accepted.push(f);
+      let finalFile = f;
+
+      // Compress only images; PDFs are NOT compressible here
+      if (isImage(f) && f.size > MAX_BYTES_NON_COMPRESSIVE) {
+        try {
+          const compressed = await imageCompression(f, {
+            maxSizeMB: 2,
+            maxWidthOrHeight: 1920,
+            useWebWorker: true,
+          });
+
+          if (compressed.size > sizeLimit) {
+            errors.push(
+              `${f.name}: mesmo após compressão excede o limite de ${(
+                sizeLimit / (1024 * 1024)
+              ).toFixed(1)} MB`
+            );
+            continue;
+          }
+
+          // imageCompression já retorna um File
+          finalFile = new File([compressed], f.name, { type: f.type });
+        } catch (err) {
+          console.error("Erro ao comprimir arquivo:", err);
+          errors.push(`Falha ao comprimir ${f.name}`);
+          continue;
+        }
+      } else if (f.size > sizeLimit) {
+        // PDFs, DOCX e XLSX (e imagens pequenas) só passam na verificação de tamanho
+        errors.push(`${f.name}: tamanho excede o limite permitido`);
+        continue;
+      }
+
+      accepted.push(finalFile);
     }
 
-    // valida tamanho total
     const totalBytes =
       currentFiles.reduce((a, f) => a + f.size, 0) +
       accepted.reduce((a, f) => a + f.size, 0);
 
     if (totalBytes > MAX_TOTAL_BYTES) {
-      errors.push("Tamanho total dos anexos excede 50MB.");
+      errors.push("Tamanho total dos anexos excede 30MB.");
     }
 
     return { accepted, errors };
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const arquivos = Array.from(e.target.files || []);
-    const { accepted, errors } = validateFiles(arquivos, anexos);
-
+// handlers
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const novos = Array.from(e.target.files || []);
+    const { accepted, errors } = await validateAndCompressFiles(novos, anexos);
     if (errors.length > 0) showValidationToast(errors, "Anexos inválidos");
-    if (accepted.length > 0) setAnexos((prev) => [...prev, ...accepted]);
-
+    if (accepted.length > 0)
+      setAnexos((prev) => [...prev, ...accepted]);
     e.target.value = "";
   };
+
   const handleRemoveAnexo = (fileToRemove: File) => {
     setAnexos((prev) => prev.filter((file) => file !== fileToRemove));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (submittingRef.current) return;
     const now = Date.now();
     if (now - lastSubmitRef.current < 800) return;
     lastSubmitRef.current = now;
 
-    // validações de campos
     const validationErrors: string[] = [];
     if (!selectedProjectId) validationErrors.push("ID do projeto não encontrado.");
-    if (!tarefa.tarTitulo?.trim()) validationErrors.push("O título da tarefa é obrigatório.");
-    if (!tarefa.usuId) validationErrors.push("Selecione um responsável pela tarefa.");
-    if (!tarefa.tarPrazo) validationErrors.push("Informe um prazo para a tarefa.");
+    if (!tarefa.tarTitulo?.trim())
+      validationErrors.push("O título da tarefa é obrigatório.");
+    if (!tarefa.usuId)
+      validationErrors.push("Selecione um responsável pela tarefa.");
+    if (!tarefa.tarPrazo)
+      validationErrors.push("Informe um prazo para a tarefa.");
 
-    // valida anexos novamente (garantia antes do fetch)
-    const { errors: fileErrors } = validateFiles([], anexos);
-    if (fileErrors.length > 0) validationErrors.push(...fileErrors);
+    // Valida anexos novamente antes do envio
+    const { errors: anexErrors } = await validateAndCompressFiles(anexos, []);
+    if (anexErrors.length > 0) validationErrors.push(...anexErrors);
 
     if (validationErrors.length > 0) {
       showValidationToast(validationErrors, "Erros de validação");
-      return; // não faz request
+      return;
     }
 
     submittingRef.current = true;
@@ -190,20 +206,8 @@ export default function ModalCriarTarefas({
       const tarefaCriada = await res.json();
 
       if (anexos.length > 0) {
-        for (const file of anexos) {
-          const fd = new FormData();
-          fd.append("file", file);
-
-          const upRes = await authFetch(
-            `http://localhost:8080/tarefa/${tarefaCriada.tarId}/upload`,
-            { method: "POST", body: fd }
-          );
-
-          if (!upRes.ok) {
-            await showErrorToastFromResponse(upRes, `Falha ao anexar "${file.name}"`);
-            return;
-          }
-        }
+        const ok = await uploadTaskAttachments(tarefaCriada.tarId, anexos);
+        if (!ok) return;
       }
 
       toast.success("Tarefa criada com sucesso!");
@@ -222,9 +226,7 @@ export default function ModalCriarTarefas({
     <div className="fixed inset-0 bg-gray-600/60 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
         <div className="p-8 pb-4 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-800">
-            Adicionar Nova Tarefa
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-800">Adicionar Nova Tarefa</h2>
           <button
             onClick={() => modalContext?.closeModal()}
             className="text-gray-400 hover:text-gray-600 text-3xl"
@@ -247,6 +249,7 @@ export default function ModalCriarTarefas({
               handleRemoveAnexo={handleRemoveAnexo}
             />
           </div>
+
           <div className="p-8 pt-4 flex justify-end gap-x-4">
             <button
               type="button"
@@ -258,8 +261,11 @@ export default function ModalCriarTarefas({
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`px-4 py-2 text-sm font-medium text-white rounded-md ${isSubmitting ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-                }`}
+              className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
+                isSubmitting
+                  ? "bg-blue-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
             >
               {isSubmitting ? "Criando..." : "Criar Tarefa"}
             </button>

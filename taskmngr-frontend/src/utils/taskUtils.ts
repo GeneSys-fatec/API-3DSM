@@ -1,3 +1,4 @@
+// utils/taskUtils.ts
 import { authFetch } from "@/utils/api";
 import { showErrorToastFromResponse } from "@/utils/errorUtils";
 
@@ -15,10 +16,7 @@ export async function uploadTaskAttachments(
     );
 
     if (!uploadRes.ok) {
-      await showErrorToastFromResponse(
-        uploadRes,
-        `Falha no upload do anexo "${arquivo.name}"`
-      );
+      await showErrorToastFromResponse(uploadRes, `Falha no upload do anexo "${arquivo.name}"`);
       return false;
     }
   }
@@ -32,6 +30,7 @@ export async function tryDeleteTask(tarId: string | number): Promise<boolean> {
     `http://localhost:8080/tarefa/deletar/${id}`,
     `http://localhost:8080/tarefa/${id}/deletar`,
   ];
+
   for (const url of candidates) {
     try {
       const res = await authFetch(url, { method: "DELETE" });

@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -27,6 +26,11 @@ import com.taskmanager.taskmngr_backend.model.entidade.AnexoTarefaModel;
 import com.taskmanager.taskmngr_backend.model.entidade.ProjetoModel;
 import com.taskmanager.taskmngr_backend.model.entidade.TarefaModel;
 import com.taskmanager.taskmngr_backend.repository.TarefaRepository;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
 
 @Service
 public class TarefaService {
@@ -86,15 +90,19 @@ public class TarefaService {
 
         String tipo = arquivo.getContentType();
         if (tipo == null) throw new IOException("Tipo do arquivo não reconhecido");
+
+        // Apenas: PDF, DOCX, XLSX e imagens JPG/PNG
         boolean permitido = tipo.matches(
-            "application/pdf|application/vnd.openxmlformats-officedocument.wordprocessingml.document|application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|image/.*"
+            "application/pdf"
+            + "|application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            + "|application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            + "|image/(jpeg|jpg|png)"
         );
         if (!permitido) throw new IOException("Tipo de arquivo não permitido");
 
         boolean isImage = tipo.startsWith("image/");
         boolean isPdf = "application/pdf".equals(tipo);
 
-        // cria a pasta de upload se não existir
         File pasta = new File(UPLOAD_DIR);
         if (!pasta.exists()) pasta.mkdirs();
 
@@ -102,17 +110,13 @@ public class TarefaService {
         String caminho = UPLOAD_DIR + uuid + "_" + arquivo.getOriginalFilename();
         File destino = new File(caminho);
 
-        //inicia a compressão dos pdfs
         long tamanhoFinal;
         if (isPdf) {
             long originalSize = arquivo.getSize();
-
-            // Tenta comprimir somente se maior que nosso limite lógico
             File arquivoBaseParaSalvar;
             if (originalSize > MAX_FILE_SIZE) {
                 File comprimido = comprimirPdfAvancado(arquivo, PDF_IMAGE_QUALITY, MAX_IMAGE_WIDTH);
                 long compressedSize = comprimido.length();
-
                 if (compressedSize > MAX_FILE_SIZE) {
                     try { comprimido.delete(); } catch (Exception ignored) {}
                     throw new AnexoTamanhoExcedente(
@@ -125,23 +129,46 @@ public class TarefaService {
             } else {
                 arquivoBaseParaSalvar = File.createTempFile("pdf_ok_", ".pdf");
                 arquivo.transferTo(arquivoBaseParaSalvar);
-                tamanhoFinal = originalSize;    
+                tamanhoFinal = originalSize;
             }
-
             Files.copy(arquivoBaseParaSalvar.toPath(), destino.toPath(), StandardCopyOption.REPLACE_EXISTING);
             try { arquivoBaseParaSalvar.delete(); } catch (Exception ignored) {}
-
         } else {
-            if (!isImage && arquivo.getSize() > MAX_FILE_SIZE) {
-                throw new AnexoTamanhoExcedente(
-                    "Tamanho de arquivo excedente",
-                    "Arquivos não-PDF e não-imagem devem ter no máximo " + (MAX_FILE_SIZE / MB) + " MB."
-                );
+            // Não-PDF
+            File arquivoBaseParaSalvar;
+            if (isImage) {
+                // Imagens: compacta automaticamente quando > 2 MiB
+                if (arquivo.getSize() > MAX_FILE_SIZE) {
+                    File comprimido = comprimirImagemAdaptativa(arquivo, tipo, MAX_IMAGE_WIDTH, 0.85f);
+                    long compressedSize = comprimido.length();
+                    if (compressedSize > MAX_FILE_SIZE) {
+                        try { comprimido.delete(); } catch (Exception ignored) {}
+                        throw new AnexoTamanhoExcedente(
+                            "Imagem excede o limite após compactação.",
+                            "Reduza a resolução/qualidade da imagem e tente novamente."
+                        );
+                    }
+                    arquivoBaseParaSalvar = comprimido;
+                } else {
+                    arquivoBaseParaSalvar = File.createTempFile("img_ok_", ".tmp");
+                    arquivo.transferTo(arquivoBaseParaSalvar);
+                }
+            } else {
+                // DOCX/XLSX: até 2 MiB
+                if (arquivo.getSize() > MAX_FILE_SIZE) {
+                    throw new AnexoTamanhoExcedente(
+                        "Tamanho de arquivo excedente",
+                        "Arquivos (DOCX/XLSX) devem ter no máximo " + (MAX_FILE_SIZE / MB) + " MB."
+                    );
+                }
+                arquivoBaseParaSalvar = File.createTempFile("file_ok_", ".tmp");
+                arquivo.transferTo(arquivoBaseParaSalvar);
             }
-            arquivo.transferTo(destino);
-            tamanhoFinal = arquivo.getSize();
+
+            tamanhoFinal = arquivoBaseParaSalvar.length();
+            Files.copy(arquivoBaseParaSalvar.toPath(), destino.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            try { arquivoBaseParaSalvar.delete(); } catch (Exception ignored) {}
         }
-        // fim da validacao de compressao
 
         Optional<TarefaModel> tarefaOpt = tarefaRepository.findById(tarefaId);
         if (tarefaOpt.isEmpty()) {
@@ -205,5 +232,74 @@ public class TarefaService {
                 }
             }doc.save(tmp);
         }return tmp;
+    }
+
+    // Compactação adaptativa de imagens (JPG/PNG): redimensiona e ajusta qualidade
+    private File comprimirImagemAdaptativa(MultipartFile arquivo, String contentType, int maxWidth, float initialJpegQuality) throws IOException {
+        BufferedImage original = ImageIO.read(arquivo.getInputStream());
+        if (original == null) throw new IOException("Imagem inválida.");
+
+        int w = original.getWidth();
+        int h = original.getHeight();
+        double aspect = h / (double) w;
+
+        if (w > maxWidth) {
+            w = maxWidth;
+            h = (int) Math.round(w * aspect);
+        }
+
+        BufferedImage atual = redimensionar(original, w, h, contentType);
+        File tmp = File.createTempFile("imgcmp_", contentType.contains("png") ? ".png" : ".jpg");
+
+        // múltiplas tentativas reduzindo qualidade (para JPEG) e resolução
+        float[] qualidades = new float[] { initialJpegQuality, 0.75f, 0.65f, 0.55f, 0.45f, 0.35f, 0.25f };
+        double escala = 0.9;
+        int minWidth = 600;
+
+        for (int pass = 0; pass < 12; pass++) {
+            if (contentType.contains("jpeg") || contentType.contains("jpg")) {
+                float q = qualidades[Math.min(pass, qualidades.length - 1)];
+                escreverJpeg(atual, tmp, q);
+            } else {
+                // PNG: regrava e reduz resolução progressivamente
+                escreverPng(atual, tmp);
+            }
+            if (tmp.length() <= MAX_FILE_SIZE) return tmp;
+
+            int newW = (int) Math.round(atual.getWidth() * escala);
+            if (newW < minWidth) break;
+            int newH = (int) Math.round(newW * aspect);
+            atual = redimensionar(atual, newW, newH, contentType);
+        }
+        return tmp;
+    }
+
+    private BufferedImage redimensionar(BufferedImage src, int newW, int newH, String contentType) {
+        int type = (contentType.contains("png") ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
+        BufferedImage scaled = new BufferedImage(newW, newH, type);
+        java.awt.Graphics2D g2 = scaled.createGraphics();
+        g2.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2.setRenderingHint(java.awt.RenderingHints.KEY_RENDERING, java.awt.RenderingHints.VALUE_RENDER_QUALITY);
+        g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.drawImage(src, 0, 0, newW, newH, null);
+        g2.dispose();
+        return scaled;
+    }
+
+    private void escreverJpeg(BufferedImage img, File destino, float quality) throws IOException {
+        ImageWriter writer = ImageIO.getImageWritersByFormatName("jpg").next();
+        try (ImageOutputStream ios = ImageIO.createImageOutputStream(destino)) {
+            writer.setOutput(ios);
+            ImageWriteParam param = writer.getDefaultWriteParam();
+            param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+            param.setCompressionQuality(Math.max(0.1f, Math.min(quality, 1.0f)));
+            writer.write(null, new javax.imageio.IIOImage(img, null, null), param);
+        } finally {
+            writer.dispose();
+        }
+    }
+
+    private void escreverPng(BufferedImage img, File destino) throws IOException {
+        ImageIO.write(img, "png", destino);
     }
 }
