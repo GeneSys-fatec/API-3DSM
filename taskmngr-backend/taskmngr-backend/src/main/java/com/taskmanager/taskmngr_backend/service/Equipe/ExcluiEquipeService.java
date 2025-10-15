@@ -18,7 +18,7 @@ public class ExcluiEquipeService {
 
     public void excluir(String id, UsuarioModel usuarioLogado) {
         EquipeModel equipe = buscaEquipeService.getEquipeById(id);
-        validacaoEquipeService.verificarSeUsuarioECriador(equipe, usuarioLogado, "excluir a equipe");
+        validacaoEquipeService.verificarSeUsuarioPodeExcluirEquipe(equipe, usuarioLogado);
         equipeRepository.delete(equipe);
     }
 }

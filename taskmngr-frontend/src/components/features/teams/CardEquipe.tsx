@@ -8,10 +8,11 @@ interface TeamCardProps {
     corClasse: string;
     onDelete: (id: string) => void;
     onEdit?: () => void;
+    onLeave?: (id: string) => void;
     onRemoveMember?: (email: string) => void;
 }
 
-export default function TeamCard({ equId, equNome, equDescricao, usuarios, corClasse, onDelete, onEdit }: TeamCardProps) {
+export default function TeamCard({ equId, equNome, equDescricao, usuarios, corClasse, onDelete, onEdit, onLeave }: TeamCardProps) {
     const mapaDeCoresBorda: { [key: string]: string } = {
         "orange-400": "bg-orange-400 border-orange-400",
         "blue-400": "bg-blue-400 border-blue-400",
@@ -54,6 +55,9 @@ export default function TeamCard({ equId, equNome, equDescricao, usuarios, corCl
                     </div>
 
                     <div className="flex gap-4 text-gray-400">
+                        <button onClick={() => onLeave?.(equId)} className="hover:text-yellow-500 transition" title="Sair da equipe">
+                            <i className="fa-solid fa-right-from-bracket text-lg"></i>
+                        </button>
                         {onEdit && (
                             <button onClick={onEdit} className="hover:text-blue-600 transition" title="Editar equipe">
                                 <i className="fa-solid fa-pen-to-square text-lg"></i>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import { updateEquipe } from "./teamService";
+import { getErrorMessage } from "@/utils/errorUtils";
 
 interface ModalEditarEquipeProps {
   isOpen: boolean;
@@ -80,13 +81,12 @@ export default function ModalEditarEquipe({ isOpen, onClose, equipe }: ModalEdit
     const payload = { equNome: teamName, equDescricao: description, membrosEmails: addedMembers };
 
     try {
-      const successMessage = await updateEquipe(equipe.equId, payload);
-      toast.success(successMessage);
-      window.dispatchEvent(new CustomEvent("equipe:updated"));
+      const successMessage = await updateEquipe(equipe.equId, payload)
+      toast.success(successMessage)
+      window.dispatchEvent(new CustomEvent("equipe:updated"))
       onClose();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Ocorreu um erro inesperado.";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     } finally {
       setIsSaving(false);
     }

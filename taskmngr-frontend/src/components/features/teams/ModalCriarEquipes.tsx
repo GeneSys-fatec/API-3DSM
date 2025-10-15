@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import { createEquipe } from "./teamService";
+import { getErrorMessage } from "@/utils/errorUtils";
 
 interface ModalCriarEquipeProps {
   isOpen: boolean;
@@ -74,13 +75,12 @@ export default function ModalCriarEquipe({ isOpen, onClose }: ModalCriarEquipePr
     const payload = { equNome: teamName, equDescricao: description, membrosEmails: addedMembers };
 
     try {
-      const successMessage = await createEquipe(payload);
-      toast.success(successMessage);
-      window.dispatchEvent(new CustomEvent("equipe:created"));
+      const successMessage = await createEquipe(payload)
+      toast.success(successMessage)
+      window.dispatchEvent(new CustomEvent("equipe:created"))
       onClose();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Ocorreu um erro inesperado.";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     } finally {
       setIsSaving(false);
     }

@@ -12,11 +12,7 @@ export const getMinhasEquipes = async (): Promise<EquipeComProjetos[]> => {
   return response.json();
 };
 
-export const createEquipe = async (payload: {
-  equNome: string;
-  equDescricao: string;
-  membrosEmails: string[];
-}): Promise<string> => {
+export const createEquipe = async (payload: { equNome: string; equDescricao: string; membrosEmails: string[] }): Promise<string> => {
   const response = await authFetch(`${API_URL}/cadastrar`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -30,6 +26,25 @@ export const createEquipe = async (payload: {
       throw new Error(errorJson.mensagem || "Erro ao criar equipe.");
     } catch (e) {
       throw new Error(data || "Erro ao criar equipe.");
+    }
+  }
+  return data;
+};
+
+export const updateEquipe = async (equipeId: string, payload: { equNome: string; equDescricao: string; membrosEmails: string[] }): Promise<string> => {
+  const response = await authFetch(`${API_URL}/atualizar/${equipeId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.text();
+  if (!response.ok) {
+    try {
+      const errorJson = JSON.parse(data);
+      throw new Error(errorJson.mensagem || "Erro ao atualizar equipe.");
+    } catch (e) {
+      throw new Error(data || "Erro ao atualizar equipe.");
     }
   }
   return data;
@@ -51,23 +66,17 @@ export const deleteEquipe = async (equipeId: string): Promise<string> => {
   return data;
 };
 
-export const updateEquipe = async (
-  equipeId: string,
-  payload: { equNome: string; equDescricao: string; membrosEmails: string[] }
-): Promise<string> => {
-  const response = await authFetch(`${API_URL}/atualizar/${equipeId}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+export const sairDaEquipe = async (equipeId: string): Promise<string> => {
+  const response = await authFetch(`${API_URL}/${equipeId}/sair`, {
+    method: "POST",
   });
-
   const data = await response.text();
   if (!response.ok) {
     try {
       const errorJson = JSON.parse(data);
-      throw new Error(errorJson.mensagem || "Erro ao atualizar equipe.");
-    } catch (e) {
-      throw new Error(data || "Erro ao atualizar equipe.");
+      throw new Error(errorJson.mensagem || "Erro ao sair da equipe.");
+    } catch {
+      throw new Error(data || "Erro ao sair da equipe.");
     }
   }
   return data;

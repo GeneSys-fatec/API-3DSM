@@ -42,3 +42,18 @@ export function showValidationToast(errors: string[], title?: string) {
     (title ? `${title}:\n` : "") + errors.map((e) => `• ${e}`).join("\n");
   toast.error(message, { style: { whiteSpace: "pre-line" } });
 }
+
+export function getErrorMessage(error: unknown, defaultMsg = "Ocorreu um erro inesperado"): string {
+  if (error instanceof Error) {
+    try {
+      const parsed = JSON.parse(error.message);
+      return parsed.mensagem || parsed.titulo || error.message;
+    } catch {
+      return error.message;
+    }
+  }
+
+  if (typeof error === "string") return error;
+
+  return defaultMsg;
+}

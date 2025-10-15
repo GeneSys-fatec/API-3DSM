@@ -21,17 +21,23 @@ public class EditaEquipeService {
 
     public EquipeModel editar(String id, EquipeDTO dto, UsuarioModel usuarioLogado) {
         EquipeModel equipe = buscaEquipeService.getEquipeById(id);
-        validacaoEquipeService.validarNomeUnico(dto.getEquNome(), id);
+
+        if (dto.getEquNome() != null && !dto.getEquNome().equals(equipe.getEquNome())) {
+            validacaoEquipeService.verificarSeUsuarioPodeAlterarNome(equipe, usuarioLogado);
+            validacaoEquipeService.validarNomeUnico(dto.getEquNome(), id);
+            equipe.setEquNome(dto.getEquNome());
+        }
+
+        if (dto.getEquDescricao() != null && !dto.getEquDescricao().equals(equipe.getEquDescricao())) {
+            validacaoEquipeService.verificarSeUsuarioPodeAlterarDescricao(equipe, usuarioLogado);
+            equipe.setEquDescricao(dto.getEquDescricao());
+        }
 
         if (dto.getMembrosEmails() != null) {
-            validacaoEquipeService.verificarSeUsuarioECriador(equipe, usuarioLogado, "alterar a lista de membros");
-
+            validacaoEquipeService.verificarSeUsuarioPodeAlterarMembros(equipe, usuarioLogado);
             List<UsuarioModel> novosMembros = validacaoEquipeService.buscarEValidarMembrosPorEmails(dto.getMembrosEmails());
             equipe.setUsuarios(novosMembros);
         }
-
-        equipe.setEquNome(dto.getEquNome());
-        equipe.setEquDescricao(dto.getEquDescricao());
 
         return equipeRepository.save(equipe);
     }

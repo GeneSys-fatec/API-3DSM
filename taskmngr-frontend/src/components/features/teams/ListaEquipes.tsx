@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import TeamCard from "./CardEquipe";
 import ModalCriarEquipe from "./ModalCriarEquipes";
-import { deleteEquipe, getMinhasEquipes } from "./teamService";
+import { deleteEquipe, getMinhasEquipes, sairDaEquipe } from "./teamService";
 import { Equipe } from "@/types/types";
 import { toast } from "react-toastify";
 import ModalConfirmacao from "@/components/ui/ModalConfirmacao";
 import ModalEditarEquipes from "./ModalEditarEquipes";
+import { getErrorMessage } from "@/utils/errorUtils";
 
 export default function ListaEquipes() {
   const [equipes, setEquipes] = useState<Equipe[]>([]);
@@ -20,38 +21,29 @@ export default function ListaEquipes() {
       try {
         const data = await getMinhasEquipes();
         setEquipes(data);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error(error);
-        if (error instanceof Error) {
-          toast.error(error.message);
-        } else {
-          toast.error("Um erro inesperado ocorreu ao buscar equipes.");
-        }
+        toast.error(getErrorMessage(error, "Um erro inesperado ocorreu ao buscar equipes."));
       }
     }
-    fetchEquipes();
-    window.addEventListener("equipe:created", fetchEquipes as EventListener);
-    window.addEventListener("equipe:updated", fetchEquipes as EventListener);
+
+    fetchEquipes()
+    window.addEventListener("equipe:created", fetchEquipes as EventListener)
+    window.addEventListener("equipe:updated", fetchEquipes as EventListener)
+
     return () => {
-      window.removeEventListener("equipe:created", fetchEquipes as EventListener);
-      window.removeEventListener("equipe:updated", fetchEquipes as EventListener);
-    };
+      window.removeEventListener("equipe:created", fetchEquipes as EventListener)
+      window.removeEventListener("equipe:updated", fetchEquipes as EventListener)
+    }
   }, []);
 
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
 
-  const handleEditarEquipe = (equipe: Equipe) => {
-    setEquipeParaEditar(equipe)
-  };
+  const handleEditarEquipe = (equipe: Equipe) => { setEquipeParaEditar(equipe) };
+  const handleCloseEditar = () => { setEquipeParaEditar(null) };
 
-  const handleCloseEditar = () => {
-    setEquipeParaEditar(null)
-  };
-
-  const confirmarExclusao = (equipe: Equipe) => {
-    setEquipeParaExcluir(equipe);
-  };
+  const confirmarExclusao = (equipe: Equipe) => { setEquipeParaExcluir(equipe); };
 
   const executarExclusao = async () => {
     if (!equipeParaExcluir) return;
@@ -60,15 +52,22 @@ export default function ListaEquipes() {
       setEquipes(prev => prev.filter(e => e.equId !== equipeParaExcluir.equId))
       toast.success("Equipe excluída com sucesso!")
     } catch (error) {
-      console.error(error);
-      toast.error("Erro ao excluir equipe.");
+      toast.error(getErrorMessage(error, "Erro ao excluir equipe."));
     } finally {
       setEquipeParaExcluir(null);
     }
   };
 
-  const handleCancelExclusao = () => {
-    setEquipeParaExcluir(null);
+  const handleCancelExclusao = () => { setEquipeParaExcluir(null); };
+
+  const handleSairEquipe = async (equipeId: string) => {
+    try {
+      const message = await sairDaEquipe(equipeId);
+      toast.success(message);
+      setEquipes(prev => prev.filter(e => e.equId !== equipeId));
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Erro ao sair da equipe."));
+    }
   };
 
   if (equipes.length === 0) {
@@ -122,6 +121,7 @@ export default function ListaEquipes() {
             corClasse={cores[i % cores.length]}
             onDelete={() => confirmarExclusao(equipe)}
             onEdit={() => handleEditarEquipe(equipe)}
+            onLeave={handleSairEquipe}
           />
         ))}
       </div>
