@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import { createEquipe } from "./teamService";
+import { getErrorMessage } from "@/utils/errorUtils";
 
 interface ModalCriarEquipeProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function ModalCriarEquipe({
-  isOpen,
-  onClose,
-}: ModalCriarEquipeProps) {
+export default function ModalCriarEquipe({ isOpen, onClose }: ModalCriarEquipeProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const [teamName, setTeamName] = useState("");
   const [description, setDescription] = useState("");
@@ -74,22 +72,15 @@ export default function ModalCriarEquipe({
     }
     setIsSaving(true);
 
-    const payload = {
-      equNome: teamName,
-      equDescricao: description,
-      membrosEmails: addedMembers,
-    };
+    const payload = { equNome: teamName, equDescricao: description, membrosEmails: addedMembers };
 
     try {
-      const successMessage = await createEquipe(payload);
-      toast.success(successMessage);
-
-      window.dispatchEvent(new CustomEvent("equipe:created"));
+      const successMessage = await createEquipe(payload)
+      toast.success(successMessage)
+      window.dispatchEvent(new CustomEvent("equipe:created"))
       onClose();
     } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : "Ocorreu um erro inesperado.";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     } finally {
       setIsSaving(false);
     }
@@ -120,8 +111,7 @@ export default function ModalCriarEquipe({
           <div className="px-8 flex-grow overflow-y-auto">
             <div className="flex flex-col gap-y-6 text-left">
               <p className="flex justify-center text-sm text-gray-500 mb-8">
-                Organize sua equipe convidando membros para colaborar em
-                projetos.
+                Organize sua equipe convidando membros para colaborar em projetos.
               </p>
 
               <div>
