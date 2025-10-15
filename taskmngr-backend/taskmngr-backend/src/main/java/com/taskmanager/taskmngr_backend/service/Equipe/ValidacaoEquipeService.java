@@ -1,5 +1,12 @@
 package com.taskmanager.taskmngr_backend.service.Equipe;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.AcessoNaoAutorizadoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.NomeDeEquipeJaExisteException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.UsuarioNaoEncontradoException;
@@ -7,13 +14,6 @@ import com.taskmanager.taskmngr_backend.model.entidade.EquipeModel;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.EquipeRepository;
 import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @Service
 public class ValidacaoEquipeService {

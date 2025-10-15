@@ -1,7 +1,7 @@
 import { Usuario } from "@/types/types";
 
 interface TeamCardProps {
-    id: string;
+    equId: string;
     equNome: string;
     equDescricao?: string;
     usuarios: Usuario[];
@@ -11,8 +11,7 @@ interface TeamCardProps {
     onRemoveMember?: (email: string) => void;
 }
 
-export default function TeamCard({ id, equNome, equDescricao, usuarios, corClasse, onDelete, onEdit,
-}: TeamCardProps) {
+export default function TeamCard({ equId, equNome, equDescricao, usuarios, corClasse, onDelete, onEdit }: TeamCardProps) {
     const mapaDeCoresBorda: { [key: string]: string } = {
         "orange-400": "bg-orange-400 border-orange-400",
         "blue-400": "bg-blue-400 border-blue-400",
@@ -60,7 +59,7 @@ export default function TeamCard({ id, equNome, equDescricao, usuarios, corClass
                                 <i className="fa-solid fa-pen-to-square text-lg"></i>
                             </button>
                         )}
-                        <button onClick={() => onDelete(id)} className="hover:text-red-500 transition" title="Excluir equipe">
+                        <button onClick={() => onDelete(equId)} className="hover:text-red-500 transition" title="Excluir equipe">
                             <i className="fa-solid fa-trash text-lg"></i>
                         </button>
                     </div>

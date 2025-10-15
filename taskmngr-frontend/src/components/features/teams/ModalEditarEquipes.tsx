@@ -1,39 +1,25 @@
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import { updateEquipe } from "./teamService";
-import type { Equipe } from "@/types/types";
 
 interface ModalEditarEquipeProps {
   isOpen: boolean;
   onClose: () => void;
-  equipe: Equipe | null;
+  equipe: {
+    equId: string;
+    equNome: string;
+    equDescricao: string;
+    membrosEmails: string[];
+  } | null;
 }
 
-export default function ModalEditarEquipe({
-  isOpen,
-  onClose,
-  equipe,
-}: ModalEditarEquipeProps) {
+export default function ModalEditarEquipe({ isOpen, onClose, equipe }: ModalEditarEquipeProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const [teamName, setTeamName] = useState("");
   const [description, setDescription] = useState("");
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const [addedMembers, setAddedMembers] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    if (equipe) {
-      setTeamName(equipe.equNome);
-
-      setDescription(equipe.equDescricao || "");
-
-      setAddedMembers(
-        (equipe.equMembros
-          ?.map((m) => m.usuEmail)
-          .filter(Boolean) as string[]) || []
-      );
-    }
-  }, [equipe]);
 
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -47,21 +33,34 @@ export default function ModalEditarEquipe({
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [isOpen, onClose]);
 
+  useEffect(() => {
+    if (isOpen && equipe) {
+      setTeamName(equipe.equNome);
+      setDescription(equipe.equDescricao || "");
+      setAddedMembers(equipe.membrosEmails || []);
+      setNewMemberEmail("");
+    }
+  }, [isOpen, equipe]);
+
   if (!isOpen || !equipe) return null;
 
   const handleAddMember = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== "Enter") return;
     e.preventDefault();
+
     const email = newMemberEmail.trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     if (!emailRegex.test(email)) {
       toast.error("Por favor, insira um email válido.");
       return;
     }
+
     if (addedMembers.includes(email)) {
       toast.warn("Este membro já foi adicionado.");
       return;
     }
+
     setAddedMembers((prev) => [...prev, email]);
     setNewMemberEmail("");
   };
@@ -78,20 +77,15 @@ export default function ModalEditarEquipe({
     }
     setIsSaving(true);
 
-    const payload = {
-      equNome: teamName,
-      equDescricao: description,
-      membrosEmails: addedMembers,
-    };
+    const payload = { equNome: teamName, equDescricao: description, membrosEmails: addedMembers };
 
     try {
-      await updateEquipe(equipe.equId, payload);
-      toast.success(`Equipe atualizada com sucesso!`);
+      const successMessage = await updateEquipe(equipe.equId, payload);
+      toast.success(successMessage);
       window.dispatchEvent(new CustomEvent("equipe:updated"));
       onClose();
     } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : "Erro ao atualizar equipe.";
+      const message = error instanceof Error ? error.message : "Ocorreu um erro inesperado.";
       toast.error(message);
     } finally {
       setIsSaving(false);
@@ -104,11 +98,10 @@ export default function ModalEditarEquipe({
         ref={modalRef}
         className="bg-white rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh] overflow-y-auto"
       >
-        <div className="p-8 pb-4 flex justify-between items-center border-b">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">Editar Equipe</h2>
-            <p className="text-sm text-gray-500">{equipe.equNome}</p>
-          </div>
+        <div className="p-8 pb-4 flex justify-between">
+          <h2 className="text-2xl font-bold text-gray-800">
+            Editar Equipe
+          </h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 text-3xl"
@@ -116,12 +109,17 @@ export default function ModalEditarEquipe({
             &times;
           </button>
         </div>
+
         <form
           onSubmit={handleSubmit}
           className="flex flex-col flex-grow overflow-hidden"
         >
-          <div className="p-8 flex-grow overflow-y-auto">
+          <div className="px-8 flex-grow overflow-y-auto">
             <div className="flex flex-col gap-y-6 text-left">
+              <p className="flex justify-center text-sm text-gray-500 mb-8">
+                Atualize as informações da sua equipe e gerencie os membros.
+              </p>
+
               <div>
                 <label
                   htmlFor="teamName"
@@ -139,6 +137,7 @@ export default function ModalEditarEquipe({
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
                 />
               </div>
+
               <div>
                 <label
                   htmlFor="newMemberEmail"
@@ -157,6 +156,7 @@ export default function ModalEditarEquipe({
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
                 />
               </div>
+
               {addedMembers.length > 0 && (
                 <div className="max-h-40 overflow-y-auto pr-2">
                   <h3 className="block text-sm font-medium text-gray-600 mb-2">
@@ -166,21 +166,36 @@ export default function ModalEditarEquipe({
                     {addedMembers.map((email) => (
                       <div
                         key={email}
-                        className="flex justify-between items-center p-3 rounded-xl text-sm bg-blue-50 border border-blue-200"
+                        className="flex justify-between items-center p-3 rounded-xl text-sm"
+                        style={{
+                          background:
+                            "linear-gradient(90deg, #e0f2fe 0%, #c3dafe 100%)",
+                          border: "1px solid #bfdbfe",
+                        }}
                       >
-                        <span className="text-gray-900">{email}</span>
+                        <div className="flex items-center gap-2 text-gray-900">
+                          <div
+                            className="w-4 h-4 rounded-full"
+                            style={{
+                              background:
+                                "radial-gradient(circle, #3b82f6 0%, #1d4ed8 100%)",
+                            }}
+                          ></div>
+                          {email}
+                        </div>
                         <button
                           type="button"
                           onClick={() => handleRemoveMember(email)}
-                          className="text-gray-500 hover:text-red-600 text-2xl ml-2 leading-none"
+                          className="text-gray-500 hover:text-gray-800 text-2xl ml-2 leading-none"
                         >
                           &times;
-                        </button>{" "}
+                        </button>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
+
               <div>
                 <label
                   htmlFor="description"
@@ -193,14 +208,15 @@ export default function ModalEditarEquipe({
                   name="description"
                   rows={3}
                   value={description}
-                  placeholder="Adicione uma descrição para esta equipe..."
+                  placeholder="Atualize a descrição da equipe..."
                   onChange={(e) => setDescription(e.target.value)}
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
                 />
               </div>
             </div>
           </div>
-          <div className="p-8 pt-4 flex justify-end gap-x-4 border-t bg-gray-50 rounded-b-lg">
+
+          <div className="p-8 pt-4 flex justify-end gap-x-4">
             <button
               type="button"
               onClick={onClose}

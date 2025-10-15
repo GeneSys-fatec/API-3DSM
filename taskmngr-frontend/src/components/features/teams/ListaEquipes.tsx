@@ -1,26 +1,19 @@
 import { useEffect, useState } from "react";
 import TeamCard from "./CardEquipe";
-import ModalCriarEquipe from "./ModalCriarEquipe";
-import { getMinhasEquipes } from "./teamService";
+import ModalCriarEquipe from "./ModalCriarEquipes";
+import { deleteEquipe, getMinhasEquipes } from "./teamService";
 import { Equipe } from "@/types/types";
 import { toast } from "react-toastify";
-import { authFetch } from "@/utils/api";
 import ModalConfirmacao from "@/components/ui/ModalConfirmacao";
+import ModalEditarEquipes from "./ModalEditarEquipes";
 
 export default function ListaEquipes() {
   const [equipes, setEquipes] = useState<Equipe[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [equipeParaExcluir, setEquipeParaExcluir] = useState<Equipe | null>(
-    null
-  );
+  const [equipeParaEditar, setEquipeParaEditar] = useState<Equipe | null>(null);
+  const [equipeParaExcluir, setEquipeParaExcluir] = useState<Equipe | null>(null);
 
-  const cores = [
-    "blue-400",
-    "green-500",
-    "purple-400",
-    "orange-400",
-    "red-400",
-  ];
+  const cores = ["blue-400", "green-500", "purple-400", "orange-400", "red-400"];
 
   useEffect(() => {
     async function fetchEquipes() {
@@ -38,16 +31,23 @@ export default function ListaEquipes() {
     }
     fetchEquipes();
     window.addEventListener("equipe:created", fetchEquipes as EventListener);
+    window.addEventListener("equipe:updated", fetchEquipes as EventListener);
     return () => {
-      window.removeEventListener(
-        "equipe:created",
-        fetchEquipes as EventListener
-      );
+      window.removeEventListener("equipe:created", fetchEquipes as EventListener);
+      window.removeEventListener("equipe:updated", fetchEquipes as EventListener);
     };
   }, []);
 
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
+
+  const handleEditarEquipe = (equipe: Equipe) => {
+    setEquipeParaEditar(equipe)
+  };
+
+  const handleCloseEditar = () => {
+    setEquipeParaEditar(null)
+  };
 
   const confirmarExclusao = (equipe: Equipe) => {
     setEquipeParaExcluir(equipe);
@@ -56,23 +56,12 @@ export default function ListaEquipes() {
   const executarExclusao = async () => {
     if (!equipeParaExcluir) return;
     try {
-      const response = await authFetch(
-        `http://localhost:8080/equipe/apagar/${equipeParaExcluir.equId}`,
-        {
-          method: "DELETE",
-        }
-      );
-      if (response.ok) {
-        setEquipes((prev) =>
-          prev.filter((e) => e.equId !== equipeParaExcluir.equId)
-        );
-        toast.success("Equipe excluída com sucesso!");
-      } else {
-        toast.error("Erro ao excluir equipe.");
-      }
+      await deleteEquipe(equipeParaExcluir.equId)
+      setEquipes(prev => prev.filter(e => e.equId !== equipeParaExcluir.equId))
+      toast.success("Equipe excluída com sucesso!")
     } catch (error) {
       console.error(error);
-      toast.error("Erro de conexão ao excluir equipe.");
+      toast.error("Erro ao excluir equipe.");
     } finally {
       setEquipeParaExcluir(null);
     }
@@ -126,20 +115,31 @@ export default function ListaEquipes() {
         {equipes.map((equipe, i) => (
           <TeamCard
             key={equipe.equId}
-            id={equipe.equId}
+            equId={equipe.equId}
             equNome={equipe.equNome}
             equDescricao={equipe.equDescricao}
             usuarios={equipe.equMembros ?? []}
             corClasse={cores[i % cores.length]}
             onDelete={() => confirmarExclusao(equipe)}
-            onEdit={() =>
-              toast.warn("Funcionalidade de edição ainda não implementada.")
-            }
+            onEdit={() => handleEditarEquipe(equipe)}
           />
         ))}
       </div>
 
       <ModalCriarEquipe isOpen={isModalOpen} onClose={handleCloseModal} />
+
+      {equipeParaEditar && (
+        <ModalEditarEquipes
+          isOpen={true}
+          onClose={handleCloseEditar}
+          equipe={{
+            equId: equipeParaEditar.equId,
+            equNome: equipeParaEditar.equNome,
+            equDescricao: equipeParaEditar.equDescricao ?? "",
+            membrosEmails: (equipeParaEditar.equMembros ?? []).map(m => m.usuEmail ?? ""),
+          }}
+        />
+      )}
 
       {equipeParaExcluir && (
         <ModalConfirmacao
