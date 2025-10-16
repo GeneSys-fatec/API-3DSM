@@ -10,9 +10,10 @@ import ModalGoogle from "../ModalGoogle";
 import CalendarLegenda from './CalendarioLegenda';
 import CalendarioToolbar from './CalendarioToolbar';
 import CalendarioComponent from './CalendarioComponent';
-import { localizer, eventStyleGetter } from '@/config/calendarioConfig';
+import { localizer, eventStyleGetter as baseEventStyleGetter } from '@/config/calendarioConfig';
 import { useTarefas } from '@/hooks/useTarefas';
 import type { Tarefa } from "@/types/types";
+import { exchangeCode, fetchGoogleEvents, getAuthStatus, consumeOAuthCodeFromUrl } from '@/services/googleCalendar';
 
 const CalendarioTarefas: React.FC = () => {
     const [view, setView] = useState<'month' | 'week'>('month');
@@ -23,6 +24,9 @@ const CalendarioTarefas: React.FC = () => {
     const [tarefaParaExcluir, setTarefaParaExcluir] = useState<Tarefa | null>(null);
     const [showGoogleModal, setShowGoogleModal] = useState(false);
     const [isGoogleLogged, setIsGoogleLogged] = useState(false);
+    const [googleEvents, setGoogleEvents] = useState<any[]>([]);
+
+    const GOOGLE_ENABLED = import.meta.env.VITE_GOOGLE_CALENDAR_ENABLED === 'true';
 
     const modalContext = useContext(ModalContext);
     const { selectedProjectId } = useOutletContext<{ selectedProjectId: string | null }>();
@@ -38,8 +42,80 @@ const CalendarioTarefas: React.FC = () => {
         excluirTarefa
     } = useTarefas(selectedProjectId);
 
+    // Carrega status de autenticação e eventos do Google, se logado
+    useEffect(() => {
+        if (!GOOGLE_ENABLED) return; // desabilita quando flag for false
+        let mounted = true;
+        (async () => {
+            try {
+                const { loggedIn } = await getAuthStatus();
+                if (!mounted) return;
+                setIsGoogleLogged(loggedIn);
+                if (loggedIn) {
+                    await carregarEventosGoogle();
+                }
+            } catch {
+                // ignora
+            }
+        })();
+        return () => { mounted = false; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+    
+    // Suporta fluxo com redirect: extrai o code e limpa a URL
+    useEffect(() => {
+        if (!GOOGLE_ENABLED) return; // desabilita quando flag for false
+        const extracted = consumeOAuthCodeFromUrl();
+        if (!extracted) return;
+
+        (async () => {
+            if (extracted.error) {
+                console.error('Erro OAuth Google:', extracted.error);
+                return;
+            }
+            if (extracted.code) {
+                try {
+                    await exchangeCode(extracted.code);
+                    setIsGoogleLogged(true);
+                    await carregarEventosGoogle();
+                } catch (e) {
+                    console.error(e);
+                    alert('Falha ao conectar com Google. Tente novamente.');
+                } finally {
+                    setShowGoogleModal(false);
+                }
+            }
+        })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+    
+    const carregarEventosGoogle = async () => {
+        if (!GOOGLE_ENABLED) return; // desabilita quando flag for false
+        try {
+            // Você pode limitar por período conforme a view/data atual:
+            // Ex.: calcular início/fim do mês/semana corrente.
+            const events = await fetchGoogleEvents();
+            setGoogleEvents(events);
+        } catch (e) {
+            console.error(e);
+            // Falha silenciosa para não quebrar a UX
+        }
+    };
+
+    // SOMENTE tarefas do aplicativo (sem eventos do Google)
+    const allEvents = React.useMemo(
+        () => eventosFiltrados,
+        [eventosFiltrados]
+    );
+
+    // Estilo padrão (sem destaque especial para Google)
+    const eventStyleGetter = (event: any) => {
+        return baseEventStyleGetter(event);
+    };
+
     const handleSelectEvent = (event: any, e: any) => {
         e.preventDefault();
+        // Nenhuma filtragem necessária, pois eventos do Google não serão carregados
         setModalPosition({ x: e.clientX, y: e.clientY });
         setSelectedTask(event);
         setShowModal(true);
@@ -71,6 +147,14 @@ const CalendarioTarefas: React.FC = () => {
             } 
         }));
         if (modalContext) modalContext.closeModal();
+
+        // Opcional: após criar tarefa, você pode também recarregar eventos do Google
+        // caso seu backend crie o evento correspondente.
+        if (isGoogleLogged) {
+            setTimeout(() => {
+                carregarEventosGoogle().catch(() => {});
+            }, 500);
+        }
     };
 
     const handleDeleteTask = () => {
@@ -97,6 +181,12 @@ const CalendarioTarefas: React.FC = () => {
             alert('Erro ao excluir tarefa. Verifique o console para mais detalhes.');
         }
         setTarefaParaExcluir(null);
+
+        if (isGoogleLogged) {
+            setTimeout(() => {
+                carregarEventosGoogle().catch(() => {});
+            }, 300);
+        }
     };
 
     const handleSelectSlot = (slotInfo: { start: Date }) => {
@@ -119,6 +209,9 @@ const CalendarioTarefas: React.FC = () => {
             if (projectId === selectedProjectId) {
                 if (action === 'created' || action === 'deleted' || action === 'updated') {
                     carregarTarefas();
+                    if (isGoogleLogged) {
+                        carregarEventosGoogle().catch(() => {});
+                    }
                 }
             }
         };
@@ -126,7 +219,8 @@ const CalendarioTarefas: React.FC = () => {
         return () => {
             window.removeEventListener('taskUpdated', handleTaskUpdate as EventListener);
         };
-    }, [selectedProjectId, carregarTarefas]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedProjectId, carregarTarefas, isGoogleLogged]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -228,18 +322,23 @@ const CalendarioTarefas: React.FC = () => {
                     <CalendarioToolbar
                         view={view}
                         setView={setView}
-                        isGoogleLogged={isGoogleLogged}
-                        setShowGoogleModal={setShowGoogleModal}
+                        isGoogleLogged={GOOGLE_ENABLED ? isGoogleLogged : false}
+                        setShowGoogleModal={GOOGLE_ENABLED ? setShowGoogleModal : () => {}}
                         responsaveis={responsaveis}
                         responsavelSelecionado={responsavelSelecionado}
                         setResponsavelSelecionado={setResponsavelSelecionado}
-                        carregarTarefas={carregarTarefas}
+                        carregarTarefas={async () => {
+                            await carregarTarefas();
+                            if (GOOGLE_ENABLED && isGoogleLogged) {
+                                await carregarEventosGoogle();
+                            }
+                        }}
                     />
                 </div>
                 <div className="h-96 sm:h-[500px] lg:h-[650px]">
                     <CalendarioComponent
                         localizer={localizer}
-                        eventosFiltrados={eventosFiltrados}
+                        eventosFiltrados={allEvents}
                         view={view}
                         setView={setView}
                         currentDate={currentDate}
@@ -274,13 +373,22 @@ const CalendarioTarefas: React.FC = () => {
                 />
             )}
 
+            {/* Modal Google só abre se a flag estiver habilitada */}
             <ModalGoogle
-                open={showGoogleModal}
+                open={GOOGLE_ENABLED && showGoogleModal}
                 onClose={() => setShowGoogleModal(false)}
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                onLogincode={(_usuEmail: string, _usuSenha: string) => {
-                    setShowGoogleModal(false);
-                    setIsGoogleLogged(true);
+                onLoginCode={async (code: string) => {
+                    if (!GOOGLE_ENABLED) return;
+                    try {
+                        await exchangeCode(code);
+                        setIsGoogleLogged(true);
+                        await carregarEventosGoogle();
+                    } catch (e) {
+                        console.error(e);
+                        alert('Falha ao conectar com Google. Tente novamente.');
+                    } finally {
+                        setShowGoogleModal(false);
+                    }
                 }}
             />
         </div>
