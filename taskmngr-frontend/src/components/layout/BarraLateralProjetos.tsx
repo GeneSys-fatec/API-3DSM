@@ -42,11 +42,6 @@ export default function BarraLateralProjetos({
     try {
       const equipesComProjetosDoBackend = await getMinhasEquipes();
 
-      // console.log(
-      //   "DADOS RECEBIDOS DO BACKEND (JÁ COM PROJETOS):",
-      //   equipesComProjetosDoBackend
-      // );
-
       setEquipesComProjetos(equipesComProjetosDoBackend);
 
       const primeiroProjeto = equipesComProjetosDoBackend[0]?.projetos[0];
@@ -130,7 +125,6 @@ export default function BarraLateralProjetos({
         isOpen ? "translate-x-0" : "-translate-x-full"
       } lg:translate-x-0 lg:w-16 lg:hover:w-64`}
     >
-      {/* Ícone de expandir/recolher */}
       <div
         onClick={onClose}
         className="hidden lg:flex items-center justify-center w-6 h-6 rounded-full absolute -right-3 top-1/2 -translate-y-1/2 cursor-pointer bg-white border border-slate-200 hover:bg-indigo-100 group-hover:bg-indigo-100 transition-all duration-300"
@@ -153,7 +147,7 @@ export default function BarraLateralProjetos({
         </h2>
       </div>
 
-      <div className="p-4 overflow-y-auto flex-1">
+      <div className="p-4 overflow-y-auto overflow-x-hidden flex-1">
         {equipesComProjetos.length === 0 && !isLoading && (
           <div
             className={`text-center p-4 t-9 transition-opacity duration-200 ${

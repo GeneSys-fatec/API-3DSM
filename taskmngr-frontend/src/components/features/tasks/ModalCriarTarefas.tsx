@@ -46,12 +46,14 @@ export default function ModalCriarTarefas({
   const lastSubmitRef = React.useRef<number>(0);
   const submittingRef = React.useRef<boolean>(false);
 
-  useEffect(() => {
-    authFetch("http://localhost:8080/usuario/listar")
-      .then((res) => res.json())
-      .then(setUsuarios)
-      .catch((err) => console.error("Erro ao buscar usuários:", err));
-  }, []);
+ useEffect(() => {
+    if (selectedProjectId) {
+      authFetch(`http://localhost:8080/projeto/${selectedProjectId}/membros`)
+        .then((res) => res.json())
+        .then((data) => setUsuarios(data))
+        .catch((err) => console.error("Erro ao buscar usuários do projeto:", err));
+    }
+  }, [selectedProjectId]);
 
   const MAX_FILES = 10;
   const MAX_TOTAL_BYTES = 30 * 1024 * 1024;

@@ -1,5 +1,6 @@
 export interface Tarefa {
   tarId: string;
+  projId: string;
   tarTitulo: string;
   tarStatus: string;
   usuId: string;
