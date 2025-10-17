@@ -73,8 +73,9 @@ export interface EquipeComProjetos extends Equipe {
 }
 export interface Notificacao {
   id: string;
-  tipo: 'expirado' | 'comentario' | 'atribuido';
+  tipo: 'expirado' | 'comentario' | 'atribuido' | 'proximoVencimento';
   tarNome: string;
   data: string;
+  notLida: boolean;
   usuNome?: string; 
 }

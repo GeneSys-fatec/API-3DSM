@@ -34,7 +34,7 @@ public class CriaComentarioController {
             comentario.setUsuNome(usuarioLogado.getUsuNome());
             comentario.setComDataAtualizacao(new Date());
         }
-        ComentarioModel salvo = comentarioService.adicionarComentario(comentario);
+        ComentarioModel salvo = comentarioService.adicionarComentario(comentario, usuarioLogado);
         ComentarioDTO dtoSalvo = comentarioConverterService.modelParaDto(salvo);
         adicionadorLink.adicionarLink(dtoSalvo);
         return ResponseEntity.status(HttpStatus.CREATED).body(dtoSalvo);
