@@ -40,13 +40,12 @@ const CardNotificacao: React.FC<CardNotificacaoProps> = ({ notificacao }) => {
   };
 
   const getMessageContent = () => {
-    const { tipo, tarNome, usuNome } = notificacao;
+    const { tipo, tarNome, } = notificacao;
 
     if (tipo === 'expirado') {
       return (
         <>
           <span className="font-semibold text-red-600">{tarNome} </span>
-          <span className="text-gray-800 leading-snug"> precisa de atenção: prazo expirado! </span>
         </>
       );
     }
@@ -54,8 +53,6 @@ const CardNotificacao: React.FC<CardNotificacaoProps> = ({ notificacao }) => {
     if (tipo === 'comentario') {
       return (
         <>
-          <span className="font-semibold">{usuNome}</span>
-          <span className="text-gray-800 leading-snug"> adicionou um comentário em </span> 
           <span className="font-semibold text-gray-700">{tarNome}</span>.
         </>
       );
@@ -64,8 +61,7 @@ const CardNotificacao: React.FC<CardNotificacaoProps> = ({ notificacao }) => {
     if (tipo === 'atribuido') {
       return (
         <>
-          <span className="font-semibold text-blue-700">{tarNome}</span> 
-          <span className="text-gray-800 leading-snug"> foi atribuída a você. Confira os detalhes! </span>
+          <span className="font-semibold text-blue-700">{tarNome}</span>
         </>
       );
     };

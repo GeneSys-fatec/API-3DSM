@@ -15,14 +15,24 @@ import com.taskmanager.taskmngr_backend.exceptions.personalizados.comentário.Co
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.comentário.ConteudoInapropriadoException;
 import com.taskmanager.taskmngr_backend.model.converter.ComentarioConverter;
 import com.taskmanager.taskmngr_backend.model.entidade.ComentarioModel;
+import com.taskmanager.taskmngr_backend.model.entidade.TarefaModel;
+import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.ComentarioRepository;
+import com.taskmanager.taskmngr_backend.repository.TarefaRepository;
 
 import jakarta.annotation.PostConstruct;
 
 @Service
 public class ComentarioService {
+
+    @Autowired
+    private NotificacaoService notificacaoService;
+
     @Autowired
     private ComentarioRepository repository;
+
+    @Autowired
+    private TarefaService tarefaService;
 
     @Autowired ComentarioConverter converter;
 
@@ -35,9 +45,25 @@ public class ComentarioService {
     public void init() {
         PALAVRAS_PROIBIDAS = new HashSet<>(Arrays.asList(palavrasProibidasConfig.split(",")));
     }
-    public ComentarioModel adicionarComentario(ComentarioModel comentario) {
+    public ComentarioModel adicionarComentario(ComentarioModel comentario, UsuarioModel usuarioLogado) {
         validarComentario(comentario);
-        return repository.save(comentario);
+        ComentarioModel comentarioSalvo = repository.save(comentario);
+
+        Optional<TarefaModel> tarefaOpt = tarefaService.buscarPorId(comentario.getTarId());
+        if (tarefaOpt.isPresent()) {
+            TarefaModel tarefa = tarefaOpt.get();
+
+            if (!tarefa.getUsuId().equals(usuarioLogado.getUsuId())) {
+                notificacaoService.criarNotificacaoComentario(
+                    usuarioLogado.getUsuId(),
+                    tarefa.getUsuId(),
+                    usuarioLogado.getUsuNome(),
+                    tarefa.getTarId()
+                );
+            }
+        }
+
+        return comentarioSalvo;
     }
 
     public List<ComentarioModel> listarPorTarefa(String tarId) {

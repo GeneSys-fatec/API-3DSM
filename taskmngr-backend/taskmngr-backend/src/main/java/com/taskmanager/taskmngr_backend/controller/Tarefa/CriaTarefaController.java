@@ -47,7 +47,7 @@ public class CriaTarefaController {
                     "Título, descrição e data são obrigatórios.");
         }
         TarefaModel tarefa = tarefaConverterService.dtoParaModel(dto);
-        TarefaModel salva = tarefaService.salvar(tarefa);
+        TarefaModel salva = tarefaService.salvar(tarefa, usuarioLogado);
         TarefaDTO dtoDeResposta = tarefaConverterService.modelParaDto(salva);
         return ResponseEntity.status(HttpStatus.CREATED).body(dtoDeResposta);
     }

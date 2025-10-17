@@ -52,7 +52,7 @@ public class EditaTarefaController {
 
             t.setProjId(dto.getProjId());
             t.setProjNome(dto.getProjNome());
-            tarefaService.salvar(t);
+            tarefaService.salvarSemNotificacao(t);
             return ResponseEntity.ok("Tarefa atualizada com sucesso!");
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

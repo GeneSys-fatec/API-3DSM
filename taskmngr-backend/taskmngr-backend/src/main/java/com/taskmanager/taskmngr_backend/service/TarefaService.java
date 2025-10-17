@@ -5,11 +5,18 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -18,6 +25,7 @@ import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,15 +33,14 @@ import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.AnexoT
 import com.taskmanager.taskmngr_backend.model.entidade.AnexoTarefaModel;
 import com.taskmanager.taskmngr_backend.model.entidade.ProjetoModel;
 import com.taskmanager.taskmngr_backend.model.entidade.TarefaModel;
+import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.TarefaRepository;
-
-import javax.imageio.ImageIO;
-import javax.imageio.ImageWriteParam;
-import javax.imageio.ImageWriter;
-import javax.imageio.stream.ImageOutputStream;
 
 @Service
 public class TarefaService {
+
+    @Autowired
+    private NotificacaoService notificacaoService;
 
     @Autowired
     private TarefaRepository tarefaRepository;
@@ -71,8 +78,37 @@ public class TarefaService {
         return tarefaRepository.findById(id);
     }
 
-    public TarefaModel salvar(TarefaModel tarefa) {
-        return tarefaRepository.save(tarefa);
+    public TarefaModel salvarSemNotificacao(TarefaModel tarefa) {
+    return tarefaRepository.save(tarefa);
+    }
+
+    public TarefaModel salvar(TarefaModel tarefa, UsuarioModel usuarioLogado) {
+    TarefaModel tarefaSalva = tarefaRepository.save(tarefa);
+
+    notificacaoService.criarNotificacaoAtribuicao(
+        usuarioLogado.getUsuId(),
+        tarefaSalva.getUsuId(),
+        usuarioLogado.getUsuNome(),
+        tarefaSalva.getTarId(),
+        tarefaSalva.getTarTitulo()
+    );
+        return tarefaSalva;
+    }
+
+    // 1 dia antes do prazo
+    @Scheduled(cron = "0 0 8 * * ?") // todo dia às 08:00
+    public void notificarTarefasProximoVencimento() {
+        LocalDate hoje = LocalDate.now();
+        LocalDate prazoProximo = hoje.plusDays(1); // 1 dia antes
+        List<TarefaModel> tarefas = tarefaRepository.findByTarPrazo(prazoProximo);
+        
+        for (TarefaModel tarefa : tarefas) {
+            notificacaoService.criarNotificacaoPrazo(
+                tarefa.getTarId(),
+                tarefa.getTarTitulo(),
+                tarefa.getUsuId()
+            );
+        }
     }
 
     public TarefaModel atualizar(TarefaModel tarefa) {
