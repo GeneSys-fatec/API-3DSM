@@ -111,6 +111,22 @@ public class TarefaService {
         }
     }
 
+    @Scheduled(cron = "0 0 8 * * ?") // roda todo dia às 08:00
+    public void notificarTarefasVencidas() {
+        LocalDate hoje = LocalDate.now();
+
+        // busca tarefas com prazo anterior a hoje e que ainda não estão concluídas
+        List<TarefaModel> vencidas = tarefaRepository.findByTarPrazoBeforeAndTarStatusNot(hoje, "Concluída");
+
+        for (TarefaModel tarefa : vencidas) {
+            notificacaoService.criarNotificacaoPrazoExpirado(
+                tarefa.getTarId(),
+                tarefa.getTarTitulo(),
+             tarefa.getUsuId()
+        );
+        }
+    }
+
     public TarefaModel atualizar(TarefaModel tarefa) {
         return tarefaRepository.save(tarefa);
     }

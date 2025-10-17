@@ -33,7 +33,7 @@ public class NotificacaoService {
         if (usuarioId == null || usuarioId.isBlank()) {
             return Collections.emptyList();
         }
-        return repository.findByUsuario(usuarioId);
+        return repository.findByNotUsuarioIdOrderByNotDataCriacaoDesc(usuarioId);
     }
 
     private NotificacaoModel salvarSeValido(NotificacaoModel notificacao, String usuarioOrigemId) {
@@ -74,6 +74,17 @@ public class NotificacaoService {
         return repository.save(notificacao);
     }
 
+    public NotificacaoModel criarNotificacaoPrazoExpirado(String tarefaId, String tituloTarefa, String usuarioDestinoId) {
+        NotificacaoModel notificacao = new NotificacaoModel();
+        notificacao.setNotUsuarioId(usuarioDestinoId);
+        notificacao.setNotTarefaId(tarefaId);
+        notificacao.setNotTipo("PRAZO_EXPIRADO");
+        notificacao.setNotMensagem("A tarefa '" + tituloTarefa + "' está com o prazo expirado!");
+        notificacao.setNotDataCriacao(LocalDateTime.now());
+        notificacao.setNotLida(false);
+        return repository.save(notificacao);
+    }
+
     public NotificacaoModel marcarComoLida(String id) {
         Optional<NotificacaoModel> notificacaoOpt = repository.findById(id);
 
@@ -85,6 +96,17 @@ public class NotificacaoService {
 
         return null;
     }
+
+    public void marcarTodasComoLidas(String usuarioId) {
+        List<NotificacaoModel> naoLidas = repository.findByNotUsuarioIdAndNotLidaFalse(usuarioId);
+
+        for (NotificacaoModel notificacao : naoLidas) {
+            notificacao.setNotLida(true);
+        }
+
+        repository.saveAll(naoLidas);
+    }
+
 
     public void deletarNotificacao(String id) {
         repository.deleteById(id);

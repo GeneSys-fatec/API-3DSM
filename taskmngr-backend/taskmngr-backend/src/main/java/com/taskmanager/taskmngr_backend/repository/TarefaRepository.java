@@ -1,8 +1,6 @@
 package com.taskmanager.taskmngr_backend.repository;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -19,4 +17,6 @@ public interface TarefaRepository extends MongoRepository<TarefaModel, String> {
     List<TarefaModel> findByProjId(String projId);
 
     List<TarefaModel> findByTarPrazo(LocalDate tarPrazo); 
+
+    List<TarefaModel> findByTarPrazoBeforeAndTarStatusNot(LocalDate tarPrazo, String status);
 }

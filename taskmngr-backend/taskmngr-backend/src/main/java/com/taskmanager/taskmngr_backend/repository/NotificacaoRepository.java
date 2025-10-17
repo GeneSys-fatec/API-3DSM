@@ -10,5 +10,8 @@ import com.taskmanager.taskmngr_backend.model.entidade.NotificacaoModel;
 public interface  NotificacaoRepository extends MongoRepository<NotificacaoModel, String> {
     @Query("{ 'NotUsuarioId': ?0 }")
     List<NotificacaoModel> findByUsuario(String usuarioId);
+
     List<NotificacaoModel> findByNotUsuarioIdAndNotLidaFalse(String notUsuarioId);
+
+    List<NotificacaoModel> findByNotUsuarioIdOrderByNotDataCriacaoDesc(String usuarioId);
 }

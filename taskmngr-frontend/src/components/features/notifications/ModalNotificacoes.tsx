@@ -22,6 +22,10 @@ const ModalNotificacoes: React.FC<ModalNotificacaoProps> = ({ isOpen, onClose })
       .finally(() => setCarregando(false));
   }, [isOpen]);
 
+  const removerNotificacao = (id: string) => {
+    setNotificacoes(prev => prev.filter(n => n.id !== id));
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -45,7 +49,7 @@ const ModalNotificacoes: React.FC<ModalNotificacaoProps> = ({ isOpen, onClose })
             <p className="text-center p-4">Nenhuma notificação</p>
           ) : (
             notificacoes.map((notificacao) => (
-              <CardNotificacao key={notificacao.id} notificacao={notificacao} />
+              <CardNotificacao key={notificacao.id} notificacao={notificacao} onDelete={removerNotificacao} />
             ))
           )}
         </div>

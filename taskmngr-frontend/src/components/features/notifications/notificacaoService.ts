@@ -12,17 +12,48 @@ export const buscarNotificacoes = async (): Promise<Notificacao[]> => {
 
   const data = await resposta.json();
 
-  // mapeia os dados do backend pro formato que o front espera
   return data.map((backend: any) => ({
-  id: backend._id,
+  id: backend.notId, 
   tipo:
     backend.notTipo === 'ATRIBUICAO'
       ? 'atribuido'
       : backend.notTipo === 'COMENTARIO'
       ? 'comentario'
       : 'expirado',
-  tarNome: backend.notMensagem, // ou extrair só o título da tarefa da string
+  tarNome: backend.notMensagem, 
   data: new Date(backend.notDataCriacao).toLocaleString(),
-  usuNome: backend.notUsuarioNome || '', // se não tiver, vai vazio
+  usuNome: backend.notUsuarioNome || '', 
 }));
+};
+
+export const buscarNotificacoesNaoLidas = async (): Promise<boolean> => {
+  const resposta = await authFetch('http://localhost:8080/notificacao/listar', { method: 'GET' });
+
+  if (!resposta.ok) {
+    console.error('Erro ao buscar notificações');
+    return false;
+  }
+
+  const notificacoes: Notificacao[] = await resposta.json();
+  return notificacoes.some((n) => !n.notLida);
+};
+
+export const marcarTodasComoLidas = async (): Promise<void> => {
+  const resposta = await authFetch('http://localhost:8080/notificacao/marcar-todas', {
+    method: 'PUT',
+  });
+
+  if (!resposta.ok) {
+    console.error('Erro ao marcar notificações como lidas');
+  }
+};
+
+export const deletarNotificacao = async (id: string): Promise<void> => {
+  const resposta = await authFetch(`http://localhost:8080/notificacao/${id}`, {
+    method: 'DELETE',
+  });
+
+  if (!resposta.ok) {
+    console.error('Erro ao deletar notificação');
+  }
 };
