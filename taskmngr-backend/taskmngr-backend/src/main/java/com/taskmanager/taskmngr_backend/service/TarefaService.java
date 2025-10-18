@@ -6,8 +6,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -27,9 +30,8 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
-import java.util.*;
-import java.util.stream.Collectors;
 
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.AnexoTamanhoExcedente;
 import com.taskmanager.taskmngr_backend.model.entidade.AnexoTarefaModel;
@@ -300,8 +302,10 @@ public class TarefaService {
         if (!pasta.exists())
             pasta.mkdirs();
 
-        String uuid = UUID.randomUUID().toString();
-        String caminho = UPLOAD_DIR + uuid + "_" + arquivo.getOriginalFilename();
+        String nomeOriginal = StringUtils.cleanPath(arquivo.getOriginalFilename());
+        String extensao = StringUtils.getFilenameExtension(nomeOriginal);
+        String nomeArquivoFinal = UUID.randomUUID().toString() + "." + extensao;
+        String caminho = UPLOAD_DIR + nomeArquivoFinal;
         File destino = new File(caminho);
 
         long tamanhoFinal;
@@ -384,7 +388,7 @@ public class TarefaService {
 
         TarefaModel tarefa = tarefaOpt.get();
         AnexoTarefaModel anexo = new AnexoTarefaModel();
-        anexo.setArquivoNome(arquivo.getOriginalFilename());
+        anexo.setArquivoNome(nomeArquivoFinal);
         anexo.setArquivoTipo(tipo);
         anexo.setArquivoTamanho(tamanhoFinal);
         anexo.setArquivoCaminho(caminho);
