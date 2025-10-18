@@ -12,6 +12,7 @@ interface FormularioTarefaProps {
     handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleRemoveAnexo: (file: File) => void;
     handleRemoverAnexoExistente?: (nomeArquivo: string) => void;
+    onVisualizaImagem?: (url: string) => void;
 }
 
 async function baixarAnexo(tarefaId: string, nomeArquivo: string) {
@@ -42,7 +43,8 @@ export default function FormularioTarefa({
     anexosExistentes,
     handleFileChange,
     handleRemoveAnexo,
-    handleRemoverAnexoExistente
+    handleRemoverAnexoExistente,
+    onVisualizaImagem
 }: FormularioTarefaProps) {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -72,6 +74,11 @@ export default function FormularioTarefa({
 
     const totalAnexosCount = (anexosExistentes?.length || 0) + (anexos?.length || 0);
 
+    const isImageFile = (fileName: string): boolean => {
+        if (!fileName) return false;
+        return /\.(jpe?g|png|gif|bmp|webp|svg)$/i.test(fileName);
+    };
+
     return (
         <div className="flex-grow overflow-y-auto">
             <div className="flex flex-col gap-y-6">
@@ -96,34 +103,55 @@ export default function FormularioTarefa({
                 {((anexosExistentes && anexosExistentes.length > 0) || (anexos && anexos.length > 0)) && (
                     <div className="mt-2 p-4 border border-dashed rounded-md bg-gray-50 max-h-40 overflow-y-auto">
                         <h4 className="text-sm font-semibold text-gray-700 mb-2">Anexos ({totalAnexosCount}):</h4>
-                        <ul className="space-y-2">
-                            {anexosExistentes?.map((anexo) => (
-                                <li key={`existente-${anexo.arquivoNome}`} className="flex items-center justify-between text-sm">
-                                    <div className="flex items-center gap-2 truncate pr-2">
-                                        {getFileIcon(anexo.arquivoTipo || "")}
-                                        {tarefa?.tarId ? (
-                                            <button
-                                                type="button"
-                                                onClick={() => baixarAnexo(tarefa.tarId!, anexo.arquivoNome)}
-                                                className="truncate text-blue-600 hover:underline text-left"
-                                            >
-                                                {anexo.arquivoNome}
-                                            </button>
-                                        ) : (
-                                            <span className="truncate">{anexo.arquivoNome}</span>
-                                        )}
-                                    </div>
-                                    {handleRemoverAnexoExistente && (
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemoverAnexoExistente(anexo.arquivoNome)}
-                                            className="text-red-500 hover:text-red-700 ml-2"
-                                        >
-                                            &times;
-                                        </button>
-                                    )}
-                                </li>
-                            ))}
+                        <ul className="space-y-3">
+                            {anexosExistentes?.map((anexo) => {
+                                const anexoUrl = `http://localhost:8080/anexos/${encodeURIComponent(anexo.arquivoNome)}`;
+
+                                const isImage = /\.(jpe?g|png|gif|bmp|webp|svg)$/i.test(anexo.arquivoNome);
+                                const isPdf = /\.pdf$/i.test(anexo.arquivoNome);
+
+                                return (
+                                    <li key={`existente-${anexo.arquivoNome}`} className="text-sm gap-1">
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex flex-col gap-2 flex-grow min-w-0">
+
+                                                <a
+                                                    href={anexoUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-2 text-blue-600 hover:underline"
+                                                    title={`Abrir ${anexo.arquivoNome} em nova aba`}
+                                                >
+                                                    {getFileIcon(anexo.arquivoTipo || "")}
+                                                    <span className="truncate">{anexo.arquivoNome}</span>
+                                                </a>
+
+                                                {isImage && (
+                                                    <div className="mt-1">
+                                                        <img
+                                                            src={anexoUrl}
+                                                            alt={`Preview de ${anexo.arquivoNome}`}
+                                                            className="max-w-full h-auto max-h-32 rounded-md border object-contain cursor-pointer hover:opacity-80 transition-opacity"
+                                                            onClick={() => onVisualizaImagem && onVisualizaImagem(anexoUrl)}
+                                                        />
+                                                    </div>
+                                                )}
+
+                                            </div>
+
+                                            {handleRemoverAnexoExistente && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoverAnexoExistente(anexo.arquivoNome)}
+                                                    className="text-red-500 hover:text-red-700 ml-2 flex-shrink-0"
+                                                >
+                                                    &times;
+                                                </button>
+                                            )}
+                                        </div>
+                                    </li>
+                                );
+                            })}
 
                             {anexos.map((file, index) => (
                                 <li key={`novo-${file.name}-${index}`} className="flex items-center justify-between text-sm">

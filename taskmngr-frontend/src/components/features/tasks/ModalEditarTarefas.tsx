@@ -9,7 +9,11 @@ import { showErrorToastFromResponse, showValidationToast } from "@/utils/errorUt
 import { uploadTaskAttachments } from "@/utils/taskUtils";
 import ListaComentarios from "./ListaComentarios";
 import imageCompression from "browser-image-compression";
+import ModalConfirmacao from "../../ui/ModalConfirmacao";
 
+type AnexoParaExcluir = {
+  nome: string;
+} | null;
 interface ModalEditarTarefasProps {
   tarefa: Tarefa;
   onSave: () => void;
@@ -29,6 +33,10 @@ export default function ModalEditarTarefas({
   const submittingRef = React.useRef<boolean>(false);
   const lastPayloadKeyRef = React.useRef<string>("");
   const lastPayloadAtRef = React.useRef<number>(0);
+  const [visualizaImagemUrl, setVisualizaImagemUrl] = useState<string | null>(null);
+
+  const [anexoParaExcluir, setAnexoParaExcluir] = useState<AnexoParaExcluir>(null); 
+
 
   useEffect(() => {
     authFetch("http://localhost:8080/usuario/listar")
@@ -42,7 +50,6 @@ export default function ModalEditarTarefas({
       .catch((err) => console.error("Erro ao buscar anexos:", err));
   }, [tarefaInicial.tarId]);
 
-  // Limites e validação local de anexos novos (mesma regra do criar)
   const MAX_FILES = 10;
   const MAX_TOTAL_BYTES = 30 * 1024 * 1024;
   const MAX_BYTES_COMPRESSIVE = 20 * 1024 * 1024;
@@ -61,7 +68,6 @@ export default function ModalEditarTarefas({
     /\.xlsx$/i.test(f.name);
   const isAllowed = (f: File) => isImage(f) || isPdf(f) || isDocx(f) || isXlsx(f);
 
-  // 🔧 Função de compressão
   async function tryCompressFile(file: File): Promise<File> {
     if (!isImage(file) && !isPdf(file)) return file;
     if (file.size <= COMPRESS_THRESHOLD) return file;
@@ -84,7 +90,6 @@ export default function ModalEditarTarefas({
     }
   }
 
-  // 🧠 Validação e compressão adaptativa
   async function validateAndCompressFiles(newFiles: File[], currentFiles: File[] = []) {
     const errors: string[] = [];
     const accepted: File[] = [];
@@ -102,7 +107,6 @@ export default function ModalEditarTarefas({
         continue;
       }
 
-      // 🔽 Compressão automática se possível
       if (isImage(f) || isPdf(f)) {
         f = await tryCompressFile(f);
       }
@@ -144,8 +148,16 @@ export default function ModalEditarTarefas({
     setNovosAnexos((prev) => prev.filter((file) => file !== fileToRemove));
   };
 
-  const handleRemoverAnexoExistente = async (nomeArquivo: string) => {
-    if (!window.confirm(`Remover anexo "${nomeArquivo}"?`)) return;
+  const handleRemoverAnexoExistente = (nomeArquivo: string) => {
+    setAnexoParaExcluir({ nome: nomeArquivo });
+  };
+  
+  const executarExclusaoAnexo = async () => {
+    if (!anexoParaExcluir || !tarefa.tarId) return;
+    const nomeArquivo = anexoParaExcluir.nome;
+
+    setAnexoParaExcluir(null);
+
     try {
       await authFetch(
         `http://localhost:8080/tarefa/${tarefa.tarId}/anexos/${encodeURIComponent(nomeArquivo)}`,
@@ -158,7 +170,6 @@ export default function ModalEditarTarefas({
       toast.error("Erro ao remover anexo.");
     }
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -181,7 +192,6 @@ export default function ModalEditarTarefas({
     submittingRef.current = true;
     setIsSubmitting(true);
 
-    // 🔍 Revalida e tenta comprimir anexos antes do envio
     const { accepted, errors: anexErrors } = await validateAndCompressFiles(novosAnexos, []);
     if (anexErrors.length > 0) {
       showValidationToast(anexErrors, "Anexos inválidos");
@@ -248,6 +258,8 @@ export default function ModalEditarTarefas({
               anexosExistentes={anexosExistentes}
               handleFileChange={handleFileChange}
               handleRemoveAnexo={handleRemoveNovoAnexo}
+              handleRemoverAnexoExistente={handleRemoverAnexoExistente}
+              onVisualizaImagem={setVisualizaImagemUrl}
             />
             <div className="flex-grow overflow-y-auto pt-4">
               <div className="flex flex-col gap-2">
@@ -256,40 +268,6 @@ export default function ModalEditarTarefas({
               </div>
             </div>
 
-            {anexosExistentes.length > 0 && (
-              <div className="mt-4 p-3 border rounded-md bg-gray-50">
-                <h4 className="font-semibold text-sm mb-2">Anexos existentes</h4>
-                <ul className="space-y-2">
-                  {anexosExistentes.map((anexo) => (
-                    <li
-                      key={anexo.arquivoNome}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-2 truncate">
-                        {getFileIcon(anexo.arquivoTipo || "")}
-                        <a
-                          href={`http://localhost:8080/tarefa/${tarefa.tarId}/anexos/${encodeURIComponent(
-                            anexo.arquivoNome
-                          )}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="truncate text-blue-600 hover:underline"
-                        >
-                          {anexo.arquivoNome}
-                        </a>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoverAnexoExistente(anexo.arquivoNome)}
-                        className="text-red-500"
-                      >
-                        &times;
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
 
           <div className="p-8 pt-4 flex justify-end gap-x-4">
@@ -314,6 +292,39 @@ export default function ModalEditarTarefas({
           </div>
         </form>
       </div>
+      {anexoParaExcluir && (
+        <ModalConfirmacao
+          titulo={"Excluir Anexo?"}
+          mensagem={
+            <p>
+              O anexo "<span className="font-bold">{anexoParaExcluir.nome}</span>" 
+              será excluído permanentemente.
+            </p>
+          }
+          onConfirm={executarExclusaoAnexo}
+          onCancel={() => setAnexoParaExcluir(null)}
+        />
+      )}
+      
+      {visualizaImagemUrl && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-80 z-[60] flex items-center justify-center p-4"
+          onClick={() => setVisualizaImagemUrl(null)}
+        >
+          <button
+            className="absolute top-4 right-4 text-white text-4xl font-bold"
+            onClick={() => setVisualizaImagemUrl(null)}
+          >
+            &times;
+          </button>
+          <img
+            src={visualizaImagemUrl}
+            alt="Visualização ampliada do anexo"
+            className="max-w-[90vw] max-h-[90vh] object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }
