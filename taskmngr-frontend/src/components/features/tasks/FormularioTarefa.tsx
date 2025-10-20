@@ -74,11 +74,6 @@ export default function FormularioTarefa({
 
     const totalAnexosCount = (anexosExistentes?.length || 0) + (anexos?.length || 0);
 
-    const isImageFile = (fileName: string): boolean => {
-        if (!fileName) return false;
-        return /\.(jpe?g|png|gif|bmp|webp|svg)$/i.test(fileName);
-    };
-
     return (
         <div className="flex-grow overflow-y-auto">
             <div className="flex flex-col gap-y-6">

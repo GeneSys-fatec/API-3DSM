@@ -1,3 +1,5 @@
+// import { authFetch } from "@/utils/api"; // não usar mais
+
 export interface RbcEvent {
   title: string;
   start: Date;
@@ -6,11 +8,11 @@ export interface RbcEvent {
   resource?: any;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || ''; 
+// Base da API: usa VITE_API_URL se existir; senão, localhost:8080
+const API_BASE = (import.meta.env.VITE_API_URL as string) || 'http://localhost:8080';
 
 function withBase(path: string) {
-  // Usa base se definida (VITE_API_URL), senão chama mesma origem
-  return API_BASE ? `${API_BASE}${path}` : path;
+  return `${API_BASE}${path}`;
 }
 
 function authHeaders(): Record<string, string> {
@@ -18,30 +20,25 @@ function authHeaders(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+// Wrapper local para fetch na API do backend
+async function apiFetch(path: string, init?: RequestInit) {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(init?.headers as Record<string, string> | undefined),
+    ...authHeaders(),
+  };
+  return fetch(withBase(path), { credentials: 'include', ...init, headers });
+}
+
 export async function exchangeCode(code: string): Promise<void> {
-  const res = await fetch(withBase('/google/exchange'), {
+  await apiFetch(`/google/exchange`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders(), // adiciona JWT
-    },
-    // credentials pode ser mantido, mas JWT é o que autentica
-    credentials: 'include',
     body: JSON.stringify({ code }),
   });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Falha ao trocar code: ${res.status} ${text}`);
-  }
 }
 
 export async function getAuthStatus(): Promise<{ loggedIn: boolean }> {
-  const res = await fetch(withBase('/google/status'), {
-    headers: {
-      ...authHeaders(), // adiciona JWT
-    },
-    credentials: 'include',
-  });
+  const res = await apiFetch(`/google/status`);
   if (!res.ok) return { loggedIn: false };
   return res.json();
 }
@@ -60,21 +57,10 @@ export async function fetchGoogleEvents(params?: {
   const qs = new URLSearchParams();
   if (params?.timeMin) qs.set('timeMin', params.timeMin);
   if (params?.timeMax) qs.set('timeMax', params.timeMax);
-
-  const res = await fetch(
-    withBase(`/google/events${qs.toString() ? `?${qs.toString()}` : ''}`),
-    {
-      headers: {
-        ...authHeaders(),
-      },
-      credentials: 'include',
-    }
-  );
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Falha ao buscar eventos: ${res.status} ${text}`);
-  }
+  const res = await apiFetch(`/google/events${qs.toString() ? `?${qs.toString()}` : ''}`);
+  if (!res.ok) throw new Error(`Falha ao buscar eventos: ${res.status} ${await res.text()}`);
   const data = await res.json();
+
 
   const items = Array.isArray(data?.items) ? data.items : [];
   return items.map((e: any) => {
@@ -87,11 +73,12 @@ export async function fetchGoogleEvents(params?: {
       : undefined;
 
     const end = isAllDay
-      ? parseDateAsLocal(e?.end?.date) // Google já envia end exclusivo; RBC entende corretamente
+      ? parseDateAsLocal(e?.end?.date) 
       : e?.end?.dateTime
       ? new Date(e.end.dateTime)
       : undefined;
 
+      console.log(e?.id)
     return {
       title: e?.summary || '(Sem título)',
       start: start as Date,
@@ -126,15 +113,12 @@ export async function createGoogleEventFromTask(tarefa: {
   let end: any;
 
   if (tarefa.tarPrazo && isDateOnly(tarefa.tarPrazo) && !tarefa.tarPrazoFim) {
-    // Evento de dia inteiro (Google usa end exclusivo)
     start = { date: tarefa.tarPrazo };
     end = { date: addDays(tarefa.tarPrazo, 1) };
   } else if (tarefa.tarPrazo && isDateOnly(tarefa.tarPrazo) && tarefa.tarPrazoFim && isDateOnly(tarefa.tarPrazoFim)) {
-    // Intervalo de dias inteiros
     start = { date: tarefa.tarPrazo };
     end = { date: addDays(tarefa.tarPrazoFim, 1) };
   } else {
-    // Com horário (ou fallback +1h)
     const startDt = tarefa.tarPrazo ? new Date(tarefa.tarPrazo) : undefined;
     const endDt = tarefa.tarPrazoFim
       ? new Date(tarefa.tarPrazoFim)
@@ -153,13 +137,8 @@ export async function createGoogleEventFromTask(tarefa: {
     end,
   };
 
-  const res = await fetch(withBase('/google/create-event'), {
+  const res = await apiFetch('/google/create-event', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders(), // JWT para autenticar no backend
-    },
-    credentials: 'include',
     body: JSON.stringify(body),
   });
   if (!res.ok) {
@@ -178,7 +157,6 @@ export function consumeOAuthCodeFromUrl():
 
   if (!code && !error) return null;
 
-  // Remove params comuns do redirect do Google
   const keysToRemove = [
     'code',
     'scope',
@@ -194,4 +172,14 @@ export function consumeOAuthCodeFromUrl():
   window.history.replaceState({}, document.title, cleaned);
 
   return { code, error };
+
 }
+
+export const deleteGoogleEvent = async (eventId:string) =>{
+  if(!eventId) return;
+
+  await apiFetch(`/google/events/${encodeURIComponent(eventId)}`, {
+    method: 'DELETE',
+  });
+}
+

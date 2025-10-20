@@ -38,6 +38,7 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.GET,"/anexos/**").permitAll()
             .requestMatchers("/error").permitAll()
             .requestMatchers(HttpMethod.POST,"/auth/login").permitAll()
+            .requestMatchers("/google/**").authenticated()
             .requestMatchers(HttpMethod.POST,"/auth/cadastrar").permitAll()
             .anyRequest().authenticated())
         .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);

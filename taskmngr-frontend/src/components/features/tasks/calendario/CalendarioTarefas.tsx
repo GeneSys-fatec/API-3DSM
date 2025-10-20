@@ -13,7 +13,7 @@ import CalendarioComponent from './CalendarioComponent';
 import { localizer, eventStyleGetter as baseEventStyleGetter } from '@/config/calendarioConfig';
 import { useTarefas } from '@/hooks/useTarefas';
 import type { Tarefa } from "@/types/types";
-import { exchangeCode, fetchGoogleEvents, getAuthStatus, consumeOAuthCodeFromUrl } from '@/services/googleCalendar';
+import { exchangeCode, fetchGoogleEvents, getAuthStatus, consumeOAuthCodeFromUrl, deleteGoogleEvent } from '@/services/googleCalendar';
 
 const CalendarioTarefas: React.FC = () => {
     const [view, setView] = useState<'month' | 'week'>('month');
@@ -62,7 +62,6 @@ const CalendarioTarefas: React.FC = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     
-    // Suporta fluxo com redirect: extrai o code e limpa a URL
     useEffect(() => {
         if (!GOOGLE_ENABLED) return; // desabilita quando flag for false
         const extracted = consumeOAuthCodeFromUrl();
@@ -88,12 +87,11 @@ const CalendarioTarefas: React.FC = () => {
         })();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-    
+
+
     const carregarEventosGoogle = async () => {
         if (!GOOGLE_ENABLED) return; // desabilita quando flag for false
         try {
-            // Você pode limitar por período conforme a view/data atual:
-            // Ex.: calcular início/fim do mês/semana corrente.
             const events = await fetchGoogleEvents();
             setGoogleEvents(events);
         } catch (e) {
@@ -157,29 +155,58 @@ const CalendarioTarefas: React.FC = () => {
         }
     };
 
-    const handleDeleteTask = () => {
+    const handleDeleteTask = async () => {
         if (selectedTask) {
             setShowModal(false);
-            setTarefaParaExcluir(selectedTask.resource.tarefaCompleta);
+
+            const tarefaBase = selectedTask.resource?.tarefaCompleta as Tarefa;
+            // tenta descobrir o id do evento do Google a partir do recurso selecionado
+            const googleEventId =
+                selectedTask?.resource?.googleId ??
+                (tarefaBase as any)?.googleEventId ??
+                selectedTask?.resource?.raw?.id ??
+                undefined;
+
+            const tarefaComGoogleId = { ...(tarefaBase as any), googleEventId };
+            setTarefaParaExcluir(tarefaComGoogleId);
+
+            // chama a exclusão usando o objeto atual, evitando race com o setState
+            await executarExclusao(tarefaComGoogleId);
             setSelectedTask(null);
         }
     };
 
-    const executarExclusao = async () => {
-        if (!tarefaParaExcluir) return;
-        const ok = await excluirTarefa(tarefaParaExcluir.tarId);
+    const executarExclusao = async (alvo?: (Tarefa & { googleEventId?: string }) | null) => {
+        const tarefa = alvo ?? tarefaParaExcluir;
+        if (!tarefa) return;
+
+        const googleEventId = (tarefa as any)?.googleEventId;
+
+        const ok = await excluirTarefa(tarefa.tarId);
+
         if (ok) {
-            window.dispatchEvent(new CustomEvent('taskUpdated', { 
-                detail: { 
-                    action: 'deleted', 
+            window.dispatchEvent(new CustomEvent('taskUpdated', {
+                detail: {
+                    action: 'deleted',
                     projectId: selectedProjectId,
-                    taskId: tarefaParaExcluir.tarId,
+                    taskId: tarefa.tarId,
                     timestamp: Date.now()
-                } 
+                }
             }));
+
+            console.log('isGoogleLogged/googleEventId =>', isGoogleLogged, googleEventId);
+            if (isGoogleLogged && googleEventId) {
+                try {
+                    console.log('Excluindo evento do Google Calendar:', googleEventId);
+                    await deleteGoogleEvent(googleEventId);
+                } catch (e) {
+                    console.warn('Falha ao excluir evento do Google Calendar.', e);
+                }
+            }
         } else {
             alert('Erro ao excluir tarefa. Verifique o console para mais detalhes.');
         }
+
         setTarefaParaExcluir(null);
 
         if (isGoogleLogged) {
@@ -322,8 +349,8 @@ const CalendarioTarefas: React.FC = () => {
                     <CalendarioToolbar
                         view={view}
                         setView={setView}
-                        isGoogleLogged={GOOGLE_ENABLED ? isGoogleLogged : false}
-                        setShowGoogleModal={GOOGLE_ENABLED ? setShowGoogleModal : () => {}}
+                        isGoogleLogged={isGoogleLogged}
+                        setShowGoogleModal={setShowGoogleModal}
                         responsaveis={responsaveis}
                         responsavelSelecionado={responsavelSelecionado}
                         setResponsavelSelecionado={setResponsavelSelecionado}
@@ -373,12 +400,13 @@ const CalendarioTarefas: React.FC = () => {
                 />
             )}
 
-            {/* Modal Google só abre se a flag estiver habilitada */}
+            {/* Abrir o modal sempre; a flag só controla integrações, não a UI */}
             <ModalGoogle
-                open={GOOGLE_ENABLED && showGoogleModal}
+                // Antes: open={GOOGLE_ENABLED && showGoogleModal}
+                open={showGoogleModal}
                 onClose={() => setShowGoogleModal(false)}
                 onLoginCode={async (code: string) => {
-                    if (!GOOGLE_ENABLED) return;
+                    // Antes: if (!GOOGLE_ENABLED) return;
                     try {
                         await exchangeCode(code);
                         setIsGoogleLogged(true);

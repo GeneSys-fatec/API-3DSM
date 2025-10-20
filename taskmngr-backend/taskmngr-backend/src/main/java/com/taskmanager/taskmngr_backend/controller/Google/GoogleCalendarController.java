@@ -13,10 +13,10 @@ import com.taskmanager.taskmngr_backend.service.GoogleOAuthService;
 @RequestMapping("/google")
 public class GoogleCalendarController {
 
-    private final GoogleOAuthService service;
+    private final GoogleOAuthService googleOAuthService;
 
-    public GoogleCalendarController(GoogleOAuthService service) {
-        this.service = service;
+    public GoogleCalendarController(GoogleOAuthService googleOAuthService) {
+        this.googleOAuthService = googleOAuthService;
     }
 
     private String currentUserKey() {
@@ -24,40 +24,41 @@ public class GoogleCalendarController {
         if (auth == null || !auth.isAuthenticated()) {
             throw new RuntimeException("unauthorized");
         }
-        return auth.getName(); // username/email do usuário autenticado
+        return auth.getName();
     }
 
     @PostMapping("/exchange")
-    public ResponseEntity<?> exchange(@RequestBody Map<String, String> body) {
-        String code = body.get("code");
-        String redirectUri = body.get("redirectUri");
+    public ResponseEntity<?> exchange(@RequestBody Map<String, Object> body) {
+        String code = body != null ? (String) body.get("code") : null;
+        String redirectUri = body != null && body.get("redirectUri") != null ? String.valueOf(body.get("redirectUri")) : null;
+
         if (code == null || code.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "code_required"));
+            return ResponseEntity.badRequest().body(Map.of("error", "missing_code"));
         }
-        service.exchangeCode(currentUserKey(), code, redirectUri);
-        return ResponseEntity.ok(Map.of("ok", true));
+
+        googleOAuthService.exchangeCode(currentUserKey(), code, redirectUri);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/status")
     public ResponseEntity<?> status() {
-        boolean has = service.hasTokens(currentUserKey());
+        boolean has = googleOAuthService.hasTokens(currentUserKey());
         return ResponseEntity.ok(Map.of("loggedIn", has));
     }
 
     @GetMapping("/events")
     public ResponseEntity<?> events(@RequestParam(required = false) String timeMin,
                                     @RequestParam(required = false) String timeMax) {
-        return service.listEvents(currentUserKey(), timeMin, timeMax);
+        return googleOAuthService.listEvents(currentUserKey(), timeMin, timeMax);
     }
 
     @PostMapping("/create-event")
     public ResponseEntity<?> createEvent(@RequestBody Map<String, Object> eventBody) {
-        return service.createEvent(currentUserKey(), eventBody);
+        return googleOAuthService.createEvent(currentUserKey(), eventBody);
     }
 
-    // DELETE /google/events/{eventId} -> remove o evento no Google Calendar
     @DeleteMapping("/events/{eventId}")
     public ResponseEntity<?> deleteEvent(@PathVariable String eventId) {
-        return service.deleteEvent(currentUserKey(), eventId);
+        return googleOAuthService.deleteEvent(currentUserKey(), eventId);
     }
 }
