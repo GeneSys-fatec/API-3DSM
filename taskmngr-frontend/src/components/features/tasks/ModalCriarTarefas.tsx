@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { ModalContext } from "@/context/ModalContext";
 import { toast } from "react-toastify";
 import FormularioTarefa from "./FormularioTarefa";
-import type { Tarefa, Usuario } from "@/types/types";
+import type { Tarefa, Usuario, ResponsavelTarefa } from "@/types/types";
 import { authFetch } from "@/utils/api";
 import {showErrorToastFromResponse,showValidationToast,} from "@/utils/errorUtils";
 import { uploadTaskAttachments } from "@/utils/taskUtils";
@@ -18,8 +18,7 @@ interface ModalCriarTarefasProps {
 const estadoInicial: Partial<Tarefa> = {
   tarTitulo: "",
   tarDescricao: "",
-  usuId: "",
-  usuNome: "Selecione um membro",
+  responsaveis: [],
   tarPrioridade: "Média",
   tarPrazo: "",
 };
@@ -46,12 +45,14 @@ export default function ModalCriarTarefas({
   const lastSubmitRef = React.useRef<number>(0);
   const submittingRef = React.useRef<boolean>(false);
 
-  useEffect(() => {
-    authFetch("http://localhost:8080/usuario/listar")
-      .then((res) => res.json())
-      .then(setUsuarios)
-      .catch((err) => console.error("Erro ao buscar usuários:", err));
-  }, []);
+ useEffect(() => {
+    if (selectedProjectId) {
+      authFetch(`http://localhost:8080/projeto/${selectedProjectId}/membros`)
+        .then((res) => res.json())
+        .then((data) => setUsuarios(data))
+        .catch((err) => console.error("Erro ao buscar usuários do projeto:", err));
+    }
+  }, [selectedProjectId]);
 
   const MAX_FILES = 10;
   const MAX_TOTAL_BYTES = 30 * 1024 * 1024;
@@ -174,8 +175,9 @@ export default function ModalCriarTarefas({
     if (!selectedProjectId) validationErrors.push("ID do projeto não encontrado.");
     if (!tarefa.tarTitulo?.trim())
       validationErrors.push("O título da tarefa é obrigatório.");
-    if (!tarefa.usuId)
-      validationErrors.push("Selecione um responsável pela tarefa.");
+    if (!tarefa.responsaveis || tarefa.responsaveis.length === 0) {
+      validationErrors.push("Selecione ao menos um responsável pela tarefa.");
+    }
     if (!tarefa.tarPrazo)
       validationErrors.push("Informe um prazo para a tarefa.");
 
@@ -190,7 +192,7 @@ export default function ModalCriarTarefas({
 
     submittingRef.current = true;
     setIsSubmitting(true);
-
+    
     try {
       const res = await authFetch("http://localhost:8080/tarefa/cadastrar", {
         method: "POST",
