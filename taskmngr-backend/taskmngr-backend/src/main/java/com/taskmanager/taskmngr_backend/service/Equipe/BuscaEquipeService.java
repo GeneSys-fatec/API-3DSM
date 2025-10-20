@@ -1,25 +1,21 @@
 package com.taskmanager.taskmngr_backend.service.Equipe;
 
-import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.EquipeNaoEncontradaException;
-import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.UsuarioNaoEncontradoException;
-import com.taskmanager.taskmngr_backend.model.entidade.EquipeModel;
-import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
-import com.taskmanager.taskmngr_backend.repository.EquipeRepository;
-import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
+import java.util.Collections;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.List;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.EquipeNaoEncontradaException;
+import com.taskmanager.taskmngr_backend.model.entidade.EquipeModel;
+import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
+import com.taskmanager.taskmngr_backend.repository.EquipeRepository;
 
 @Service
 public class BuscaEquipeService {
 
     @Autowired
     private EquipeRepository equipeRepository;
-
-    @Autowired
-    private UsuarioRepository usuarioRepository;
 
     public List<EquipeModel> getAllEquipes() {
         return equipeRepository.findAll();

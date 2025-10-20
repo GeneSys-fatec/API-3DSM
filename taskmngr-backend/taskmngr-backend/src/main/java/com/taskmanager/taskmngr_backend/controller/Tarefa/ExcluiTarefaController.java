@@ -42,7 +42,7 @@ public class ExcluiTarefaController {
         }
 
         tarefa.getTarAnexos().remove(anexo);
-        tarefaService.salvar(tarefa);
+        tarefaService.salvarSemNotificacao(tarefa);
 
         File arquivo = new File(anexo.getArquivoCaminho());
         if (arquivo.exists()) {

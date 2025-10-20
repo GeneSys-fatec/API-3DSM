@@ -19,6 +19,8 @@ public class TarefaConverter {
         model.setTarAnexos(dto.getTarAnexos());
         model.setTarDataCriacao(dto.getTarDataCriacao());
         model.setTarDataAtualizacao(dto.getTarDataAtualizacao());
+        model.setTarDataConclusao(dto.getTarDataConclusao());
+        model.setConcluidaNoPrazo(dto.getConcluidaNoPrazo());
         model.setUsuId(dto.getUsuId());
         model.setUsuNome(dto.getUsuNome());
         model.setProjId(dto.getProjId());
@@ -37,6 +39,8 @@ public class TarefaConverter {
         dto.setTarAnexos(model.getTarAnexos());
         dto.setTarDataCriacao(model.getTarDataCriacao());
         dto.setTarDataAtualizacao(model.getTarDataAtualizacao());
+        dto.setTarDataConclusao(model.getTarDataConclusao());
+        dto.setConcluidaNoPrazo(model.getConcluidaNoPrazo());
         dto.setUsuId(model.getUsuId());
         dto.setUsuNome(model.getUsuNome());
         dto.setProjId(model.getProjId());

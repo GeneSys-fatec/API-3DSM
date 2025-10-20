@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
+import { useOutletContext } from "react-router-dom";
+import { authFetch } from "../utils/api";
 import {
   BarChart,
   Bar,
@@ -10,90 +12,129 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  Cell,
 } from "recharts";
 
-interface DashboardProps {
-  prazosData: { mes: string; dentroPrazo: number; foraPrazo: number }[];
-  tarefasData: { nome: string; concluidas: number }[];
-  produtividadeData: { usuario: string; produtividade: number }[];
-}
+export default function Dashboard() {
+  const { selectedProjectId } = useOutletContext<{ selectedProjectId: string | null }>();
 
-export default function Dashboard({
-  prazosData,
-  tarefasData,
-  produtividadeData,
-}: DashboardProps) {
-
-  // Dados de exemplo (mock)
-  const mockPrazos = [
-    { mes: 'Jan', dentroPrazo: 12, foraPrazo: 3 },
-    { mes: 'Fev', dentroPrazo: 9, foraPrazo: 4 },
-    { mes: 'Mar', dentroPrazo: 14, foraPrazo: 2 },
-    { mes: 'Abr', dentroPrazo: 7, foraPrazo: 6 },
-  ];
-
-  const mockTarefas = [
-    { nome: 'Projeto A', concluidas: 24 },
-    { nome: 'Projeto B', concluidas: 18 },
-    { nome: 'Projeto C', concluidas: 12 },
-  ];
-
-  const mockTarefasSemanal = [
-    { nome: 'Projeto A', concluidas: 6 },
-    { nome: 'Projeto B', concluidas: 4 },
-    { nome: 'Projeto C', concluidas: 3 },
-  ];
-
-
-  const mockProdutividadeMensalGrouped = [
-    { mes: 'Jan', Alice: 90, Bob: 20, Carol: 10 },
-    { mes: 'Fev', Alice: 50, Bob: 75, Carol: 30 },
-    { mes: 'Mar', Alice: 60, Bob: 40, Carol: 55 },
-    { mes: 'Apr', Alice: 30, Bob: 20, Carol: 70 },
-    { mes: 'May', Alice: 45, Bob: 50, Carol: 65 },
-    { mes: 'Jun', Alice: 55, Bob: 35, Carol: 20 },
-    { mes: 'Jul', Alice: 10, Bob: 5, Carol: 15 },
-    { mes: 'Aug', Alice: 80, Bob: 60, Carol: 90 },
-    { mes: 'Sep', Alice: 85, Bob: 90, Carol: 75 },
-    { mes: 'Oct', Alice: 70, Bob: 80, Carol: 60 },
-    { mes: 'Nov', Alice: 65, Bob: 55, Carol: 85 },
-    { mes: 'Dec', Alice: 95, Bob: 70, Carol: 95 },
-  ];
-
-  const mockProdutividadeSemanalGrouped = [
-    { mes: 'S1', Alice: 20, Bob: 10, Carol: 5 },
-    { mes: 'S2', Alice: 40, Bob: 30, Carol: 15 },
-    { mes: 'S3', Alice: 60, Bob: 45, Carol: 35 },
-    { mes: 'S4', Alice: 30, Bob: 20, Carol: 25 },
-  ];
-
-  const finalPrazos = prazosData && prazosData.length ? prazosData : mockPrazos;
-  const finalTarefas = tarefasData && tarefasData.length ? tarefasData : mockTarefas;
-
-  const mockPrazosSemanal = [
-    { mes: 'S1', dentroPrazo: 1, foraPrazo: 3 },
-    { mes: 'S2', dentroPrazo: 3, foraPrazo: 2 },
-    { mes: 'S3', dentroPrazo: 4, foraPrazo: 1 },
-    { mes: 'S4', dentroPrazo: 2, foraPrazo: 2 },
-  ];
+  const [prazosData, setPrazosData] = useState<any[]>([]);
+  const [tarefasData, setTarefasData] = useState<any[]>([]);
+  const [produtividadeData, setProdutividadeData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [periodoPrazos, setPeriodoPrazos] = useState<'semanal' | 'mensal'>('semanal');
-  const dadosPrazosExibidos = periodoPrazos === 'semanal' ? mockPrazosSemanal : finalPrazos;
   const [periodoTarefas, setPeriodoTarefas] = useState<'semanal' | 'mensal'>('semanal');
-  const dadosTarefasExibidos = periodoTarefas === 'semanal' ? mockTarefasSemanal : finalTarefas;
-  const [periodoProd, setPeriodoProd] = useState<'semanal' | 'mensal'>('semanal');
-  const groupedFromProps = (produtividadeData as any[]) && produtividadeData.length && (produtividadeData as any)[0] && (produtividadeData as any)[0].mes ? (produtividadeData as any[]) : null;
-  const dadosProdutividadeExibidos = groupedFromProps ? groupedFromProps : (periodoProd === 'semanal' ? mockProdutividadeSemanalGrouped : mockProdutividadeMensalGrouped);
+  const [periodoProdutividade, setPeriodoProdutividade] = useState<'semanal' | 'mensal'>('semanal');
+  const [isCompact, setIsCompact] = useState(false);
+
+  const dadosPrazosExibidos = prazosData.map((item) => ({
+    mes: item.mes || item.nomeMes || "Mês",
+    dentroPrazo: item.dentroPrazo || 0,
+    foraPrazo: item.foraPrazo || 0,
+  }));
+
+  const dadosTarefasExibidos = tarefasData.map((item) => {
+    const nomeOriginal = item.usuNome || item.nome || "Membro";
+    const nomeCurto = nomeOriginal.length > 7 ? nomeOriginal.slice(0, 7) + "..." : nomeOriginal;
+    return {
+      nome: nomeCurto,
+      concluidas: item.tarefasConcluidas || item.concluidas || 0,
+    };
+  });
+
+
+  const dadosProdutividadeExibidos = produtividadeData.map((item) => ({
+    nome: item.usuNome || "Membro",
+    produtividade: item.produtividade || 0,
+  }));
+
+  const CompactLegend = ({ payload }: any) => {
+    if (!payload || !Array.isArray(payload)) return null;
+    const fontSize = isCompact ? 11 : 13;
+    return (
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: 8 }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+          {payload.map((entry: any) => (
+            <div key={entry.value} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#374151', fontSize }}>
+              <span style={{ width: 12, height: 12, background: entry.color, display: 'inline-block', borderRadius: 2 }} />
+              <span style={{ whiteSpace: 'nowrap' }}>{entry.value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  useEffect(() => {
+    if (!selectedProjectId) return;
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const prazosRes = await authFetch(`http://localhost:8080/tarefa/prazos-geral/${selectedProjectId}`);
+        const tarefasRes = await authFetch(`http://localhost:8080/tarefa/tarefas-concluidas/${selectedProjectId}`);
+        const produtividadeRes = await authFetch(`http://localhost:8080/tarefa/produtividade/${selectedProjectId}`);
+
+        if (!prazosRes.ok || !tarefasRes.ok || !produtividadeRes.ok) {
+          throw new Error(`Erro HTTP: ${prazosRes.status} / ${tarefasRes.status} / ${produtividadeRes.status}`);
+        }
+
+        const prazosJson = await prazosRes.json();
+        const tarefasJson = await tarefasRes.json();
+        const produtividadeJson = await produtividadeRes.json();
+
+        // Garante que o gráfico receba array
+        const prazosFormatado = Array.isArray(prazosJson)
+          ? prazosJson
+          : [{ mes: "Total", ...prazosJson }];
+
+
+
+
+        setPrazosData(prazosFormatado);
+        setTarefasData(tarefasJson);
+        setProdutividadeData(produtividadeJson);
+      } catch (error) {
+        console.error("Erro ao buscar dados do dashboard:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [selectedProjectId]);
+
+
+  useEffect(() => {
+    let tid: any = null;
+    const onResize = () => {
+      if (tid) clearTimeout(tid);
+      tid = setTimeout(() => setIsCompact(window.innerWidth < 640), 100);
+    };
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => { window.removeEventListener('resize', onResize); if (tid) clearTimeout(tid); };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-full">
+        <p className="text-gray-500">Carregando dados do dashboard...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-6 p-6 w-full h-full bg-slate-50 overflow-y-auto">
+    <div className="flex flex-col gap-6 p-6 pb-20 md:pb-16 lg:pb-8 w-full h-full bg-slate-50 overflow-y-auto overflow-x-hidden">
       {/*Grid*/}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/*RN.5: As métricas de prazos devem ser exibidas em um gráfico de linha.*/}
 
         <div className="bg-white p-4 rounded-2xl shadow-md">
-          <div className="flex items-start justify-between">
-            <h2 className="text-lg font-semibold mb-3 text-gray-800">Cumprimento de Prazos</h2>
-            <div className="inline-flex rounded-md shadow-sm bg-gray-100 p-1">
+          <div className="flex items-start justify-between flex-wrap gap-2">
+            <h2 className="text-lg font-semibold mb-3 text-gray-800 min-w-0 text-center sm:text-left">Cumprimento de Prazos</h2>
+            <div className="inline-flex rounded-md shadow-sm bg-gray-100 p-1 flex-shrink-0">
               <button
                 onClick={() => setPeriodoPrazos('semanal')}
                 className={`px-3 py-1 text-sm rounded ${periodoPrazos === 'semanal' ? 'bg-white font-semibold' : 'text-gray-600'}`}
@@ -107,8 +148,8 @@ export default function Dashboard({
                 Mensal
               </button>
             </div>
-            </div>
-            <ResponsiveContainer width="100%" height={300}>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
             <LineChart
               width={500}
               height={300}
@@ -118,8 +159,8 @@ export default function Dashboard({
               <XAxis dataKey="mes" />
               <YAxis />
               <Tooltip />
-              <Legend verticalAlign="bottom" align="center" wrapperStyle={{ overflowX: 'auto', whiteSpace: 'nowrap' }} />
-              <Line type="monotone" dataKey="dentroPrazo" stroke="#8884d8" name="Dentro do prazo"/>
+              <Legend content={<CompactLegend />} />
+              <Line type="monotone" dataKey="dentroPrazo" stroke="#8884d8" name="Dentro do prazo" />
               <Line type="monotone" dataKey="foraPrazo" stroke="#82ca9d" name="Fora do prazo" />
             </LineChart>
           </ResponsiveContainer>
@@ -127,9 +168,9 @@ export default function Dashboard({
 
         {/*RN.4: As métricas de tarefas concluídas devem ser exibidas em um gráfico de barras horizontais.*/}
         <div className="bg-white p-4 rounded-2xl shadow-md">
-          <div className="flex items-start justify-between">
-            <h2 className="text-lg font-semibold mb-3 text-gray-800">Tarefas Concluídas</h2>
-            <div className="inline-flex rounded-md shadow-sm bg-gray-100 p-1">
+          <div className="flex items-start justify-between flex-wrap gap-2">
+            <h2 className="text-lg font-semibold mb-3 text-gray-800 min-w-0 text-center sm:text-left">Tarefas Concluídas</h2>
+            <div className="inline-flex rounded-md shadow-sm bg-gray-100 p-1 flex-shrink-0">
               <button
                 onClick={() => setPeriodoTarefas('semanal')}
                 className={`px-3 py-1 text-sm rounded ${periodoTarefas === 'semanal' ? 'bg-white font-semibold' : 'text-gray-600'}`}
@@ -151,9 +192,9 @@ export default function Dashboard({
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis type="number" />
-              <YAxis dataKey="nome" type="category" />
+              <YAxis dataKey="nome" type="category" width={120} />
               <Tooltip />
-              <Legend verticalAlign="bottom" align="center" wrapperStyle={{ overflowX: 'auto', whiteSpace: 'nowrap' }} />
+              <Legend content={<CompactLegend />} />
               <Bar dataKey="concluidas" fill="#34d399" name="Concluídas" />
             </BarChart>
           </ResponsiveContainer>
@@ -162,18 +203,18 @@ export default function Dashboard({
 
       {/*RN.6: As métricas de produtividade devem ser exibidas em um gráfico de barras verticais.*/}
       <div className="bg-white p-4 rounded-2xl shadow-md">
-        <div className="flex items-start justify-between">
-          <h2 className="text-lg font-semibold mb-3 text-gray-800">Produtividade da Equipe</h2>
-          <div className="inline-flex rounded-md shadow-sm bg-gray-100 p-1">
+        <div className="flex items-start justify-between flex-wrap gap-2">
+          <h2 className="text-lg font-semibold mb-3 text-gray-800 min-w-0 text-center sm:text-left">Produtividade da Equipe</h2>
+          <div className="inline-flex rounded-md shadow-sm bg-gray-100 p-1 flex-shrink-0">
             <button
-              onClick={() => setPeriodoProd('semanal')}
-              className={`px-3 py-1 text-sm rounded ${periodoProd === 'semanal' ? 'bg-white font-semibold' : 'text-gray-600'}`}
+              onClick={() => setPeriodoProdutividade('semanal')}
+              className={`px-3 py-1 text-sm rounded ${periodoProdutividade === 'semanal' ? 'bg-white font-semibold' : 'text-gray-600'}`}
             >
               Semanal
             </button>
             <button
-              onClick={() => setPeriodoProd('mensal')}
-              className={`px-3 py-1 text-sm rounded ${periodoProd === 'mensal' ? 'bg-white font-semibold' : 'text-gray-600'}`}
+              onClick={() => setPeriodoProdutividade('mensal')}
+              className={`px-3 py-1 text-sm rounded ${periodoProdutividade === 'mensal' ? 'bg-white font-semibold' : 'text-gray-600'}`}
             >
               Mensal
             </button>
@@ -186,21 +227,32 @@ export default function Dashboard({
             data={dadosProdutividadeExibidos}
           >
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="mes" />
+            <XAxis dataKey="nome" />
             <YAxis domain={[0, 100]} />
             <Tooltip formatter={(value: any) => `${value}%`} />
-            <Legend verticalAlign="bottom" align="center" wrapperStyle={{ display: 'flex', justifyContent: 'center', width: '100%', overflowX: 'auto', whiteSpace: 'nowrap' }} />
-            {
-              // Ta criando uma barra dinamica pra cada usuario
-              (dadosProdutividadeExibidos[0] ? Object.keys(dadosProdutividadeExibidos[0]).filter(k => k !== 'mes') : [])
-                .map((userKey, idx) => {
-                  const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7f7f', '#7dd3fc'];
-                  return <Bar key={userKey} dataKey={userKey} name={userKey} fill={colors[idx % colors.length]} />;
-                })
-            }
+            <Legend content={<CompactLegend />} />
+            <Bar dataKey="produtividade" name="Produtividade (%)">
+              {dadosProdutividadeExibidos.map((_, index) => {
+                const colors = [
+                  "#60a5fa",
+                  "#34d399",
+                  "#fbbf24",
+                  "#f87171",
+                  "#a78bfa",
+                  "#fb923c",
+                  "#38bdf8",
+                  "#f472b6",
+                ];
+                return (
+                  <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                );
+              })}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
+      {/* spacer para garantir que o conteúdo não seja cortado pela bottom navbar fixa */}
+      <div className="h-20 md:h-12 lg:h-4" />
     </div>
   );
 }
