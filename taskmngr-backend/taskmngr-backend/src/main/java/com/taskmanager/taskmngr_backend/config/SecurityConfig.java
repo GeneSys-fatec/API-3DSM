@@ -35,6 +35,8 @@ public class SecurityConfig {
         .sessionManagement(session -> session
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
+            .requestMatchers(HttpMethod.GET,"/anexos/**").permitAll()
+            .requestMatchers("/error").permitAll()
             .requestMatchers(HttpMethod.POST,"/auth/login").permitAll()
             .requestMatchers(HttpMethod.POST,"/auth/cadastrar").permitAll()
             .anyRequest().authenticated())

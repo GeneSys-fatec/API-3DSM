@@ -21,6 +21,8 @@ public class TarefaModel {
     private List<AnexoTarefaModel> tarAnexos;
     private String tarDataCriacao;
     private String tarDataAtualizacao;
+    private String tarDataConclusao;
+    private Boolean concluidaNoPrazo; // true = dentro do prazo, false = fora
     private String usuId;
     private String usuNome;
     private String projId;
