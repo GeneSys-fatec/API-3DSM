@@ -12,7 +12,11 @@ import {
 import { uploadTaskAttachments } from "@/utils/taskUtils";
 import ListaComentarios from "./ListaComentarios";
 import imageCompression from "browser-image-compression";
+import ModalConfirmacao from "../../ui/ModalConfirmacao";
 
+type AnexoParaExcluir = {
+  nome: string;
+} | null;
 interface ModalEditarTarefasProps {
   tarefa: Tarefa;
   onSave: () => void;
@@ -32,6 +36,12 @@ export default function ModalEditarTarefas({
   const submittingRef = React.useRef<boolean>(false);
 
   const projId = tarefaInicial.projId;
+  const lastPayloadKeyRef = React.useRef<string>("");
+  const lastPayloadAtRef = React.useRef<number>(0);
+  const [visualizaImagemUrl, setVisualizaImagemUrl] = useState<string | null>(null);
+
+  const [anexoParaExcluir, setAnexoParaExcluir] = useState<AnexoParaExcluir>(null); 
+
 
   useEffect(() => {
     if (projId) {
@@ -98,6 +108,7 @@ export default function ModalEditarTarefas({
     newFiles: File[],
     currentFiles: File[] = []
   ) {
+  async function validateAndCompressFiles(newFiles: File[], currentFiles: File[] = []) {
     const errors: string[] = [];
     const accepted: File[] = [];
 
@@ -165,8 +176,16 @@ export default function ModalEditarTarefas({
     setNovosAnexos((prev) => prev.filter((file) => file !== fileToRemove));
   };
 
-  const handleRemoverAnexoExistente = async (nomeArquivo: string) => {
-    if (!window.confirm(`Remover anexo "${nomeArquivo}"?`)) return;
+  const handleRemoverAnexoExistente = (nomeArquivo: string) => {
+    setAnexoParaExcluir({ nome: nomeArquivo });
+  };
+  
+  const executarExclusaoAnexo = async () => {
+    if (!anexoParaExcluir || !tarefa.tarId) return;
+    const nomeArquivo = anexoParaExcluir.nome;
+
+    setAnexoParaExcluir(null);
+
     try {
       await authFetch(
         `http://localhost:8080/tarefa/${
@@ -183,7 +202,6 @@ export default function ModalEditarTarefas({
       toast.error("Erro ao remover anexo.");
     }
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -213,6 +231,7 @@ export default function ModalEditarTarefas({
       novosAnexos,
       []
     );
+    const { accepted, errors: anexErrors } = await validateAndCompressFiles(novosAnexos, []);
     if (anexErrors.length > 0) {
       showValidationToast(anexErrors, "Anexos inválidos");
       setIsSubmitting(false);
@@ -281,6 +300,8 @@ export default function ModalEditarTarefas({
               anexosExistentes={anexosExistentes}
               handleFileChange={handleFileChange}
               handleRemoveAnexo={handleRemoveNovoAnexo}
+              handleRemoverAnexoExistente={handleRemoverAnexoExistente}
+              onVisualizaImagem={setVisualizaImagemUrl}
             />
             <div className="flex-grow overflow-y-auto pt-4">
               <div className="flex flex-col gap-2">
@@ -353,6 +374,40 @@ export default function ModalEditarTarefas({
           </div>
         </form>
       </div>
+      {anexoParaExcluir && (
+        <ModalConfirmacao
+          titulo={"Excluir Anexo?"}
+          mensagem={
+            <p>
+              O anexo "<span className="font-bold">{anexoParaExcluir.nome}</span>" 
+              será excluído permanentemente.
+            </p>
+          }
+          onConfirm={executarExclusaoAnexo}
+          onCancel={() => setAnexoParaExcluir(null)}
+        />
+      )}
+      
+      {visualizaImagemUrl && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-80 z-[60] flex items-center justify-center p-4"
+          onClick={() => setVisualizaImagemUrl(null)}
+        >
+          <button
+            className="absolute top-4 right-4 text-white text-4xl font-bold"
+            onClick={() => setVisualizaImagemUrl(null)}
+          >
+            &times;
+          </button>
+          <img
+            src={visualizaImagemUrl}
+            alt="Visualização ampliada do anexo"
+            className="max-w-[90vw] max-h-[90vh] object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
+}
 }

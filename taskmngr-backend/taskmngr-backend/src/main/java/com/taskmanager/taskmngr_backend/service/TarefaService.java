@@ -5,11 +5,21 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -18,22 +28,23 @@ import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.AnexoTamanhoExcedente;
 import com.taskmanager.taskmngr_backend.model.entidade.AnexoTarefaModel;
 import com.taskmanager.taskmngr_backend.model.entidade.ProjetoModel;
 import com.taskmanager.taskmngr_backend.model.entidade.TarefaModel;
+import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.TarefaRepository;
-
-import javax.imageio.ImageIO;
-import javax.imageio.ImageWriteParam;
-import javax.imageio.ImageWriter;
-import javax.imageio.stream.ImageOutputStream;
 
 @Service
 public class TarefaService {
+
+    @Autowired
+    private NotificacaoService notificacaoService;
 
     @Autowired
     private TarefaRepository tarefaRepository;
@@ -43,7 +54,7 @@ public class TarefaService {
     // 2 MiB (tamanho MÁXIMO para arquivos depois de processados)
     private static final long MB = 1024L * 1024L;
     private static final long MAX_FILE_SIZE = 2L * MB;
-    private static final float PDF_IMAGE_QUALITY = 0.6f; 
+    private static final float PDF_IMAGE_QUALITY = 0.6f;
     private static final int MAX_IMAGE_WIDTH = 1600;
 
     public List<TarefaModel> listarTodas() {
@@ -71,8 +82,53 @@ public class TarefaService {
         return tarefaRepository.findById(id);
     }
 
-    public TarefaModel salvar(TarefaModel tarefa) {
-        return tarefaRepository.save(tarefa);
+    public TarefaModel salvarSemNotificacao(TarefaModel tarefa) {
+    return tarefaRepository.save(tarefa);
+    }
+
+    public TarefaModel salvar(TarefaModel tarefa, UsuarioModel usuarioLogado) {
+    TarefaModel tarefaSalva = tarefaRepository.save(tarefa);
+
+    notificacaoService.criarNotificacaoAtribuicao(
+        usuarioLogado.getUsuId(),
+        tarefaSalva.getUsuId(),
+        usuarioLogado.getUsuNome(),
+        tarefaSalva.getTarId(),
+        tarefaSalva.getTarTitulo()
+    );
+        return tarefaSalva;
+    }
+
+    // 1 dia antes do prazo
+    @Scheduled(cron = "0 0 8 * * ?") // todo dia às 08:00
+    public void notificarTarefasProximoVencimento() {
+        LocalDate hoje = LocalDate.now();
+        LocalDate prazoProximo = hoje.plusDays(1); // 1 dia antes
+        List<TarefaModel> tarefas = tarefaRepository.findByTarPrazo(prazoProximo);
+        
+        for (TarefaModel tarefa : tarefas) {
+            notificacaoService.criarNotificacaoPrazo(
+                tarefa.getTarId(),
+                tarefa.getTarTitulo(),
+                tarefa.getUsuId()
+            );
+        }
+    }
+
+    @Scheduled(cron = "0 0 8 * * ?") // roda todo dia às 08:00
+    public void notificarTarefasVencidas() {
+        LocalDate hoje = LocalDate.now();
+
+        // busca tarefas com prazo anterior a hoje e que ainda não estão concluídas
+        List<TarefaModel> vencidas = tarefaRepository.findByTarPrazoBeforeAndTarStatusNot(hoje, "Concluída");
+
+        for (TarefaModel tarefa : vencidas) {
+            notificacaoService.criarNotificacaoPrazoExpirado(
+                tarefa.getTarId(),
+                tarefa.getTarTitulo(),
+             tarefa.getUsuId()
+        );
+        }
     }
 
     public TarefaModel atualizar(TarefaModel tarefa) {
@@ -83,31 +139,173 @@ public class TarefaService {
         tarefaRepository.deleteById(id);
     }
 
+    // -----METRICAS-----
+
+    // GRAFICO 1
+
+    public List<Map<String, Object>> calcularPrazosPorMembro(String projId) {
+        List<TarefaModel> tarefas = tarefaRepository.findByProjId(projId);
+
+        // filtra apenas tarefas concluídas
+        List<TarefaModel> concluidas = tarefas.stream()
+                .filter(t -> "Concluída".equalsIgnoreCase(t.getTarStatus()))
+                .toList();
+
+        if (concluidas.isEmpty())
+            return List.of();
+
+        // agrupa por membro
+        Map<String, List<TarefaModel>> tarefasPorMembro = concluidas.stream()
+                .filter(t -> t.getUsuNome() != null)
+                .collect(Collectors.groupingBy(TarefaModel::getUsuNome));
+
+        List<Map<String, Object>> resultado = new ArrayList<>();
+
+        for (Map.Entry<String, List<TarefaModel>> entry : tarefasPorMembro.entrySet()) {
+            String usuario = entry.getKey();
+            List<TarefaModel> tarefasUsuario = entry.getValue();
+
+            long dentroPrazo = tarefasUsuario.stream()
+                    .filter(t -> Boolean.TRUE.equals(t.getConcluidaNoPrazo()))
+                    .count();
+
+            long foraPrazo = tarefasUsuario.stream()
+                    .filter(t -> Boolean.FALSE.equals(t.getConcluidaNoPrazo()))
+                    .count();
+
+            Map<String, Object> dados = new HashMap<>();
+            dados.put("usuNome", usuario);
+            dados.put("dentroPrazo", dentroPrazo);
+            dados.put("foraPrazo", foraPrazo);
+
+            resultado.add(dados);
+        }
+
+        return resultado;
+    }
+
+    // GRAFICO 1 - Total de tarefas dentro e fora do prazo (geral do projeto)
+    public Map<String, Long> calcularPrazosGerais(String projId) {
+        List<TarefaModel> tarefas = tarefaRepository.findByProjId(projId);
+
+        // Filtra apenas tarefas concluídas
+        List<TarefaModel> concluidas = tarefas.stream()
+                .filter(t -> "Concluída".equalsIgnoreCase(t.getTarStatus()))
+                .toList();
+
+        if (concluidas.isEmpty()) {
+            return Map.of("dentroPrazo", 0L, "foraPrazo", 0L);
+        }
+
+        long dentroPrazo = concluidas.stream()
+                .filter(t -> Boolean.TRUE.equals(t.getConcluidaNoPrazo()))
+                .count();
+
+        long foraPrazo = concluidas.stream()
+                .filter(t -> Boolean.FALSE.equals(t.getConcluidaNoPrazo()))
+                .count();
+
+        return Map.of(
+                "dentroPrazo", dentroPrazo,
+                "foraPrazo", foraPrazo);
+    }
+
+    // GRAFICO 2
+    public List<Map<String, Object>> contarTarefasConcluidasPorMembro(String projId) {
+        List<TarefaModel> tarefas = tarefaRepository.findByProjId(projId);
+
+        // ve as tarefas concluidas
+        List<TarefaModel> concluídas = tarefas.stream()
+                .filter(t -> "Concluída".equalsIgnoreCase(t.getTarStatus()))
+                .toList();
+
+        // juntas os usuarios e conta
+        Map<String, Long> agrupadas = concluídas.stream()
+                .collect(Collectors.groupingBy(
+                        TarefaModel::getUsuNome,
+                        Collectors.counting()));
+
+        // transforma em lista para JSON
+        List<Map<String, Object>> resultado = new ArrayList<>();
+        agrupadas.forEach((usuNome, count) -> {
+            Map<String, Object> entry = new HashMap<>();
+            entry.put("usuNome", usuNome);
+            entry.put("tarefasConcluidas", count);
+            resultado.add(entry);
+        });
+
+        return resultado;
+    }
+
+    // GRAFICO 3
+    public List<Map<String, Object>> calcularProdutividadePorMembro(String projId) {
+        List<TarefaModel> tarefas = tarefaRepository.findByProjId(projId);
+
+        if (tarefas.isEmpty())
+            return List.of();
+
+        Map<String, List<TarefaModel>> tarefasPorMembro = tarefas.stream()
+                .filter(t -> t.getUsuNome() != null)
+                .collect(Collectors.groupingBy(TarefaModel::getUsuNome));
+
+        List<Map<String, Object>> resultado = new ArrayList<>();
+
+        for (Map.Entry<String, List<TarefaModel>> entry : tarefasPorMembro.entrySet()) {
+            String usuario = entry.getKey();
+            List<TarefaModel> tarefasUsuario = entry.getValue();
+
+            long total = tarefasUsuario.size();
+            long concluidasNoPrazo = tarefasUsuario.stream()
+                    .filter(t -> Boolean.TRUE.equals(t.getConcluidaNoPrazo()))
+                    .count();
+
+            double produtividade = total > 0 ? (concluidasNoPrazo * 100.0) / total : 0.0;
+
+            Map<String, Object> dados = new HashMap<>();
+            dados.put("usuNome", usuario);
+            dados.put("produtividade", Math.round(produtividade * 10.0) / 10.0);
+            dados.put("tarefasTotal", total);
+            dados.put("tarefasNoPrazo", concluidasNoPrazo);
+
+            resultado.add(dados);
+        }
+
+        resultado.sort((a, b) -> Double.compare(
+                (double) b.get("produtividade"),
+                (double) a.get("produtividade")));
+
+        return resultado;
+    }
+
     public AnexoTarefaModel adicionarAnexo(String tarefaId, MultipartFile arquivo) throws IOException {
         if (arquivo.isEmpty()) {
             throw new IOException("Arquivo vazio!");
         }
 
         String tipo = arquivo.getContentType();
-        if (tipo == null) throw new IOException("Tipo do arquivo não reconhecido");
+        if (tipo == null)
+            throw new IOException("Tipo do arquivo não reconhecido");
 
         // Apenas: PDF, DOCX, XLSX e imagens JPG/PNG
         boolean permitido = tipo.matches(
-            "application/pdf"
-            + "|application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            + "|application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            + "|image/(jpeg|jpg|png)"
-        );
-        if (!permitido) throw new IOException("Tipo de arquivo não permitido");
+                "application/pdf"
+                        + "|application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        + "|application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        + "|image/(jpeg|jpg|png)");
+        if (!permitido)
+            throw new IOException("Tipo de arquivo não permitido");
 
         boolean isImage = tipo.startsWith("image/");
         boolean isPdf = "application/pdf".equals(tipo);
 
         File pasta = new File(UPLOAD_DIR);
-        if (!pasta.exists()) pasta.mkdirs();
+        if (!pasta.exists())
+            pasta.mkdirs();
 
-        String uuid = UUID.randomUUID().toString();
-        String caminho = UPLOAD_DIR + uuid + "_" + arquivo.getOriginalFilename();
+        String nomeOriginal = StringUtils.cleanPath(arquivo.getOriginalFilename());
+        String extensao = StringUtils.getFilenameExtension(nomeOriginal);
+        String nomeArquivoFinal = UUID.randomUUID().toString() + "." + extensao;
+        String caminho = UPLOAD_DIR + nomeArquivoFinal;
         File destino = new File(caminho);
 
         long tamanhoFinal;
@@ -118,11 +316,13 @@ public class TarefaService {
                 File comprimido = comprimirPdfAvancado(arquivo, PDF_IMAGE_QUALITY, MAX_IMAGE_WIDTH);
                 long compressedSize = comprimido.length();
                 if (compressedSize > MAX_FILE_SIZE) {
-                    try { comprimido.delete(); } catch (Exception ignored) {}
+                    try {
+                        comprimido.delete();
+                    } catch (Exception ignored) {
+                    }
                     throw new AnexoTamanhoExcedente(
-                        "Impossível comprimir PDF.",
-                        "Tente reduzir a qualidade ou remover páginas do arquivo original."
-                    );
+                            "Impossível comprimir PDF.",
+                            "Tente reduzir a qualidade ou remover páginas do arquivo original.");
                 }
                 arquivoBaseParaSalvar = comprimido;
                 tamanhoFinal = compressedSize;
@@ -132,7 +332,10 @@ public class TarefaService {
                 tamanhoFinal = originalSize;
             }
             Files.copy(arquivoBaseParaSalvar.toPath(), destino.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            try { arquivoBaseParaSalvar.delete(); } catch (Exception ignored) {}
+            try {
+                arquivoBaseParaSalvar.delete();
+            } catch (Exception ignored) {
+            }
         } else {
             // Não-PDF
             File arquivoBaseParaSalvar;
@@ -142,11 +345,13 @@ public class TarefaService {
                     File comprimido = comprimirImagemAdaptativa(arquivo, tipo, MAX_IMAGE_WIDTH, 0.85f);
                     long compressedSize = comprimido.length();
                     if (compressedSize > MAX_FILE_SIZE) {
-                        try { comprimido.delete(); } catch (Exception ignored) {}
+                        try {
+                            comprimido.delete();
+                        } catch (Exception ignored) {
+                        }
                         throw new AnexoTamanhoExcedente(
-                            "Imagem excede o limite após compactação.",
-                            "Reduza a resolução/qualidade da imagem e tente novamente."
-                        );
+                                "Imagem excede o limite após compactação.",
+                                "Reduza a resolução/qualidade da imagem e tente novamente.");
                     }
                     arquivoBaseParaSalvar = comprimido;
                 } else {
@@ -157,9 +362,8 @@ public class TarefaService {
                 // DOCX/XLSX: até 2 MiB
                 if (arquivo.getSize() > MAX_FILE_SIZE) {
                     throw new AnexoTamanhoExcedente(
-                        "Tamanho de arquivo excedente",
-                        "Arquivos (DOCX/XLSX) devem ter no máximo " + (MAX_FILE_SIZE / MB) + " MB."
-                    );
+                            "Tamanho de arquivo excedente",
+                            "Arquivos (DOCX/XLSX) devem ter no máximo " + (MAX_FILE_SIZE / MB) + " MB.");
                 }
                 arquivoBaseParaSalvar = File.createTempFile("file_ok_", ".tmp");
                 arquivo.transferTo(arquivoBaseParaSalvar);
@@ -167,18 +371,24 @@ public class TarefaService {
 
             tamanhoFinal = arquivoBaseParaSalvar.length();
             Files.copy(arquivoBaseParaSalvar.toPath(), destino.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            try { arquivoBaseParaSalvar.delete(); } catch (Exception ignored) {}
+            try {
+                arquivoBaseParaSalvar.delete();
+            } catch (Exception ignored) {
+            }
         }
 
         Optional<TarefaModel> tarefaOpt = tarefaRepository.findById(tarefaId);
         if (tarefaOpt.isEmpty()) {
-            try { destino.delete(); } catch (Exception ignored) {}
+            try {
+                destino.delete();
+            } catch (Exception ignored) {
+            }
             throw new IOException("Tarefa não encontrada");
         }
 
         TarefaModel tarefa = tarefaOpt.get();
         AnexoTarefaModel anexo = new AnexoTarefaModel();
-        anexo.setArquivoNome(arquivo.getOriginalFilename());
+        anexo.setArquivoNome(nomeArquivoFinal);
         anexo.setArquivoTipo(tipo);
         anexo.setArquivoTamanho(tamanhoFinal);
         anexo.setArquivoCaminho(caminho);
@@ -191,8 +401,10 @@ public class TarefaService {
         return anexo;
     }
 
-    // Compressão avançada: recomprime imagens, redimensiona, remove metadata simples
-    private File comprimirPdfAvancado(MultipartFile arquivo, float qualidadeJpeg, int maxImageWidth) throws IOException {
+    // Compressão avançada: recomprime imagens, redimensiona, remove metadata
+    // simples
+    private File comprimirPdfAvancado(MultipartFile arquivo, float qualidadeJpeg, int maxImageWidth)
+            throws IOException {
         File tmp = File.createTempFile("pdfcmp_", ".pdf");
         try (PDDocument doc = PDDocument.load(arquivo.getInputStream())) {
             // Remove metadata (opcional)
@@ -205,16 +417,19 @@ public class TarefaService {
 
             for (PDPage page : doc.getPages()) {
                 PDResources res = page.getResources();
-                if (res == null) continue;
+                if (res == null)
+                    continue;
 
                 for (COSName name : res.getXObjectNames()) {
                     PDXObject xobj = res.getXObject(name);
                     if (xobj instanceof PDImageXObject) {
                         PDImageXObject img = (PDImageXObject) xobj;
-                        if (img.getBitsPerComponent() == 1) continue; // evita máscaras 1-bit
+                        if (img.getBitsPerComponent() == 1)
+                            continue; // evita máscaras 1-bit
 
                         BufferedImage bi = img.getImage();
-                        if (bi == null) continue;
+                        if (bi == null)
+                            continue;
 
                         // Redimensiona se necessário
                         if (bi.getWidth() > maxImageWidth) {
@@ -230,14 +445,18 @@ public class TarefaService {
                         res.put(name, jpeg);
                     }
                 }
-            }doc.save(tmp);
-        }return tmp;
+            }
+            doc.save(tmp);
+        }
+        return tmp;
     }
 
     // Compactação adaptativa de imagens (JPG/PNG): redimensiona e ajusta qualidade
-    private File comprimirImagemAdaptativa(MultipartFile arquivo, String contentType, int maxWidth, float initialJpegQuality) throws IOException {
+    private File comprimirImagemAdaptativa(MultipartFile arquivo, String contentType, int maxWidth,
+            float initialJpegQuality) throws IOException {
         BufferedImage original = ImageIO.read(arquivo.getInputStream());
-        if (original == null) throw new IOException("Imagem inválida.");
+        if (original == null)
+            throw new IOException("Imagem inválida.");
 
         int w = original.getWidth();
         int h = original.getHeight();
@@ -264,10 +483,12 @@ public class TarefaService {
                 // PNG: regrava e reduz resolução progressivamente
                 escreverPng(atual, tmp);
             }
-            if (tmp.length() <= MAX_FILE_SIZE) return tmp;
+            if (tmp.length() <= MAX_FILE_SIZE)
+                return tmp;
 
             int newW = (int) Math.round(atual.getWidth() * escala);
-            if (newW < minWidth) break;
+            if (newW < minWidth)
+                break;
             int newH = (int) Math.round(newW * aspect);
             atual = redimensionar(atual, newW, newH, contentType);
         }
@@ -278,7 +499,8 @@ public class TarefaService {
         int type = (contentType.contains("png") ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
         BufferedImage scaled = new BufferedImage(newW, newH, type);
         java.awt.Graphics2D g2 = scaled.createGraphics();
-        g2.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
+                java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         g2.setRenderingHint(java.awt.RenderingHints.KEY_RENDERING, java.awt.RenderingHints.VALUE_RENDER_QUALITY);
         g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
         g2.drawImage(src, 0, 0, newW, newH, null);
