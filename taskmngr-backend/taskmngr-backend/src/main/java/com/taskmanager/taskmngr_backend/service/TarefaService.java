@@ -20,6 +20,11 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
 
+import com.taskmanager.taskmngr_backend.model.converter.TarefaConverter;
+import com.taskmanager.taskmngr_backend.model.dto.ResponsavelTarefaDTO;
+import com.taskmanager.taskmngr_backend.model.dto.TarefaDTO;
+import com.taskmanager.taskmngr_backend.model.entidade.*;
+import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -34,10 +39,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.AnexoTamanhoExcedente;
-import com.taskmanager.taskmngr_backend.model.entidade.AnexoTarefaModel;
-import com.taskmanager.taskmngr_backend.model.entidade.ProjetoModel;
-import com.taskmanager.taskmngr_backend.model.entidade.TarefaModel;
-import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.TarefaRepository;
 
 @Service
@@ -48,6 +49,12 @@ public class TarefaService {
 
     @Autowired
     private TarefaRepository tarefaRepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository; // <<< ADICIONAR INJEÇÃO
+
+    @Autowired
+    private TarefaConverter tarefaConverter;
 
     private final String UPLOAD_DIR = new File("").getAbsolutePath() + "/taskmngr-backend/uploads/";
 
@@ -82,20 +89,96 @@ public class TarefaService {
         return tarefaRepository.findById(id);
     }
 
-    public TarefaModel salvarSemNotificacao(TarefaModel tarefa) {
-    return tarefaRepository.save(tarefa);
+    public TarefaModel criarTarefa(TarefaDTO dto, UsuarioModel usuarioLogado) {
+        // 1. Converte os campos simples do DTO para o Model
+        TarefaModel tarefa = tarefaConverter.dtoParaModel(dto);
+
+        // 2. Constrói a lista de responsáveis de forma segura
+        if (dto.getResponsaveis() != null && !dto.getResponsaveis().isEmpty()) {
+            List<ResponsavelTarefa> responsaveisVerificados = buildResponsaveisList(dto.getResponsaveis());
+            tarefa.setResponsaveis(responsaveisVerificados);
+        } else {
+            tarefa.setResponsaveis(new ArrayList<>()); // Garante que não é nulo
+        }
+
+        // 3. Salva e envia a notificação
+        return salvarEEnviarNotificacao(tarefa, usuarioLogado);
     }
 
-    public TarefaModel salvar(TarefaModel tarefa, UsuarioModel usuarioLogado) {
-    TarefaModel tarefaSalva = tarefaRepository.save(tarefa);
+    public TarefaModel atualizarTarefa(String tarId, TarefaDTO dto, UsuarioModel usuarioLogado) {
+        // 1. Busca a tarefa existente
+        TarefaModel tarefa = buscarPorId(tarId)
+                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com id: " + tarId)); // Crie uma exceção melhor
 
-    notificacaoService.criarNotificacaoAtribuicao(
-        usuarioLogado.getUsuId(),
-        tarefaSalva.getUsuId(),
-        usuarioLogado.getUsuNome(),
-        tarefaSalva.getTarId(),
-        tarefaSalva.getTarTitulo()
-    );
+        // 2. Atualiza os campos simples (Lógica que estava no EditaTarefaController)
+        tarefa.setTarTitulo(dto.getTarTitulo());
+        tarefa.setTarDescricao(dto.getTarDescricao());
+        tarefa.setTarStatus(dto.getTarStatus());
+        tarefa.setTarPrioridade(dto.getTarPrioridade());
+        tarefa.setTarPrazo(dto.getTarPrazo());
+        tarefa.setTarDataAtualizacao(dto.getTarDataAtualizacao());
+        tarefa.setProjId(dto.getProjId());
+        tarefa.setProjNome(dto.getProjNome());
+
+        // 3. Constrói a lista de responsáveis de forma segura
+        if (dto.getResponsaveis() != null && !dto.getResponsaveis().isEmpty()) {
+            List<ResponsavelTarefa> responsaveisVerificados = buildResponsaveisList(dto.getResponsaveis());
+            tarefa.setResponsaveis(responsaveisVerificados);
+        } else {
+            tarefa.setResponsaveis(new ArrayList<>()); // Limpa a lista se ela vier vazia
+        }
+
+        // 4. Lógica de conclusão
+        if ("Concluída".equalsIgnoreCase(dto.getTarStatus())) {
+            String dataConclusao = java.time.LocalDate.now().toString();
+            tarefa.setTarDataConclusao(dataConclusao);
+            java.time.LocalDate prazo = java.time.LocalDate.parse(tarefa.getTarPrazo());
+            java.time.LocalDate conclusao = java.time.LocalDate.parse(dataConclusao);
+            tarefa.setConcluidaNoPrazo(!conclusao.isAfter(prazo));
+        } else {
+            tarefa.setTarDataConclusao(null);
+            tarefa.setConcluidaNoPrazo(null);
+        }
+
+        // 5. Salva (sem notificação de atribuição, pois é uma atualização)
+        //    (Se quiser notificar sobre *mudança* de responsável, a lógica seria mais complexa)
+        return salvarSemNotificacao(tarefa);
+    }
+
+    private List<ResponsavelTarefa> buildResponsaveisList(List<ResponsavelTarefaDTO> responsaveisDto) {
+        // 1. Pega apenas os IDs da lista de DTOs
+        List<String> ids = responsaveisDto.stream()
+                .map(ResponsavelTarefaDTO::getUsuId)
+                .collect(Collectors.toList());
+
+        // 2. Busca os usuários REAIS no banco de dados
+        List<UsuarioModel> usuariosReais = usuarioRepository.findByUsuIdIn(ids);
+
+        // 3. Mapeia os usuários reais para a lista de ResponsavelTarefa (Embedded)
+        // Isso garante que o usuNome está 100% correto.
+        return usuariosReais.stream()
+                .map(usuario -> new ResponsavelTarefa(usuario.getUsuId(), usuario.getUsuNome()))
+                .collect(Collectors.toList());
+    }
+
+    public TarefaModel salvarSemNotificacao(TarefaModel tarefa) {
+        return tarefaRepository.save(tarefa);
+    }
+
+    private TarefaModel salvarEEnviarNotificacao(TarefaModel tarefa, UsuarioModel usuarioLogado) {
+        TarefaModel tarefaSalva = tarefaRepository.save(tarefa);
+
+        if (tarefaSalva.getResponsaveis() != null) {
+            for (ResponsavelTarefa responsavel : tarefaSalva.getResponsaveis()) {
+                notificacaoService.criarNotificacaoAtribuicao(
+                        usuarioLogado.getUsuId(),
+                        responsavel.getUsuId(),
+                        usuarioLogado.getUsuNome(),
+                        tarefaSalva.getTarId(),
+                        tarefaSalva.getTarTitulo()
+                );
+            }
+        }
         return tarefaSalva;
     }
 
@@ -105,13 +188,17 @@ public class TarefaService {
         LocalDate hoje = LocalDate.now();
         LocalDate prazoProximo = hoje.plusDays(1); // 1 dia antes
         List<TarefaModel> tarefas = tarefaRepository.findByTarPrazo(prazoProximo);
-        
+
         for (TarefaModel tarefa : tarefas) {
-            notificacaoService.criarNotificacaoPrazo(
-                tarefa.getTarId(),
-                tarefa.getTarTitulo(),
-                tarefa.getUsuId()
-            );
+            if (tarefa.getResponsaveis() != null) {
+                for (ResponsavelTarefa responsavel : tarefa.getResponsaveis()) {
+                    notificacaoService.criarNotificacaoPrazo(
+                            tarefa.getTarId(),
+                            tarefa.getTarTitulo(),
+                            responsavel.getUsuId() // <<< MUDANÇA
+                    );
+                }
+            }
         }
     }
 
@@ -123,11 +210,15 @@ public class TarefaService {
         List<TarefaModel> vencidas = tarefaRepository.findByTarPrazoBeforeAndTarStatusNot(hoje, "Concluída");
 
         for (TarefaModel tarefa : vencidas) {
-            notificacaoService.criarNotificacaoPrazoExpirado(
-                tarefa.getTarId(),
-                tarefa.getTarTitulo(),
-             tarefa.getUsuId()
-        );
+            if (tarefa.getResponsaveis() != null) {
+                for (ResponsavelTarefa responsavel : tarefa.getResponsaveis()) {
+                    notificacaoService.criarNotificacaoPrazoExpirado(
+                            tarefa.getTarId(),
+                            tarefa.getTarTitulo(),
+                            responsavel.getUsuId()
+                    );
+                }
+            }
         }
     }
 
@@ -154,10 +245,17 @@ public class TarefaService {
         if (concluidas.isEmpty())
             return List.of();
 
-        // agrupa por membro
+        // "Achata" a lista: Se 1 tarefa tem 3 usuários,
+        // ela vira 3 entradas (Usuario1, Tarefa), (Usuario2, Tarefa), etc.
         Map<String, List<TarefaModel>> tarefasPorMembro = concluidas.stream()
-                .filter(t -> t.getUsuNome() != null)
-                .collect(Collectors.groupingBy(TarefaModel::getUsuNome));
+                .filter(t -> t.getResponsaveis() != null && !t.getResponsaveis().isEmpty())
+                .flatMap(tarefa -> tarefa.getResponsaveis().stream()
+                        .map(resp -> Map.entry(resp.getUsuNome(), tarefa)) // Cria uma "Entry" temporária
+                )
+                .collect(Collectors.groupingBy(
+                        Map.Entry::getKey, // Agrupa pelo nome (a chave da Entry)
+                        Collectors.mapping(Map.Entry::getValue, Collectors.toList()) // Coleta as tarefas (o valor da Entry)
+                ));
 
         List<Map<String, Object>> resultado = new ArrayList<>();
 
@@ -219,11 +317,14 @@ public class TarefaService {
                 .filter(t -> "Concluída".equalsIgnoreCase(t.getTarStatus()))
                 .toList();
 
-        // juntas os usuarios e conta
+        // "Achata" a lista e conta por nome de responsável
         Map<String, Long> agrupadas = concluídas.stream()
+                .filter(t -> t.getResponsaveis() != null && !t.getResponsaveis().isEmpty())
+                .flatMap(tarefa -> tarefa.getResponsaveis().stream()) // Gera um stream de ResponsavelTarefa
                 .collect(Collectors.groupingBy(
-                        TarefaModel::getUsuNome,
-                        Collectors.counting()));
+                        ResponsavelTarefa::getUsuNome, // Agrupa pelo nome
+                        Collectors.counting() // Conta as ocorrências
+                ));
 
         // transforma em lista para JSON
         List<Map<String, Object>> resultado = new ArrayList<>();
@@ -244,9 +345,18 @@ public class TarefaService {
         if (tarefas.isEmpty())
             return List.of();
 
+        // <<< MUDANÇA: Agrupar por responsável usando flatMap
+        // Mesma lógica do 'calcularPrazosPorMembro'
         Map<String, List<TarefaModel>> tarefasPorMembro = tarefas.stream()
-                .filter(t -> t.getUsuNome() != null)
-                .collect(Collectors.groupingBy(TarefaModel::getUsuNome));
+                .filter(t -> t.getResponsaveis() != null && !t.getResponsaveis().isEmpty())
+                .flatMap(tarefa -> tarefa.getResponsaveis().stream()
+                        .map(resp -> Map.entry(resp.getUsuNome(), tarefa))
+                )
+                .collect(Collectors.groupingBy(
+                        Map.Entry::getKey,
+                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())
+                ));
+
 
         List<Map<String, Object>> resultado = new ArrayList<>();
 
@@ -453,7 +563,7 @@ public class TarefaService {
 
     // Compactação adaptativa de imagens (JPG/PNG): redimensiona e ajusta qualidade
     private File comprimirImagemAdaptativa(MultipartFile arquivo, String contentType, int maxWidth,
-            float initialJpegQuality) throws IOException {
+                                           float initialJpegQuality) throws IOException {
         BufferedImage original = ImageIO.read(arquivo.getInputStream());
         if (original == null)
             throw new IOException("Imagem inválida.");

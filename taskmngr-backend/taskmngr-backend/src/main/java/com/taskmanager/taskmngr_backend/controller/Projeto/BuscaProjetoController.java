@@ -3,6 +3,9 @@ package com.taskmanager.taskmngr_backend.controller.Projeto;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.taskmanager.taskmngr_backend.model.AdicionadorLinkUsuario;
+import com.taskmanager.taskmngr_backend.model.converter.UsuarioConverter;
+import com.taskmanager.taskmngr_backend.model.dto.UsuarioDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +35,10 @@ public class BuscaProjetoController {
     private AdicionadorLinkProjetos adicionadorLink;
     @Autowired
     private ProjetoConverter projetoConverterService;
+    @Autowired
+    private UsuarioConverter usuarioConverter;
+    @Autowired
+    private AdicionadorLinkUsuario adicionadorLinkUsuario;
 
     @GetMapping("/meus-projetos")
     public ResponseEntity<List<ProjetoDTO>> listarProjetosDoUsuario(@AuthenticationPrincipal UsuarioModel usuario) {
@@ -55,13 +62,29 @@ public class BuscaProjetoController {
         return ResponseEntity.ok(dto);
     }
 
-    // ENDPOINT para admin. (talvez remover depois)
     @GetMapping("/listar")
     public ResponseEntity<List<ProjetoDTO>> listarTodas() {
         List<ProjetoModel> projetos = projetoService.listarTodas();
         List<ProjetoDTO> dtos = projetos.stream().map(projetoConverterService::modelParaDto)
                 .collect(Collectors.toList());
         adicionadorLink.adicionarLink(dtos);
+        return ResponseEntity.ok(dtos);
+    }
+
+    @GetMapping("/{projId}/membros")
+    public ResponseEntity<List<UsuarioDTO>> listarMembrosDoProjeto(@PathVariable String projId) {
+        List<UsuarioModel> membros = projetoService.buscarMembrosDoProjeto(projId);
+
+        if (membros.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        List<UsuarioDTO> dtos = membros.stream()
+                .map(usuarioConverter::modelParaDto)
+                .collect(Collectors.toList());
+
+        adicionadorLinkUsuario.adicionarLink(dtos);
+
         return ResponseEntity.ok(dtos);
     }
 

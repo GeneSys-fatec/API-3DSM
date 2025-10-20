@@ -71,6 +71,14 @@ export default class ModalProjetos extends React.Component<
     }));
   };
 
+  private resetState = () => {
+    this.setState({
+      projNome: "",
+      projDescricao: "",
+      erros: {},
+    });
+  };
+
   adicionarProjeto = async () => {
     if (!this.props.equipeId) {
       toast.error("Nenhuma equipe selecionada para adicionar o projeto.");
@@ -96,6 +104,7 @@ export default class ModalProjetos extends React.Component<
       if (response.ok) {
         toast.success(data);
         window.dispatchEvent(new CustomEvent("projeto:created"));
+        this.resetState();
         this.props.onClose();
       } else {
         toast.error(data);

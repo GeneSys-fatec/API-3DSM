@@ -1,12 +1,24 @@
 package com.taskmanager.taskmngr_backend.model.converter;
 
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Component;
 
+import com.taskmanager.taskmngr_backend.model.dto.ResponsavelTarefaDTO;
 import com.taskmanager.taskmngr_backend.model.dto.TarefaDTO;
+import com.taskmanager.taskmngr_backend.model.entidade.ResponsavelTarefa;
 import com.taskmanager.taskmngr_backend.model.entidade.TarefaModel;
 
 @Component
 public class TarefaConverter {
+
+    private ResponsavelTarefa convertResponsavelDtoToEmbedded(ResponsavelTarefaDTO dto) {
+        return new ResponsavelTarefa(dto.getUsuId(), dto.getUsuNome());
+    }
+
+    private ResponsavelTarefaDTO convertResponsavelEmbeddedToDto(ResponsavelTarefa embedded) {
+        return new ResponsavelTarefaDTO(embedded.getUsuId(), embedded.getUsuNome());
+    }
 
     public TarefaModel dtoParaModel(TarefaDTO dto) {
         TarefaModel model = new TarefaModel();
@@ -21,14 +33,23 @@ public class TarefaConverter {
         model.setTarDataAtualizacao(dto.getTarDataAtualizacao());
         model.setTarDataConclusao(dto.getTarDataConclusao());
         model.setConcluidaNoPrazo(dto.getConcluidaNoPrazo());
-        model.setUsuId(dto.getUsuId());
-        model.setUsuNome(dto.getUsuNome());
         model.setProjId(dto.getProjId());
         model.setProjNome(dto.getProjNome());
+
+        if (dto.getResponsaveis() != null) {
+            model.setResponsaveis(
+                    dto.getResponsaveis().stream()
+                            .map(this::convertResponsavelDtoToEmbedded)
+                            .collect(Collectors.toList())
+            );
+
+        }
+
         return model;
     }
 
-    public TarefaDTO modelParaDto(TarefaModel model) {
+
+    public TarefaDTO modelParaDto (TarefaModel model){
         TarefaDTO dto = new TarefaDTO();
         dto.setTarId(model.getTarId());
         dto.setTarTitulo(model.getTarTitulo());
@@ -41,18 +62,18 @@ public class TarefaConverter {
         dto.setTarDataAtualizacao(model.getTarDataAtualizacao());
         dto.setTarDataConclusao(model.getTarDataConclusao());
         dto.setConcluidaNoPrazo(model.getConcluidaNoPrazo());
-        dto.setUsuId(model.getUsuId());
-        dto.setUsuNome(model.getUsuNome());
         dto.setProjId(model.getProjId());
         dto.setProjNome(model.getProjNome());
+
+        if (model.getResponsaveis() != null) {
+            dto.setResponsaveis(
+                    model.getResponsaveis().stream()
+                            .map(this::convertResponsavelEmbeddedToDto)
+                            .collect(Collectors.toList())
+            );
+        }
         return dto;
     }
-
-    //ta explicacao rapida:
-    //o >>modelpradto<< converte a entidade para objeto de resposta da api(dto)
-    //vc usa quando for retornar dados pro cliente (get, get by id etc)
-
-    //o >>dtopra model<<quando vai salvar ou atualizar dados no banco
 
 
 }

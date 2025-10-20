@@ -23,8 +23,7 @@ public class TarefaModel {
     private String tarDataAtualizacao;
     private String tarDataConclusao;
     private Boolean concluidaNoPrazo; // true = dentro do prazo, false = fora
-    private String usuId;
-    private String usuNome;
+    private List<ResponsavelTarefa> responsaveis;
     private String projId;
     private String projNome;
 }

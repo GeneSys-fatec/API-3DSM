@@ -1,13 +1,18 @@
-export interface Tarefa {
-  tarId: string;
-  tarTitulo: string;
-  tarStatus: string;
+export interface ResponsavelTarefa {
   usuId: string;
   usuNome: string;
+}
+
+export interface Tarefa {
+  tarId: string;
+  projId: string;
+  tarTitulo: string;
+  tarStatus: string;
+  responsaveis: ResponsavelTarefa[];
   tarPrazo: string;
   tarPrioridade: "Alta" | "Média" | "Baixa";
   tarDescricao: string;
-  tarAnexo?: File | null;
+  tarAnexos?: Anexo[];
 }
 
 export type NovaTarefa = Omit<Tarefa, "tarId">;
@@ -73,9 +78,9 @@ export interface EquipeComProjetos extends Equipe {
 }
 export interface Notificacao {
   id: string;
-  tipo: 'expirado' | 'comentario' | 'atribuido' | 'proximoVencimento';
+  tipo: "expirado" | "comentario" | "atribuido" | "proximoVencimento";
   tarNome: string;
   data: string;
   notLida: boolean;
-  usuNome?: string; 
+  usuNome?: string;
 }

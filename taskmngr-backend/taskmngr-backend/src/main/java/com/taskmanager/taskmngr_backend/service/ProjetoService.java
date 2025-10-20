@@ -1,6 +1,7 @@
 package com.taskmanager.taskmngr_backend.service;
 
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.EquipeNaoEncontradaException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.projetos.ProjetoNaoEncontradoException;
 import com.taskmanager.taskmngr_backend.model.entidade.ColunaModel;
 import com.taskmanager.taskmngr_backend.model.entidade.EquipeModel;
 import com.taskmanager.taskmngr_backend.model.entidade.ProjetoModel;
@@ -57,6 +58,21 @@ public class ProjetoService {
                 .collect(Collectors.toList());
 
         return projetoRepository.findByEquipeEquIdIn(idsDasEquipes);
+    }
+
+    public List<UsuarioModel> buscarMembrosDoProjeto(String projId) {
+        ProjetoModel projeto = projetoRepository.findById(projId)
+                .orElseThrow(() -> new ProjetoNaoEncontradoException(
+                        "Projeto não encontrado",
+                        "Não foi possível buscar membros pois o projeto com id " + projId + " não foi encontrado"));
+
+        EquipeModel equipe = projeto.getEquipe();
+
+        if (equipe != null && equipe.getUsuarios() != null) {
+            return equipe.getUsuarios();
+        }
+
+        return Collections.emptyList();
     }
 
     public List<ProjetoModel> listarTodas() { return projetoRepository.findAll(); }
