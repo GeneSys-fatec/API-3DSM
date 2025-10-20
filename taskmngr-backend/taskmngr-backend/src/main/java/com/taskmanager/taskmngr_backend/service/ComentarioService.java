@@ -15,6 +15,8 @@ import com.taskmanager.taskmngr_backend.exceptions.personalizados.comentário.Co
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.comentário.ConteudoInapropriadoException;
 import com.taskmanager.taskmngr_backend.model.converter.ComentarioConverter;
 import com.taskmanager.taskmngr_backend.model.entidade.ComentarioModel;
+// <<< MUDANÇA: Importar ResponsavelTarefa
+import com.taskmanager.taskmngr_backend.model.entidade.ResponsavelTarefa;
 import com.taskmanager.taskmngr_backend.model.entidade.TarefaModel;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.ComentarioRepository;
@@ -52,14 +54,18 @@ public class ComentarioService {
         Optional<TarefaModel> tarefaOpt = tarefaService.buscarPorId(comentario.getTarId());
         if (tarefaOpt.isPresent()) {
             TarefaModel tarefa = tarefaOpt.get();
+            if (tarefa.getResponsaveis() != null && !tarefa.getResponsaveis().isEmpty()) {
+                for (ResponsavelTarefa responsavel : tarefa.getResponsaveis()) {
 
-            if (!tarefa.getUsuId().equals(usuarioLogado.getUsuId())) {
-                notificacaoService.criarNotificacaoComentario(
-                    usuarioLogado.getUsuId(),
-                    tarefa.getUsuId(),
-                    usuarioLogado.getUsuNome(),
-                    tarefa.getTarId()
-                );
+                    if (!responsavel.getUsuId().equals(usuarioLogado.getUsuId())) {
+                        notificacaoService.criarNotificacaoComentario(
+                                usuarioLogado.getUsuId(),
+                                responsavel.getUsuId(),
+                                usuarioLogado.getUsuNome(),
+                                tarefa.getTarId()
+                        );
+                    }
+                }
             }
         }
 
