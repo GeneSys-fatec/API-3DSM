@@ -1,9 +1,11 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import useMediaQuery from "@/hooks/MediaQuerie";
-import type { Tarefa } from "@/types/types";
+
+import type { Tarefa, ResponsavelTarefa } from "@/types/types";
 import { Trash } from "lucide-react";
 import { formatDateToDDMMYYYY } from "@/utils/dateUtils";
+
 interface CardTarefaProps {
   tarefa: Tarefa;
   onAbrirModalEdicao?: (tarefa: Tarefa) => void;
@@ -11,6 +13,18 @@ interface CardTarefaProps {
   corClasse?: string;
   onExcluir?: (tarefa: Tarefa) => void;
 }
+
+const Avatar = ({ responsavel }: { responsavel: ResponsavelTarefa }) => {
+  const inicial = responsavel.usuNome?.charAt(0)?.toUpperCase() || "?";
+  return (
+    <div
+      title={responsavel.usuNome}
+      className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold border-2 border-white"
+    >
+      {inicial}
+    </div>
+  );
+};
 
 export default function CardTarefa(props: CardTarefaProps) {
   const { tarefa, onAbrirModalEdicao, isOverlay, corClasse, onExcluir } = props;
@@ -60,7 +74,10 @@ export default function CardTarefa(props: CardTarefaProps) {
     ? "hover:cursor-grab active-cursor-grabbing"
     : "cursor-pointer";
 
-  const inicialResponsavel = tarefa.usuNome?.charAt(0)?.toUpperCase() || "?";
+  const responsaveis = tarefa.responsaveis || [];
+  const maxAvatares = 2;
+  const avataresExibidos = responsaveis.slice(0, maxAvatares);
+  const avataresOcultos = responsaveis.length - maxAvatares;
 
   return (
     <div
@@ -87,7 +104,9 @@ export default function CardTarefa(props: CardTarefaProps) {
             >
               {tarefa.tarPrioridade}
             </span>
-            <span className="text-sm text-gray-500 ">{formatDateToDDMMYYYY(tarefa.tarPrazo)}</span>
+            <span className="text-sm text-gray-500 ">
+              {formatDateToDDMMYYYY(tarefa.tarPrazo)}
+            </span>
           </div>
         </div>
         <div className="flex flex-col justify-between items-center gap-2">
@@ -96,19 +115,32 @@ export default function CardTarefa(props: CardTarefaProps) {
             title="Excluir tarefa"
             onClick={(e) => {
               e.stopPropagation();
-
-              if (onExcluir) {
-                onExcluir(tarefa);
-              }
+              if (onExcluir) onExcluir(tarefa);
             }}
           >
             <Trash className="h-4" />
           </button>
-          <div
-            title={tarefa.usuNome}
-            className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold"
-          >
-            {inicialResponsavel}
+
+          <div className="flex -space-x-2">
+            {avataresExibidos.map((resp) => (
+              <Avatar key={resp.usuId} responsavel={resp} />
+            ))}
+            {avataresOcultos > 0 && (
+              <div
+                title={`${avataresOcultos} outros responsáveis`}
+                className="w-6 h-6 rounded-full bg-gray-300 text-gray-700 flex items-center justify-center text-xs font-bold border-2 border-white"
+              >
+                +{avataresOcultos}
+              </div>
+            )}
+            {responsaveis.length === 0 && (
+              <div
+                title="Sem responsável"
+                className="w-6 h-6 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-sm font-bold border-2 border-white"
+              >
+                ?
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -36,16 +36,14 @@ export default function ModalEditarTarefas({
   const submittingRef = React.useRef<boolean>(false);
 
   const projId = tarefaInicial.projId;
-  const lastPayloadKeyRef = React.useRef<string>("");
-  const lastPayloadAtRef = React.useRef<number>(0);
   const [visualizaImagemUrl, setVisualizaImagemUrl] = useState<string | null>(null);
 
   const [anexoParaExcluir, setAnexoParaExcluir] = useState<AnexoParaExcluir>(null); 
 
 
-  useEffect(() => {
-    if (projId) {
-      authFetch(`http://localhost:8080/projeto/${projId}/membros`)
+ useEffect(() => {
+    if (projId) { //
+      authFetch(`http://localhost:8080/projeto/${projId}/membros`) //
         .then((res) => res.json())
         .then(setUsuarios)
         .catch((err) =>
@@ -55,11 +53,11 @@ export default function ModalEditarTarefas({
       console.warn("ID do projeto não fornecido para o modal de edição.");
     }
 
-    authFetch(`http://localhost:8080/tarefa/${tarefaInicial.tarId}/anexos`)
+    authFetch(`http://localhost:8080/tarefa/${tarefaInicial.tarId}/anexos`) //
       .then((res) => res.json())
       .then(setAnexosExistentes)
       .catch((err) => console.error("Erro ao buscar anexos:", err));
-  }, [tarefaInicial.tarId]);
+  }, [tarefaInicial.tarId, projId]);
 
   const MAX_FILES = 10;
   const MAX_TOTAL_BYTES = 30 * 1024 * 1024;
@@ -104,10 +102,6 @@ export default function ModalEditarTarefas({
     }
   }
 
-  async function validateAndCompressFiles(
-    newFiles: File[],
-    currentFiles: File[] = []
-  ) {
   async function validateAndCompressFiles(newFiles: File[], currentFiles: File[] = []) {
     const errors: string[] = [];
     const accepted: File[] = [];
@@ -214,8 +208,9 @@ export default function ModalEditarTarefas({
     const validationErrors: string[] = [];
     if (!tarefa.tarTitulo?.trim())
       validationErrors.push("O título da tarefa é obrigatório.");
-    if (!tarefa.usuId)
-      validationErrors.push("Selecione um responsável pela tarefa.");
+   if (!tarefa.responsaveis || tarefa.responsaveis.length === 0) {
+      validationErrors.push("Selecione ao menos um responsável pela tarefa.");
+    }
     if (!tarefa.tarPrazo)
       validationErrors.push("Informe um prazo para a tarefa.");
 
@@ -227,10 +222,6 @@ export default function ModalEditarTarefas({
     submittingRef.current = true;
     setIsSubmitting(true);
 
-    const { accepted, errors: anexErrors } = await validateAndCompressFiles(
-      novosAnexos,
-      []
-    );
     const { accepted, errors: anexErrors } = await validateAndCompressFiles(novosAnexos, []);
     if (anexErrors.length > 0) {
       showValidationToast(anexErrors, "Anexos inválidos");
@@ -409,5 +400,4 @@ export default function ModalEditarTarefas({
       )}
     </div>
   );
-}
 }
