@@ -26,4 +26,5 @@ public class TarefaModel {
     private List<ResponsavelTarefa> responsaveis;
     private String projId;
     private String projNome;
+    private String googleId; // ID do evento no Google Calendar
 }
