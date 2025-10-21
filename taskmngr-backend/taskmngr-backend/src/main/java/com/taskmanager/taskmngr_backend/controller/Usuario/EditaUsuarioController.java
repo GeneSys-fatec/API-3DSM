@@ -30,7 +30,6 @@ public class EditaUsuarioController {
             u.setUsuNome(dto.getUsuNome());
             u.setUsuEmail(dto.getUsuEmail());
             u.setUsuCaminhoFoto(dto.getUsuCaminhoFoto());
-            u.setUsuSenha(dto.getUsuSenha());
             u.setUsuDataCriacao(dto.getUsuDataCriacao());
             u.setUsuDataAtualizacao(dto.getUsuDataAtualizacao());
             usuarioService.salvar(u);

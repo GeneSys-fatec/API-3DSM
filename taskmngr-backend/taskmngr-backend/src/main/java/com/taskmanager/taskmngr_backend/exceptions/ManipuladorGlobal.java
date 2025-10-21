@@ -25,6 +25,7 @@ import com.taskmanager.taskmngr_backend.exceptions.personalizados.projetos.Proje
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.AnexoTamanhoExcedente;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.InvalidTaskDataException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.EmailJaCadastradoException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.SenhasNaoCoincidemException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.UsuarioNaoEncontradoException;
 import com.taskmanager.taskmngr_backend.model.dto.ErroRespostaDTO;
 
@@ -75,6 +76,13 @@ public class ManipuladorGlobal {
     // EmailJáCadastradoException
     @ExceptionHandler(EmailJaCadastradoException.class)
     public ResponseEntity<ErroRespostaDTO> manipularEmailJaCadastrado(EmailJaCadastradoException ex) {
+        ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
+    }
+
+    // SenhasNaoCoincidemException
+    @ExceptionHandler(SenhasNaoCoincidemException.class)
+    public ResponseEntity<ErroRespostaDTO> manipularSenhasNaoCoincidem(SenhasNaoCoincidemException ex) {
         ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
     }
