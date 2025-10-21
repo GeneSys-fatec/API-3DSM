@@ -213,11 +213,11 @@ export default function ModalCriarTarefas({
         if (!ok) return;
       }
 
-      // Tentar criar o evento no Google Calendar se usuário estiver conectado
       try {
         const { loggedIn } = await getAuthStatus();
         if (loggedIn) {
           await createGoogleEventFromTask({
+            googleId: tarefaCriada.googleId,
             tarTitulo: tarefaCriada.tarTitulo,
             tarDescricao: tarefaCriada.tarDescricao,
             tarPrazo: tarefaCriada.tarPrazo,

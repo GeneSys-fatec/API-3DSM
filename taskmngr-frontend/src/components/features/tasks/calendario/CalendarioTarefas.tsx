@@ -155,33 +155,28 @@ const CalendarioTarefas: React.FC = () => {
         }
     };
 
-    const handleDeleteTask = async () => {
-        if (selectedTask) {
-            setShowModal(false);
+    const handleDeleteTask = () => {
+        if (!selectedTask) return;
 
-            const tarefaBase = selectedTask.resource?.tarefaCompleta as Tarefa;
-            // tenta descobrir o id do evento do Google a partir do recurso selecionado
-            const googleEventId =
-                selectedTask?.resource?.googleId ??
-                (tarefaBase as any)?.googleEventId ??
-                selectedTask?.resource?.raw?.id ??
-                undefined;
+        setShowModal(false);
 
-            const tarefaComGoogleId = { ...(tarefaBase as any), googleEventId };
-            setTarefaParaExcluir(tarefaComGoogleId);
+        const tarefaBase = selectedTask.resource?.tarefaCompleta as Tarefa;
+        const googleEventId =
+            (tarefaBase as any)?.googleId ??
+            selectedTask?.resource?.googleId ??
+            selectedTask?.resource?.raw?.id ??
+            undefined;
 
-            // chama a exclusão usando o objeto atual, evitando race com o setState
-            await executarExclusao(tarefaComGoogleId);
-            setSelectedTask(null);
-        }
+        const tarefaComGoogleId = { ...(tarefaBase as any), googleId: googleEventId };
+        setTarefaParaExcluir(tarefaComGoogleId); 
+        setSelectedTask(null);
     };
 
-    const executarExclusao = async (alvo?: (Tarefa & { googleEventId?: string }) | null) => {
+    const executarExclusao = async (alvo?: (Tarefa & { googleId?: string }) | null) => {
         const tarefa = alvo ?? tarefaParaExcluir;
         if (!tarefa) return;
 
-        const googleEventId = (tarefa as any)?.googleEventId;
-
+        const googleEventId = (tarefa as any)?.googleId;
         const ok = await excluirTarefa(tarefa.tarId);
 
         if (ok) {
@@ -194,11 +189,9 @@ const CalendarioTarefas: React.FC = () => {
                 }
             }));
 
-            console.log('isGoogleLogged/googleEventId =>', isGoogleLogged, googleEventId);
             if (isGoogleLogged && googleEventId) {
                 try {
-                    console.log('Excluindo evento do Google Calendar:', googleEventId);
-                    await deleteGoogleEvent(googleEventId);
+                    deleteGoogleEvent(googleEventId);
                 } catch (e) {
                     console.warn('Falha ao excluir evento do Google Calendar.', e);
                 }
@@ -212,7 +205,7 @@ const CalendarioTarefas: React.FC = () => {
         if (isGoogleLogged) {
             setTimeout(() => {
                 carregarEventosGoogle().catch(() => {});
-            }, 300);
+            }, 500);
         }
     };
 
@@ -393,20 +386,17 @@ const CalendarioTarefas: React.FC = () => {
                             " será excluída permanentemente.
                         </p>
                     }
-                    onConfirm={executarExclusao}
+                    onConfirm={() => executarExclusao()}   // executar somente aqui
                     onCancel={() => setTarefaParaExcluir(null)}
                     confirmText="Excluir"
                     cancelText="Cancelar"
                 />
             )}
 
-            {/* Abrir o modal sempre; a flag só controla integrações, não a UI */}
             <ModalGoogle
-                // Antes: open={GOOGLE_ENABLED && showGoogleModal}
                 open={showGoogleModal}
                 onClose={() => setShowGoogleModal(false)}
                 onLoginCode={async (code: string) => {
-                    // Antes: if (!GOOGLE_ENABLED) return;
                     try {
                         await exchangeCode(code);
                         setIsGoogleLogged(true);

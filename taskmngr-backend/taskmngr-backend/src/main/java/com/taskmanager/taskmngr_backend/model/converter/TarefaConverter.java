@@ -35,6 +35,7 @@ public class TarefaConverter {
         model.setConcluidaNoPrazo(dto.getConcluidaNoPrazo());
         model.setProjId(dto.getProjId());
         model.setProjNome(dto.getProjNome());
+        model.setGoogleId(dto.getGoogleId());
 
         if (dto.getResponsaveis() != null) {
             model.setResponsaveis(
@@ -64,6 +65,7 @@ public class TarefaConverter {
         dto.setConcluidaNoPrazo(model.getConcluidaNoPrazo());
         dto.setProjId(model.getProjId());
         dto.setProjNome(model.getProjNome());
+        dto.setGoogleId(model.getGoogleId());
 
         if (model.getResponsaveis() != null) {
             dto.setResponsaveis(

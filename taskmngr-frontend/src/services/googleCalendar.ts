@@ -93,7 +93,19 @@ export async function fetchGoogleEvents(params?: {
   });
 }
 
+function generateGoogleEventId(): string {
+  // Caracteres válidos para base32hex (RFC 4648)
+  const chars = '0123456789abcdefghijklmnopqrstuv';
+  let result = 'taskmngr'; // Prefixo para evitar colisões
+  for (let i = 0; i < 22; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+
 export async function createGoogleEventFromTask(tarefa: {
+  googleId?: string;
   tarTitulo: string;
   tarDescricao?: string;
   tarPrazo?: string | Date;
@@ -131,6 +143,7 @@ export async function createGoogleEventFromTask(tarefa: {
   }
 
   const body = {
+    id: tarefa.googleId || generateGoogleEventId(), // Usa o ID da tarefa se existir, senão gera um novo
     summary: tarefa.tarTitulo,
     description: tarefa.tarDescricao ?? '',
     start,

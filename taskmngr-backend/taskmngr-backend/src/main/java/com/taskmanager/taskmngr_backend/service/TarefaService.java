@@ -41,6 +41,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.AnexoTamanhoExcedente;
 import com.taskmanager.taskmngr_backend.repository.TarefaRepository;
 
+import java.security.SecureRandom;
+
 @Service
 public class TarefaService {
 
@@ -63,6 +65,9 @@ public class TarefaService {
     private static final long MAX_FILE_SIZE = 2L * MB;
     private static final float PDF_IMAGE_QUALITY = 0.6f;
     private static final int MAX_IMAGE_WIDTH = 1600;
+
+    private static final char[] BASE32HEX = "0123456789abcdefghijklmnopqrstuv".toCharArray();
+    private static final SecureRandom RNG = new SecureRandom();
 
     public List<TarefaModel> listarTodas() {
         return tarefaRepository.findAll();
@@ -99,6 +104,11 @@ public class TarefaService {
             tarefa.setResponsaveis(responsaveisVerificados);
         } else {
             tarefa.setResponsaveis(new ArrayList<>()); // Garante que não é nulo
+        }
+
+        // Gera e define o googleId se vier vazio/nulo
+        if (tarefa.getGoogleId() == null || tarefa.getGoogleId().isBlank()) {
+            tarefa.setGoogleId(generateGoogleEventId());
         }
 
         // 3. Salva e envia a notificação
@@ -633,5 +643,19 @@ public class TarefaService {
 
     private void escreverPng(BufferedImage img, File destino) throws IOException {
         ImageIO.write(img, "png", destino);
+    }
+
+    // Gera ID compatível com Google Calendar (base32hex), tamanho ~30 com prefixo
+    private String generateGoogleEventId() {
+        String prefix = "taskmngr"; // opcional, ajuda a identificar
+        int len = 22;               // total ~ 7 + 22 = 29 caracteres (entre 5 e 1024)
+        char[] buf = new char[prefix.length() + len];
+        // copia prefixo
+        for (int i = 0; i < prefix.length(); i++) buf[i] = prefix.charAt(i);
+        // preenche randômico base32hex
+        for (int i = prefix.length(); i < buf.length; i++) {
+            buf[i] = BASE32HEX[RNG.nextInt(BASE32HEX.length)];
+        }
+        return new String(buf);
     }
 }
