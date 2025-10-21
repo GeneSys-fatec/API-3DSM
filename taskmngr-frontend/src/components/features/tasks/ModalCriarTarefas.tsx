@@ -7,6 +7,7 @@ import { authFetch } from "@/utils/api";
 import {showErrorToastFromResponse,showValidationToast,} from "@/utils/errorUtils";
 import { uploadTaskAttachments } from "@/utils/taskUtils";
 import imageCompression from "browser-image-compression";
+import { getAuthStatus, createGoogleEventFromTask } from "@/services/googleCalendar";
 
 interface ModalCriarTarefasProps {
   onSuccess: () => void;
@@ -62,7 +63,7 @@ export default function ModalCriarTarefas({
   const isImage = (f: File) =>
     f.type.match(/^image\/(jpeg|jpg|png)$/i) || /\.(jpe?g|png)$/i.test(f.name);
   const isPdf = (f: File) =>
-    f.type === "application/pdf" || /\.pdf$/i.test(f.name);
+    f.type === "application/pdf" || /\.pdf$/i.test(f.name); 
   const isDocx = (f: File) =>
     f.type ===
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
@@ -210,6 +211,22 @@ export default function ModalCriarTarefas({
       if (anexos.length > 0) {
         const ok = await uploadTaskAttachments(tarefaCriada.tarId, anexos);
         if (!ok) return;
+      }
+
+      try {
+        const { loggedIn } = await getAuthStatus();
+        if (loggedIn) {
+          await createGoogleEventFromTask({
+            googleId: tarefaCriada.googleId,
+            tarTitulo: tarefaCriada.tarTitulo,
+            tarDescricao: tarefaCriada.tarDescricao,
+            tarPrazo: tarefaCriada.tarPrazo,
+            tarPrazoFim: tarefaCriada.tarPrazoFim,
+          });
+        }
+      } catch (e) {
+        console.warn("Falha ao criar evento no Google Calendar:", e);
+        // não bloqueia a criação da tarefa
       }
 
       toast.success("Tarefa criada com sucesso!");
