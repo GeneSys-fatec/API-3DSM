@@ -1,6 +1,7 @@
 package com.taskmanager.taskmngr_backend.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -8,6 +9,7 @@ import com.taskmanager.taskmngr_backend.exceptions.personalizados.projetos.Proje
 import com.taskmanager.taskmngr_backend.model.dto.ColunaDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.ColunaModel;
 import com.taskmanager.taskmngr_backend.repository.ColunaRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ColunaService {
@@ -46,5 +48,28 @@ public class ColunaService {
             throw new ProjetoNaoEncontradoException("Coluna não encontrada", "Coluna com id " + col_id + " não foi encontrada");
         }
         colunaRepository.deleteById(col_id);
+    }
+
+    @Transactional // Garante que ou tudo salva, ou nada salva
+    public void atualizarOrdemColunas(List<Map<String, Object>> colunasOrdem) {
+        if (colunasOrdem == null || colunasOrdem.isEmpty()) {
+            return;
+        }
+        List<String> ids = colunasOrdem.stream()
+                .map(map -> (String) map.get("id"))
+                .collect(Collectors.toList());
+        List<ColunaModel> colunas = colunaRepository.findAllById(ids);
+        Map<String, Integer> ordemMap = colunasOrdem.stream()
+                .collect(Collectors.toMap(
+                        map -> (String) map.get("id"),
+                        map -> (Integer) map.get("ordem")
+                ));
+        for (ColunaModel coluna : colunas) {
+            Integer novaOrdem = ordemMap.get(coluna.getColId());
+            if (novaOrdem != null) {
+                coluna.setColOrdem(novaOrdem);
+            }
+        }
+        colunaRepository.saveAll(colunas);
     }
 }
