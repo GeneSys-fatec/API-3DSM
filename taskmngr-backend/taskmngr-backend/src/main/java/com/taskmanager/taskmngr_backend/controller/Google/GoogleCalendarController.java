@@ -61,4 +61,9 @@ public class GoogleCalendarController {
     public ResponseEntity<?> deleteEvent(@PathVariable String eventId) {
         return googleOAuthService.deleteEvent(currentUserKey(), eventId);
     }
+
+    @PutMapping("/events/{eventId}")
+    public ResponseEntity<?> updateEvent(@PathVariable String eventId, @RequestBody Map<String, Object> eventBody) {
+        return googleOAuthService.updateEvent(currentUserKey(), eventId, eventBody);
+    }
 }

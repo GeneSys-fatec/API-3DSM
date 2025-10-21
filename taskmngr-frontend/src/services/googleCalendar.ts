@@ -103,15 +103,14 @@ function generateGoogleEventId(): string {
   return result;
 }
 
-
-export async function createGoogleEventFromTask(tarefa: {
-  googleId?: string;
+export function buildGoogleEventBodyFromTask(tarefa: {
   tarTitulo: string;
   tarDescricao?: string;
   tarPrazo?: string | Date;
   tarPrazoFim?: string | Date;
-}): Promise<void> {
-  // Detecta se é data sem horário (YYYY-MM-DD)
+}) {
+  if (!tarefa.tarPrazo) throw new Error('tarPrazo é obrigatório');
+
   const isDateOnly = (v: unknown): v is string =>
     typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
 
@@ -124,12 +123,16 @@ export async function createGoogleEventFromTask(tarefa: {
   let start: any;
   let end: any;
 
-  if (tarefa.tarPrazo && isDateOnly(tarefa.tarPrazo) && !tarefa.tarPrazoFim) {
-    start = { date: tarefa.tarPrazo };
-    end = { date: addDays(tarefa.tarPrazo, 1) };
-  } else if (tarefa.tarPrazo && isDateOnly(tarefa.tarPrazo) && tarefa.tarPrazoFim && isDateOnly(tarefa.tarPrazoFim)) {
-    start = { date: tarefa.tarPrazo };
-    end = { date: addDays(tarefa.tarPrazoFim, 1) };
+  if (isDateOnly(tarefa.tarPrazo) && !tarefa.tarPrazoFim) {
+    start = { date: tarefa.tarPrazo as string };
+    end = { date: addDays(tarefa.tarPrazo as string, 1) };
+  } else if (
+    isDateOnly(tarefa.tarPrazo) &&
+    tarefa.tarPrazoFim &&
+    isDateOnly(tarefa.tarPrazoFim)
+  ) {
+    start = { date: tarefa.tarPrazo as string };
+    end = { date: addDays(tarefa.tarPrazoFim as string, 1) };
   } else {
     const startDt = tarefa.tarPrazo ? new Date(tarefa.tarPrazo) : undefined;
     const endDt = tarefa.tarPrazoFim
@@ -142,12 +145,26 @@ export async function createGoogleEventFromTask(tarefa: {
     end = endDt ? { dateTime: endDt.toISOString() } : undefined;
   }
 
-  const body = {
-    id: tarefa.googleId || generateGoogleEventId(), // Usa o ID da tarefa se existir, senão gera um novo
+  return {
     summary: tarefa.tarTitulo,
     description: tarefa.tarDescricao ?? '',
     start,
     end,
+  };
+}
+
+export async function createGoogleEventFromTask(tarefa: {
+  googleId?: string;
+  tarTitulo: string;
+  tarDescricao?: string;
+  tarPrazo?: string | Date;
+  tarPrazoFim?: string | Date;
+}): Promise<void> {
+  const event = buildGoogleEventBodyFromTask(tarefa);
+
+  const body = {
+    id: tarefa.googleId || generateGoogleEventId(),
+    ...event,
   };
 
   const res = await apiFetch('/google/create-event', {
@@ -194,5 +211,18 @@ export const deleteGoogleEvent = async (eventId:string) =>{
   await apiFetch(`/google/events/${encodeURIComponent(eventId)}`, {
     method: 'DELETE',
   });
+}
+
+export async function updateGoogleEvent(eventId: string, eventBody: any): Promise<any> {
+  if (!eventId) throw new Error('eventId é obrigatório');
+  const res = await apiFetch(`/google/events/${encodeURIComponent(eventId)}`, {
+    method: 'PUT',
+    body: JSON.stringify(eventBody),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Falha ao atualizar evento no Google: ${res.status} ${text}`);
+  }
+  return res.json();
 }
 

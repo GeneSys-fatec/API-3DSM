@@ -13,6 +13,7 @@ import { uploadTaskAttachments } from "@/utils/taskUtils";
 import ListaComentarios from "./ListaComentarios";
 import imageCompression from "browser-image-compression";
 import ModalConfirmacao from "../../ui/ModalConfirmacao";
+import { getAuthStatus, updateGoogleEvent, buildGoogleEventBodyFromTask } from "@/services/googleCalendar";
 
 type AnexoParaExcluir = {
   nome: string;
@@ -251,6 +252,27 @@ export default function ModalEditarTarefas({
           toast.error("Falha ao anexar novos arquivos.");
           return;
         }
+      }
+
+      // Atualiza evento no Google Calendar com o MESMO payload da criação
+      try {
+        const { loggedIn } = await getAuthStatus();
+        if (loggedIn) {
+          const googleEventId =
+            (tarefa as any)?.googleId || (tarefaInicial as any)?.googleId;
+          if (googleEventId && tarefa.tarTitulo && tarefa.tarPrazo) {
+            const eventBody = buildGoogleEventBodyFromTask({
+              tarTitulo: tarefa.tarTitulo,
+              tarDescricao: tarefa.tarDescricao,
+              tarPrazo: tarefa.tarPrazo as any,
+              // tarPrazoFim é opcional; se existir no modelo, será considerado pelo helper
+              tarPrazoFim: (tarefa as any)?.tarPrazoFim,
+            });
+            await updateGoogleEvent(String(googleEventId), eventBody);
+          }
+        }
+      } catch (e) {
+        console.warn("Falha ao sincronizar atualização no Google Calendar:", e);
       }
 
       toast.success("Tarefa atualizada com sucesso!");

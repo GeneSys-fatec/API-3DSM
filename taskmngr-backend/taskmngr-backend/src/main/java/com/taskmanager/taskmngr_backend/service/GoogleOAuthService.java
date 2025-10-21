@@ -200,4 +200,27 @@ public class GoogleOAuthService {
             throw ex;
         }
     }
+
+    public ResponseEntity<Map> updateEvent(String userKey, String eventId, Map<String, Object> eventBody) {
+        String access = getValidAccessToken(userKey);
+
+        String url = EVENTS_URL + "/" + URLEncoder.encode(eventId, StandardCharsets.UTF_8);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(access);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        try {
+            return http.exchange(url, HttpMethod.PUT, new HttpEntity<>(eventBody, headers), Map.class);
+        } catch (RestClientResponseException ex) {
+            if (ex.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                GoogleOAuthToken saved = repo.findByUserKey(userKey).orElseThrow();
+                if (saved.getRefreshToken() != null && !saved.getRefreshToken().isBlank()) {
+                    refreshAccessToken(saved);
+                    headers.setBearerAuth(getValidAccessToken(userKey));
+                    return http.exchange(url, HttpMethod.PUT, new HttpEntity<>(eventBody, headers), Map.class);
+                }
+            }
+            throw ex;
+        }
+    }
 }
