@@ -2,7 +2,7 @@ package com.taskmanager.taskmngr_backend.model.converter;
 
 import org.springframework.stereotype.Component;
 
-import com.taskmanager.taskmngr_backend.model.dto.UsuarioDTO;
+import com.taskmanager.taskmngr_backend.model.dto.usuario.UsuarioDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 
 @Component

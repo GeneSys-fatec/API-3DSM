@@ -90,7 +90,7 @@ export default function BarraLateralProjetos({
         `http://localhost:8080/projeto/apagar/${encodeURIComponent(
           optionsMenu.selectedId
         )}`,
-        { method: "DELETE" }
+        { method: "DELETE", credentials: "include", }
       );
       if (activeProjectId === optionsMenu.selectedId) {
         onProjectSelect(null);

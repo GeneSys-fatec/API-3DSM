@@ -53,6 +53,7 @@ export default function ListaComentarios({ tarId }: ListaComentariosProps) {
                     tarId: tarId,
                     comResposta: null
                 }),
+                credentials: "include",
             })
 
             if (!response.ok) {
@@ -88,6 +89,7 @@ export default function ListaComentarios({ tarId }: ListaComentariosProps) {
                     comMensagem: novoTextoComentario,
                     comDataAtualizacao: new Date().toISOString(),
                 }),
+                credentials: "include",
             })
 
             if (!response.ok) {
@@ -110,7 +112,8 @@ export default function ListaComentarios({ tarId }: ListaComentariosProps) {
             return
         }
         await authFetch(`http://localhost:8080/comentario/apagar/${comentarioExcluindoId}`, {
-            method: "DELETE"
+            method: "DELETE",
+            credentials: "include",
         })
         setComentarioExcluindoId(null)
         setMostrarConfirmacao(false)
@@ -149,6 +152,7 @@ export default function ListaComentarios({ tarId }: ListaComentariosProps) {
                     tarId: tarId,
                     comResposta: respostaParaId
                 }),
+                credentials: "include",
             })
 
             if (!response.ok) {

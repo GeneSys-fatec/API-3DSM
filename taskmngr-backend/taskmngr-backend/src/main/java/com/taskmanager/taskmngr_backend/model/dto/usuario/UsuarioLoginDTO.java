@@ -1,4 +1,4 @@
-package com.taskmanager.taskmngr_backend.model.dto;
+package com.taskmanager.taskmngr_backend.model.dto.usuario;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

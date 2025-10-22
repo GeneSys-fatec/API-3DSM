@@ -5,10 +5,9 @@ import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.SenhasNaoCoincidemException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.EmailJaCadastradoException;
-import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.SenhasNaoCoincidemException;
-import com.taskmanager.taskmngr_backend.model.dto.ResponseDTO;
-import com.taskmanager.taskmngr_backend.model.dto.UsuarioCadastroDTO;
+import com.taskmanager.taskmngr_backend.model.dto.usuario.UsuarioCadastroDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
 import com.taskmanager.taskmngr_backend.service.TokenService;
@@ -23,7 +22,7 @@ public class CriaUsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
 
-    public ResponseDTO cadastrarUsuario(UsuarioCadastroDTO body) {
+    public String cadastrarUsuario(UsuarioCadastroDTO body) {
         Optional<UsuarioModel> usuarioOpt = this.usuarioRepository.findByEmail(body.getUsuEmail().toLowerCase());
 
         if (usuarioOpt.isPresent()) {
@@ -42,6 +41,6 @@ public class CriaUsuarioService {
 
         String token = this.tokenService.generateToken(novoUsuario);
 
-        return new ResponseDTO(novoUsuario.getUsuNome(), token);
+        return token;
     }
 }

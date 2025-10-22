@@ -1,4 +1,4 @@
-package com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário;
+package com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação;
 
 import lombok.Getter;
 

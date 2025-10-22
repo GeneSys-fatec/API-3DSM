@@ -1,4 +1,4 @@
-package com.taskmanager.taskmngr_backend.model.dto;
+package com.taskmanager.taskmngr_backend.model.dto.usuario;
 
 import org.springframework.hateoas.RepresentationModel;
 

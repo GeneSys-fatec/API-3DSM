@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.CredenciaisInvalidasException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.SenhasNaoCoincidemException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.TokenCriacaoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.TokenInvalidoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.comentário.ComentarioEmBrancoException;
@@ -25,7 +26,6 @@ import com.taskmanager.taskmngr_backend.exceptions.personalizados.projetos.Proje
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.AnexoTamanhoExcedente;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.InvalidTaskDataException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.EmailJaCadastradoException;
-import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.SenhasNaoCoincidemException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.UsuarioNaoEncontradoException;
 import com.taskmanager.taskmngr_backend.model.dto.ErroRespostaDTO;
 
