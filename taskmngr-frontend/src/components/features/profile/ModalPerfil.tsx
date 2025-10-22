@@ -3,12 +3,11 @@ import { useModal } from "@/context/ModalContext";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-
 export const ModalPerfil: React.FC = () => {
   const { closeModal } = useModal();
   const modalRef = useRef<HTMLDivElement>(null);
 
-  const { userName: nome, handleLogout } = useAuth();
+  const { usuNome: nome, deslogarUsuario } = useAuth();
 
   const navigate = useNavigate();
 
@@ -45,7 +44,7 @@ export const ModalPerfil: React.FC = () => {
       <button
         onClick={() => {
           closeModal();
-          handleLogout(navigate);
+          deslogarUsuario(navigate);
         }}
         className="w-full text-indigo-600 hover:text-indigo-800 font-semibold rounded cursor-pointer mt-2"
       >

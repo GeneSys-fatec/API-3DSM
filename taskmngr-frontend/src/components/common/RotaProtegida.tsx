@@ -1,15 +1,14 @@
 import React from 'react';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext'; 
 
 const RotaProtegida: React.FC = () => {
-  const { isAuthenticated, loading } = useAuth(); 
-  const location = useLocation();
+  const { autenticado, carregando } = useAuth(); 
 
-  if (loading) return <div>Verificando sessão...</div>;
+  if (carregando) return <div>Verificando sessão...</div>;
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  if (!autenticado) {
+    return <Navigate to="/login" replace />;
   }
 
   return <Outlet />;

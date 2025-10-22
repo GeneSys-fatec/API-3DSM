@@ -52,6 +52,22 @@ export const logout = async () => {
         });
 
     } catch (error) {
-        console.error("Erro na comunicação com o servidor durante o logout:", error);
+        console.error("Erro ao conectar com o servidor.", error);
     }
+}
+
+export const verificarSessao = async () => {
+  try {
+    const response = await fetch("http://localhost:8080/auth/session", {
+      method: "GET",
+      credentials: "include",
+    });
+
+    if (!response.ok) return null;
+    const dados = await response.json();
+    return dados;
+  } catch (erro) {
+    console.error("Erro ao verificar sessão:", erro);
+    return null;
+  }
 }

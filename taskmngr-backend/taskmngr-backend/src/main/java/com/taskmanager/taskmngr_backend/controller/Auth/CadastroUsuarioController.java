@@ -1,6 +1,7 @@
 package com.taskmanager.taskmngr_backend.controller.Auth;
 
-import org.springframework.http.HttpHeaders;       
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -9,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.taskmanager.taskmngr_backend.model.dto.ResponseDTO;
-import com.taskmanager.taskmngr_backend.model.dto.usuario.UsuarioLoginDTO;
-import com.taskmanager.taskmngr_backend.service.Auth.LogarUsuarioService;
+import com.taskmanager.taskmngr_backend.model.dto.usuario.UsuarioCadastroDTO;
+import com.taskmanager.taskmngr_backend.service.Auth.CadastroUsuarioService;
 import com.taskmanager.taskmngr_backend.service.CookieService;
 
 import jakarta.validation.Valid;
@@ -19,17 +20,16 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-public class LogarUsuarioController {
-    
-    private final LogarUsuarioService logarUsuarioService;
+public class CadastroUsuarioController {
+
+    private final CadastroUsuarioService cadastroUsuarioService;
     private final CookieService cookieService;
 
-    @PostMapping("/login")
-    public ResponseEntity login(@RequestBody @Valid UsuarioLoginDTO body) {
-        String nomeUsuario = logarUsuarioService.loginUsuario(body);
-        String token = logarUsuarioService.generateTokenForUser(body);
-        ResponseDTO response = new ResponseDTO(nomeUsuario);
+    @PostMapping("/cadastrar")
+    public ResponseEntity cadastrar(@RequestBody @Valid UsuarioCadastroDTO body) {
+        String token = cadastroUsuarioService.cadastrarUsuario(body);
+        ResponseDTO response = new ResponseDTO(body.getUsuNome());
         ResponseCookie cookie = cookieService.createJWTCookie(token);
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).header(HttpHeaders.SET_COOKIE, cookie.toString()).body(response);
     }
 }

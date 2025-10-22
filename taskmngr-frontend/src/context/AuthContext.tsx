@@ -1,82 +1,70 @@
-import { logout } from '@/components/features/auth/authService';
 import React, { createContext, useState, useContext, ReactNode, useCallback, useEffect } from 'react';
+import { logout, verificarSessao } from '@/components/features/auth/authService';
 
-interface AuthState {
-  userName: string | null;
-  isAuthenticated: boolean;
+interface EstadoAuth {
+  usuNome: string | null;
+  autenticado: boolean;
 }
 
-interface AuthContextType extends AuthState {
-  loginUser: (userName: string) => void;
-  handleLogout: (navigate: (path: string) => void) => void;
-  loading: boolean;
+interface TipoAuthContexto extends EstadoAuth {
+  logarUsuario: (usuNome: string) => void;
+  deslogarUsuario: (navegar: (caminho: string) => void) => void;
+  carregando: boolean;
 }
 
-const initialAuthState: AuthState = {
-  userName: null,
-  isAuthenticated: false,
+const estadoInicial: EstadoAuth = {
+  usuNome: null,
+  autenticado: false,
 };
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContexto = createContext<TipoAuthContexto | undefined>(undefined);
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth deve ser usado dentro de AuthProvider');
-  return context;
+  const contexto = useContext(AuthContexto);
+  if (!contexto) throw new Error('useAuth deve ser usado dentro de AuthProvider');
+  return contexto;
 };
 
-interface AuthProviderProps {
+interface PropsAuthProvider {
   children: ReactNode;
 }
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [authState, setAuthState] = useState<AuthState>(initialAuthState);
-  const [loading, setLoading] = useState(true);
+export const AuthProvider: React.FC<PropsAuthProvider> = ({ children }) => {
+  const [estado, setEstado] = useState<EstadoAuth>(estadoInicial);
+  const [carregando, setCarregando] = useState(true);
 
-  const loginUser = useCallback((userName: string) => {
-    setAuthState({ userName, isAuthenticated: true });
+  const logarUsuario = useCallback((usuNome: string) => {
+    setEstado({ usuNome, autenticado: true });
   }, []);
 
-  const handleLogout = useCallback(async (navigate: (path: string) => void) => {
+  const deslogarUsuario = useCallback(async (navegar: (caminho: string) => void) => {
     try {
-      await logout(); 
-    } catch (error) {
-      console.error("Erro no logout:", error);
+      await logout();
+    } catch (erro) {
+      console.error("Erro ao deslogar:", erro);
     } finally {
-      setAuthState(initialAuthState);
-      navigate("/login");
+      setEstado(estadoInicial);
+      navegar("/login");
     }
   }, []);
 
   useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const res = await fetch("http://localhost:8080/auth/session", {
-          method: "GET",
-          credentials: "include", 
-        });
-        
-        if (res.ok) {
-          const data = await res.json();
-          if (data.userName) {
-            setAuthState({ userName: data.userName, isAuthenticated: true });
-          }
-        } else {
-          setAuthState(initialAuthState);
-        }
-      } catch {
-        setAuthState(initialAuthState);
-      } finally {
-        setLoading(false); 
+    const checarSessao = async () => {
+      const dados = await verificarSessao();
+      if (dados?.usuNome) {
+        setEstado({ usuNome: dados.usuNome, autenticado: true });
+      } else {
+        setEstado(estadoInicial);
       }
+      setCarregando(false);
     };
 
-    checkSession();
+    checarSessao();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ ...authState, loginUser, handleLogout, loading }}>
+    <AuthContexto.Provider value={{ ...estado, logarUsuario, deslogarUsuario, carregando }}>
       {children}
-    </AuthContext.Provider>
+    </AuthContexto.Provider>
   );
-}
+};

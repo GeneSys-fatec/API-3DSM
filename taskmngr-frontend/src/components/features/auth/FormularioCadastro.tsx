@@ -1,18 +1,7 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
 import { cadastrar } from "./authService";
-
-interface AuthResponseData {
-    usuNome?: string;
-    mensagem?: string;
-    titulo?: string;
-}
-
-interface ServiceResponse {
-    ok: boolean;
-    data: AuthResponseData;
-}
 
 interface CriteriosSenha {
     tamanho: boolean;
@@ -21,27 +10,36 @@ interface CriteriosSenha {
     caractere: boolean;
 }
 
-const Criterios: CriteriosSenha = {
-    tamanho: false,
-    maiuscula: false,
-    numero: false,
-    caractere: false,
-};
-
 const FormularioCadastro: React.FC = () => {
     const navigate = useNavigate();
-    const [usuNome, setUsuNome] = useState("");
-    const [usuEmail, setUsuEmail] = useState("");
-    const [usuSenha, setUsuSenha] = useState("");
-    const [usuConfirmarSenha, setUsuConfirmarSenha] = useState("");
     const [erros, setErros] = useState<{ [campo: string]: string }>({});
     const [forcaSenha, setForcaSenha] = useState(0);
     const [mostrarSenha, setMostrarSenha] = useState(false);
     const [mostrarConfirmacaoSenha, setMostrarConfirmacaoSenha] = useState(false);
     const [mostrarValidacao, setMostrarValidacao] = useState(false);
-    const [criteriosSenha, setCriteriosSenha] = useState<CriteriosSenha>(Criterios);
+    const [form, setForm] = useState({ usuNome: "", usuEmail: "", usuSenha: "", usuConfirmarSenha: "" });
+    const [criteriosSenha, setCriteriosSenha] = useState<CriteriosSenha>({ tamanho: false, maiuscula: false, numero: false, caractere: false });
 
-    const updateCriteriosSenha = useCallback((senha: string) => {
+    const { usuNome, usuEmail, usuSenha, usuConfirmarSenha } = form;
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+
+        setForm((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+
+        setErros(prev => ({
+            ...prev,
+            [name]: ""
+        }));
+
+        if (name === "usuSenha") updateCriteriosSenha(value);
+
+    }
+
+    const updateCriteriosSenha = (senha: string) => {
         const criterios: CriteriosSenha = {
             tamanho: senha.length >= 8,
             maiuscula: /[A-Z]/.test(senha),
@@ -51,61 +49,21 @@ const FormularioCadastro: React.FC = () => {
         const novaForca = Object.values(criterios).filter(Boolean).length;
         setCriteriosSenha(criterios);
         setForcaSenha(novaForca);
-    }, []);
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-
-        setErros(prev => ({
-            ...prev,
-            [name]: ""
-        }));
-
-        switch (name) {
-            case "usuNome":
-                setUsuNome(value);
-                break;
-            case "usuEmail":
-                setUsuEmail(value);
-                break;
-            case "usuSenha":
-                setUsuSenha(value);
-                updateCriteriosSenha(value);
-                break;
-            case "usuConfirmarSenha":
-                setUsuConfirmarSenha(value);
-                break;
-        }
     }
 
-    const toggleMostrarSenha = useCallback(() => setMostrarSenha(prev => !prev), []);
-    const toggleMostrarConfirmacaoSenha = useCallback(() => setMostrarConfirmacaoSenha(prev => !prev), []);
-    const handleFocus = useCallback(() => setMostrarValidacao(true), []);
-    const handleBlur = useCallback(() => setMostrarValidacao(false), []);
+    const toggleMostrarSenha = () => setMostrarSenha(prev => !prev);
+    const toggleMostrarConfirmacaoSenha = () => setMostrarConfirmacaoSenha(prev => !prev);
+    const handleFocus = () => setMostrarValidacao(true);
+    const handleBlur = () => setMostrarValidacao(false);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        const novoUsuario = { usuNome, usuEmail, usuSenha, usuConfirmarSenha };
-
-        if (!novoUsuario.usuNome?.trim()) {
-            toast.error("O nome é obrigatório!");
-            return;
-        }
-
-        if (!novoUsuario.usuEmail?.trim()) {
-            toast.error("O email é obrigatório!");
-            return;
-        }
-
-        if (!novoUsuario.usuSenha?.trim()) {
-            toast.error("A senha é obrigatória!");
-            return;
-        }
-
-        if (!novoUsuario.usuConfirmarSenha?.trim()) {
-            toast.error("A confirmação de senha é obrigatória!");
-            return;
+        for (const [campo, valor] of Object.entries(form)) {
+            if (!valor.trim()) {
+                toast.error(`O ${campo.replace("usu", "").toLowerCase()} é obrigatório!`);
+                return;
+            }
         }
 
         if (usuSenha !== usuConfirmarSenha) {
@@ -115,26 +73,23 @@ const FormularioCadastro: React.FC = () => {
         }
 
         try {
-            const { ok, data: apiData }: ServiceResponse = await cadastrar(novoUsuario);
+            const { ok, data } = await cadastrar(form);
             const campos = ["usuNome", "usuEmail", "usuSenha", "usuConfirmarSenha"];
             const errosMap: { [campo: string]: string } = {};
 
             if (ok) {
                 toast.success("Usuário cadastrado com sucesso!");
-                setUsuNome("");
-                setUsuEmail("");
-                setUsuSenha("");
-                setUsuConfirmarSenha("");
+                setForm({ usuNome: "", usuEmail: "", usuSenha: "", usuConfirmarSenha: "" });
                 setErros({});
                 setTimeout(() => navigate("/login"), 1500);
                 return;
             }
 
-            if (apiData.mensagem) {
+            if (data.mensagem) {
                 let erroEncontrado = false;
                 campos.forEach((campo) => {
-                    if (typeof apiData.mensagem === "string" && apiData.mensagem.toLowerCase().includes(campo.toLowerCase())) {
-                        errosMap[campo] = apiData.mensagem;
+                    if (data.mensagem?.toLowerCase().includes(campo.toLowerCase())) {
+                        errosMap[campo] = data.mensagem;
                         erroEncontrado = true;
                     }
                 });
@@ -142,7 +97,7 @@ const FormularioCadastro: React.FC = () => {
                 setErros(errosMap);
 
                 if (!erroEncontrado) {
-                    toast.error(apiData.mensagem);
+                    toast.error(data.mensagem);
                 }
             }
         } catch (error) {
