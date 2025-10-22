@@ -23,6 +23,13 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { useMemo } from "react";
+
 export default function Home() {
   const { selectedProjectId } = useOutletContext<{
     selectedProjectId: string | null;
@@ -32,6 +39,7 @@ export default function Home() {
   const modalContext = useContext(ModalContext);
 
   const [activeTask, setActiveTask] = useState<Tarefa | null>(null);
+  const [activeColumn, setActiveColumn] = useState<Coluna | null>(null);
   const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
   const [itemParaExcluir, setItemParaExcluir] = useState<{
     type: "tarefa" | "coluna";
@@ -43,69 +51,131 @@ export default function Home() {
     useSensor(KeyboardSensor, {})
   );
 
+  const colunasIds = useMemo(() => colunas.map((c) => c.id), [colunas]);
+
+  const handleSaveColumnOrder = async (
+    updateData: { id: string; ordem: number }[]
+  ) => {
+    try {
+      const response = await authFetch(
+        `http://localhost:8080/colunas/reordenar`,
+        {
+          method: "PUT",
+          body: JSON.stringify(updateData),
+        }
+      );
+      if (!response.ok)
+        throw new Error("Falha ao reordenar as colunas no servidor.");
+    } catch (error) {
+      console.error(
+        "Erro ao salvar a ordem das colunas, revertendo a UI:",
+        error
+      );
+      fetchData();
+    }
+  };
+
   const handleDragStart = (event: DragStartEvent) => {
-    const activeId = event.active.id as string;
-    const colunaTitulo = encontrarColunaDaTarefa(activeId, tarefas);
-    if (colunaTitulo) {
-      const tarefa = tarefas[colunaTitulo].find((t) => t.tarId === activeId);
-      if (tarefa) setActiveTask(tarefa);
+    const { active } = event;
+    const type = active.data.current?.type;
+
+    if (type === "task") {
+      const activeId = active.id as string;
+      const colunaTitulo = encontrarColunaDaTarefa(activeId, tarefas);
+      if (colunaTitulo) {
+        const tarefa = tarefas[colunaTitulo].find((t) => t.tarId === activeId);
+        if (tarefa) setActiveTask(tarefa);
+      }
+    }
+
+    if (type === "column") {
+      setActiveColumn(active.data.current?.coluna);
     }
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     setActiveTask(null);
+    setActiveColumn(null);
+
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
     const activeId = active.id as string;
     const overId = over.id as string;
+    const activeType = active.data.current?.type;
 
-    const activeContainer = encontrarColunaDaTarefa(activeId, tarefas);
-    const overColuna = colunas.find((c) => c.id === overId);
-    const overContainer = overColuna
-      ? overColuna.titulo
-      : encontrarColunaDaTarefa(overId, tarefas);
+    if (activeType === "column") {
+      setColunas((prevColunas) => {
+        const activeIndex = prevColunas.findIndex((c) => c.id === activeId);
+        const overIndex = prevColunas.findIndex((c) => c.id === overId);
 
-    if (!activeContainer || !overContainer || activeContainer === overContainer)
-      return;
+        if (activeIndex === -1 || overIndex === -1) return prevColunas;
 
-    const tarefaMovida = tarefas[activeContainer]?.find(
-      (t) => t.tarId === activeId
-    );
-    if (!tarefaMovida) return;
+        const newColunas = arrayMove(prevColunas, activeIndex, overIndex);
 
-    setTarefas((prev) => {
-      const newTarefas = JSON.parse(JSON.stringify(prev));
-      const activeItems = newTarefas[activeContainer];
-      const activeIndex = activeItems.findIndex(
-        (item: Tarefa) => item.tarId === activeId
+        const updateData = newColunas.map((col, index) => ({
+          id: col.id,
+          ordem: index,
+        }));
+
+        handleSaveColumnOrder(updateData);
+
+        return newColunas;
+      });
+    }
+
+    if (activeType === "task") {
+      const activeContainer = encontrarColunaDaTarefa(activeId, tarefas);
+      const overColuna = colunas.find((c) => c.id === overId);
+      const overContainer = overColuna
+        ? overColuna.titulo
+        : encontrarColunaDaTarefa(overId, tarefas);
+
+      if (
+        !activeContainer ||
+        !overContainer ||
+        activeContainer === overContainer
+      )
+        return;
+
+      const tarefaMovida = tarefas[activeContainer]?.find(
+        (t) => t.tarId === activeId
       );
+      if (!tarefaMovida) return;
 
-      const [movedItem] = activeItems.splice(activeIndex, 1);
-      movedItem.tarStatus = overContainer;
+      setTarefas((prev) => {
+        const newTarefas = JSON.parse(JSON.stringify(prev));
+        const activeItems = newTarefas[activeContainer];
+        const activeIndex = activeItems.findIndex(
+          (item: Tarefa) => item.tarId === activeId
+        );
 
-      const overItems = newTarefas[overContainer];
-      overItems.push(movedItem);
+        const [movedItem] = activeItems.splice(activeIndex, 1);
+        movedItem.tarStatus = overContainer;
 
-      return newTarefas;
-    });
+        const overItems = newTarefas[overContainer];
+        overItems.push(movedItem);
 
-    try {
-      const response = await authFetch(
-        `http://localhost:8080/tarefa/atualizar/${activeId}`,
-        {
-          method: "PUT",
-          body: JSON.stringify({ ...tarefaMovida, tarStatus: overContainer }),
-        }
-      );
-      if (!response.ok)
-        throw new Error("Falha ao atualizar a tarefa no servidor.");
-    } catch (error) {
-      console.error(
-        "Erro ao salvar a mudança da tarefa, revertendo a UI:",
-        error
-      );
-      fetchData();
+        return newTarefas;
+      });
+
+      try {
+        const response = await authFetch(
+          `http://localhost:8080/tarefa/atualizar/${activeId}`,
+          {
+            method: "PUT",
+            body: JSON.stringify({ ...tarefaMovida, tarStatus: overContainer }),
+          }
+        );
+        if (!response.ok)
+          throw new Error("Falha ao atualizar a tarefa no servidor.");
+      } catch (error) {
+        console.error(
+          "Erro ao salvar a mudança da tarefa, revertendo a UI:",
+          error
+        );
+        fetchData();
+      }
     }
   };
 
@@ -225,31 +295,53 @@ export default function Home() {
         onDragEnd={handleDragEnd}
       >
         <div className="flex flex-col h-full lg:flex-row items-center lg:items-start gap-5 pt-5 pb-4 lg:pr-4 flex-1 overflow-y-auto lg:overflow-x-auto lg:overflow-y-hidden">
-          {colunas.map((coluna) => (
-            <ColunaKanban
-              key={coluna.id}
-              {...coluna}
-              tarefas={tarefas[coluna.titulo] || []}
-              onAbrirModalCriacao={() => abrirModalCriacao(coluna.titulo)}
-              onAbrirModalEdicao={abrirModalEdicao}
-              onApagarColuna={() => {
-                if ((tarefas[coluna.titulo] || []).length > 0) {
-                  alert("Não é possível apagar colunas com tarefas.");
-                  return;
+          <SortableContext
+            items={colunasIds}
+            strategy={horizontalListSortingStrategy}
+          >
+            {colunas.map((coluna) => (
+              <ColunaKanban
+                key={coluna.id}
+                {...coluna}
+                tarefas={tarefas[coluna.titulo] || []}
+                onAbrirModalCriacao={() => abrirModalCriacao(coluna.titulo)}
+                onAbrirModalEdicao={abrirModalEdicao}
+                onApagarColuna={() => {
+                  if ((tarefas[coluna.titulo] || []).length > 0) {
+                    alert("Não é possível apagar colunas com tarefas.");
+                    return;
+                  }
+                  setItemParaExcluir({ type: "coluna", data: coluna });
+                }}
+                onExcluirTarefa={(tarefa) =>
+                  setItemParaExcluir({ type: "tarefa", data: tarefa })
                 }
-                setItemParaExcluir({ type: "coluna", data: coluna });
-              }}
-              onExcluirTarefa={(tarefa) =>
-                setItemParaExcluir({ type: "tarefa", data: tarefa })
-              }
-              isEditing={editingColumnId === coluna.id}
-              onStartEditing={setEditingColumnId}
-              onFinishEditing={handleUpdateColumnTitle}
-            />
-          ))}
+                isEditing={editingColumnId === coluna.id}
+                onStartEditing={setEditingColumnId}
+                onFinishEditing={handleUpdateColumnTitle}
+              />
+            ))}
+          </SortableContext>
+
           <DragOverlay dropAnimation={dropAnimation}>
             {activeTask ? <CardTarefa tarefa={activeTask} isOverlay /> : null}
+
+            {activeColumn ? (
+              <ColunaKanban
+                {...activeColumn}
+                tarefas={tarefas[activeColumn.titulo] || []}
+                onAbrirModalCriacao={() => {}}
+                onAbrirModalEdicao={() => {}}
+                onApagarColuna={() => {}}
+                onExcluirTarefa={() => {}}
+                isEditing={false}
+                onStartEditing={() => {}}
+                onFinishEditing={() => {}}
+                isOverlay
+              />
+            ) : null}
           </DragOverlay>
+
           <div className="w-full lg:w-80 flex-shrink-0 lg:mt-0">
             <button
               onClick={handleAddColumn}
