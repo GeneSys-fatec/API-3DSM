@@ -24,19 +24,18 @@ export async function parseErroResposta(res: Response): Promise<string> {
 }
 
 export async function showErrorToastFromResponse(
-  res: Response,
+  res: Response | null | undefined,
   prefix?: string
 ): Promise<void> {
+  if (!res || res.ok) return;
   const parsed = await parseErroResposta(res);
-  const fallback = "Ocorreu um erro.";
+  const fallback = `Ocorreu um erro. (status ${res.status})`;
   const message = parsed || fallback;
   toast.error(prefix ? `${prefix}: ${message}` : message);
 }
 
-// Exibe várias mensagens em um único toast (com quebras de linha)
 export function showValidationToast(errors: string[], title?: string) {
   if (!errors || errors.length === 0) return;
-  // limpa toasts anteriores para não empilhar
   toast.dismiss();
   const message =
     (title ? `${title}:\n` : "") + errors.map((e) => `• ${e}`).join("\n");

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { ModalContext } from "@/context/ModalContext";
 import { toast } from "react-toastify";
 import FormularioTarefa from "./FormularioTarefa";
-import type { Tarefa, Usuario, ResponsavelTarefa } from "@/types/types";
+import type { Tarefa, Usuario, ResponsavelTarefa, Coluna } from "@/types/types";
 import { authFetch } from "@/utils/api";
 import {showErrorToastFromResponse,showValidationToast,} from "@/utils/errorUtils";
 import { uploadTaskAttachments } from "@/utils/taskUtils";
@@ -12,7 +12,7 @@ import { getAuthStatus, createGoogleEventFromTask } from "@/services/googleCalen
 interface ModalCriarTarefasProps {
   onSuccess: () => void;
   statusInicial: string;
-  selectedProjectId: string | null;
+  selectedProjectId: string;
   tarPrazo?: Date | string;
 }
 
@@ -27,7 +27,7 @@ const estadoInicial: Partial<Tarefa> = {
 export default function ModalCriarTarefas({
   onSuccess,
   statusInicial,
-  selectedProjectId,
+  selectedProjectId, // já existe aqui
   tarPrazo,
 }: ModalCriarTarefasProps) {
   const modalContext = useContext(ModalContext);
@@ -42,11 +42,12 @@ export default function ModalCriarTarefas({
   });
   const [anexos, setAnexos] = useState<File[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [colunas, setColunas] = useState<Coluna[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const lastSubmitRef = React.useRef<number>(0);
   const submittingRef = React.useRef<boolean>(false);
 
- useEffect(() => {
+  useEffect(() => {
     if (selectedProjectId) {
       authFetch(`http://localhost:8080/projeto/${selectedProjectId}/membros`)
         .then((res) => res.json())
@@ -54,6 +55,38 @@ export default function ModalCriarTarefas({
         .catch((err) => console.error("Erro ao buscar usuários do projeto:", err));
     }
   }, [selectedProjectId]);
+
+  useEffect(() => {
+    const projId = selectedProjectId || (tarefa?.projId as string | undefined);
+    if (!projId) {
+      setColunas([]);
+      return;
+    }
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await authFetch(`http://localhost:8080/colunas/por-projeto/${projId}`);
+        if (!res.ok) {
+          setColunas([]);
+          return;
+        }
+        const data = await res.json();
+        // normalize fields: suporta diferentes formatos (colTitulo, titulo, Titulo, colId, id, Id)
+        const normalized: Coluna[] = (data || []).map((it: any, i: number) => ({
+          id: it.colId || it.id || it.Id || `col-${i}`,
+          titulo: it.colTitulo || it.titulo || it.Titulo || "",
+          ordem: it.colOrdem ?? it.ordem ?? i,
+          corClasse: "", // não precisamos de cor aqui
+          corFundo: "",
+        }));
+        if (mounted) setColunas(normalized);
+      } catch (err) {
+        console.error("Erro ao carregar colunas:", err);
+        if (mounted) setColunas([]);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [selectedProjectId, tarefa?.projId]);
 
   const MAX_FILES = 10;
   const MAX_TOTAL_BYTES = 30 * 1024 * 1024;
@@ -199,7 +232,6 @@ export default function ModalCriarTarefas({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...tarefa, projId: selectedProjectId }),
-        credentials: "include",
       });
 
       if (!res.ok) {
@@ -267,6 +299,7 @@ export default function ModalCriarTarefas({
               anexos={anexos}
               handleFileChange={handleFileChange}
               handleRemoveAnexo={handleRemoveAnexo}
+              selectedProjectId={selectedProjectId} // <--- encaminha projId
             />
           </div>
 
