@@ -280,20 +280,6 @@ const CalendarioTarefas: React.FC = () => {
         );
     }
 
-    if (mensagemVazia) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className="text-center">
-                    <i className="fa-solid fa-calendar-xmark text-6xl text-gray-400 mb-4"></i>
-                    <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                        Calendário Vazio
-                    </h3>
-                    <p className="text-gray-500 mb-4">{mensagemVazia}</p>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="space-y-2 pb-20 sm:pb-0">
             {showModal && selectedTask && (

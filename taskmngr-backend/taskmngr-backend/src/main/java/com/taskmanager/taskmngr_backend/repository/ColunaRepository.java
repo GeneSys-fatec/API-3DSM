@@ -12,4 +12,12 @@ public interface ColunaRepository extends MongoRepository<ColunaModel, String> {
 
     @Query(value="{ 'projId' : ?0 }", count = true)
     long countByprojId(String projId);
+
+    long countByProjId(String projId);
+
+    long countByProjIdAndColTitulo(String projId, String colTitulo);
+
+    long countByProjIdAndColTituloAndColIdNot(String projId, String colTitulo, String colId);
+
+    boolean existsByProjIdAndColTitulo(String projId, String colTitulo);
 }

@@ -3,6 +3,7 @@ import { authFetch } from "../utils/api";
 import { useKanban } from "../hooks/useKanban";
 import { encontrarColunaDaTarefa, dropAnimation } from "../utils/kanbanUtils";
 import { type Tarefa, type Coluna } from "../types/types";
+import { showErrorToastFromResponse } from "../utils/errorUtils";
 
 import ColunaKanban from "../components/features/tasks/ColunaKanban";
 import CardTarefa from "../components/features/tasks/CardTarefa";
@@ -192,7 +193,10 @@ export default function Home() {
           }),
         }
       );
-      if (!response.ok) throw new Error("Falha ao criar a coluna.");
+      if (!response.ok) {
+        await showErrorToastFromResponse(response, "Erro ao criar coluna");
+        return;
+      }
       await fetchData();
     } catch (error) {
       console.error("Erro ao adicionar nova coluna:", error);
@@ -214,11 +218,37 @@ export default function Home() {
           body: JSON.stringify({ titulo: newTitle }),
         }
       );
-      if (!response.ok) throw new Error("Falha ao atualizar o título.");
+      if (!response.ok) {
+        await showErrorToastFromResponse(response, "Erro ao atualizar o título");
+        setColunas(originalColumns);
+        return;
+      }
       await fetchData();
     } catch (error) {
       console.error("Erro ao atualizar título da coluna:", error);
       setColunas(originalColumns);
+    }
+  };
+
+  const executarExclusao = async () => {
+    if (!itemParaExcluir) return;
+    const { type, data } = itemParaExcluir;
+    const url =
+      type === "tarefa"
+        ? `http://localhost:8080/tarefa/apagar/${(data as Tarefa).tarId}`
+        : `http://localhost:8080/colunas/deletar/${(data as Coluna).id}`;
+
+    try {
+      const response = await authFetch(url, { method: "DELETE" });
+      if (!response.ok) {
+        await showErrorToastFromResponse(response, `Erro ao excluir ${type}`);
+        return;
+      }
+      fetchData();
+    } catch (error) {
+      console.error(`Falha ao excluir ${type}:`, error);
+    } finally {
+      setItemParaExcluir(null);
     }
   };
 
@@ -243,25 +273,6 @@ export default function Home() {
     },
     [modalContext, fetchData]
   );
-
-  const executarExclusao = async () => {
-    if (!itemParaExcluir) return;
-    const { type, data } = itemParaExcluir;
-    const url =
-      type === "tarefa"
-        ? `http://localhost:8080/tarefa/apagar/${(data as Tarefa).tarId}`
-        : `http://localhost:8080/colunas/deletar/${(data as Coluna).id}`;
-
-    try {
-      const response = await authFetch(url, { method: "DELETE" });
-      if (!response.ok) throw new Error(`Erro ao excluir ${type}.`);
-      fetchData();
-    } catch (error) {
-      console.error(`Falha ao excluir ${type}:`, error);
-    } finally {
-      setItemParaExcluir(null);
-    }
-  };
 
   if (loading) {
     return (

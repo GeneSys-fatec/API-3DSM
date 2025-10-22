@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.CredenciaisInvalidasException;
-import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.SenhasNaoCoincidemException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.TokenCriacaoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.TokenInvalidoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.comentário.ComentarioEmBrancoException;
@@ -28,6 +27,8 @@ import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.Invali
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.EmailJaCadastradoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.UsuarioNaoEncontradoException;
 import com.taskmanager.taskmngr_backend.model.dto.ErroRespostaDTO;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.coluna.NomeDeColunaJaExisteException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.coluna.LimiteDeColunasExcedidoException;
 
 
 @ControllerAdvice
@@ -76,13 +77,6 @@ public class ManipuladorGlobal {
     // EmailJáCadastradoException
     @ExceptionHandler(EmailJaCadastradoException.class)
     public ResponseEntity<ErroRespostaDTO> manipularEmailJaCadastrado(EmailJaCadastradoException ex) {
-        ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
-    }
-
-    // SenhasNaoCoincidemException
-    @ExceptionHandler(SenhasNaoCoincidemException.class)
-    public ResponseEntity<ErroRespostaDTO> manipularSenhasNaoCoincidem(SenhasNaoCoincidemException ex) {
         ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
     }
@@ -172,5 +166,17 @@ public class ManipuladorGlobal {
     public ResponseEntity<ErroRespostaDTO> manipularComentarioInapropriado(ConteudoInapropriadoException ex) {
         ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
+    }
+
+    @ExceptionHandler(NomeDeColunaJaExisteException.class)
+    public ResponseEntity<ErroRespostaDTO> manipularNomeDeColunaJaExiste(NomeDeColunaJaExisteException ex) {
+        ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(erro); // 409
+    }
+
+    @ExceptionHandler(LimiteDeColunasExcedidoException.class)
+    public ResponseEntity<ErroRespostaDTO> manipularLimiteDeColunas(LimiteDeColunasExcedidoException ex) {
+        ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro); // 400
     }
 }
