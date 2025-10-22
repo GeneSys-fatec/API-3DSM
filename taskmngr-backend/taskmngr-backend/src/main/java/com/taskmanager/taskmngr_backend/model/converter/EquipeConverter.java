@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 import com.taskmanager.taskmngr_backend.model.dto.EquipeDTO;
 import com.taskmanager.taskmngr_backend.model.dto.ProjetoDTO; // IMPORTAR
-import com.taskmanager.taskmngr_backend.model.dto.UsuarioDTO;
+import com.taskmanager.taskmngr_backend.model.dto.usuario.UsuarioDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.EquipeModel;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 

@@ -199,6 +199,7 @@ export default function ModalCriarTarefas({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...tarefa, projId: selectedProjectId }),
+        credentials: "include",
       });
 
       if (!res.ok) {

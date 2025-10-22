@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.taskmanager.taskmngr_backend.model.dto.UsuarioDTO;
+import com.taskmanager.taskmngr_backend.model.dto.usuario.UsuarioDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.service.UsuarioService;
 
@@ -30,7 +30,6 @@ public class EditaUsuarioController {
             u.setUsuNome(dto.getUsuNome());
             u.setUsuEmail(dto.getUsuEmail());
             u.setUsuCaminhoFoto(dto.getUsuCaminhoFoto());
-            u.setUsuSenha(dto.getUsuSenha());
             u.setUsuDataCriacao(dto.getUsuDataCriacao());
             u.setUsuDataAtualizacao(dto.getUsuDataAtualizacao());
             usuarioService.salvar(u);

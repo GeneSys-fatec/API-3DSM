@@ -1,14 +1,15 @@
 import React, { useRef, useEffect } from "react";
 import { useModal } from "@/context/ModalContext";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-interface PerfilProps {
-  nome: string | null;
-  onLogout: () => void;
-}
-
-export const ModalPerfil: React.FC<PerfilProps> = ({ nome, onLogout }) => {
+export const ModalPerfil: React.FC = () => {
   const { closeModal } = useModal();
   const modalRef = useRef<HTMLDivElement>(null);
+
+  const { usuNome: nome, deslogarUsuario } = useAuth();
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -27,7 +28,6 @@ export const ModalPerfil: React.FC<PerfilProps> = ({ nome, onLogout }) => {
     };
   }, [closeModal]);
 
-  if (!nome) return null;
   const inicialUsuario = nome?.charAt(0)?.toUpperCase() || "?";
 
   return (
@@ -44,7 +44,7 @@ export const ModalPerfil: React.FC<PerfilProps> = ({ nome, onLogout }) => {
       <button
         onClick={() => {
           closeModal();
-          onLogout();
+          deslogarUsuario(navigate);
         }}
         className="w-full text-indigo-600 hover:text-indigo-800 font-semibold rounded cursor-pointer mt-2"
       >

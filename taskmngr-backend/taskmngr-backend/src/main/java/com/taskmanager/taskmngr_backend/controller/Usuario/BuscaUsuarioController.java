@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.taskmanager.taskmngr_backend.model.AdicionadorLinkUsuario;
 import com.taskmanager.taskmngr_backend.model.converter.UsuarioConverter;
-import com.taskmanager.taskmngr_backend.model.dto.UsuarioDTO;
+import com.taskmanager.taskmngr_backend.model.dto.usuario.UsuarioDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.service.UsuarioService;
 

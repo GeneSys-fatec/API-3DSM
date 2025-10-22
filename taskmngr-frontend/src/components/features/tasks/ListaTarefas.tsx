@@ -108,6 +108,7 @@ export default function ListaTarefas() {
         `http://localhost:8080/tarefa/apagar/${tarefaParaExcluir}`,
         {
           method: "DELETE",
+          credentials: "include",
         }
       );
 

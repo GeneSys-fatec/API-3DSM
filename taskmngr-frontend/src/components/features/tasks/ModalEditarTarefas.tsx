@@ -186,7 +186,7 @@ export default function ModalEditarTarefas({
         `http://localhost:8080/tarefa/${
           tarefa.tarId
         }/anexos/${encodeURIComponent(nomeArquivo)}`,
-        { method: "DELETE" }
+        { method: "DELETE", credentials: "include", }
       );
       setAnexosExistentes((prev) =>
         prev.filter((a) => a.arquivoNome !== nomeArquivo)
@@ -238,6 +238,7 @@ export default function ModalEditarTarefas({
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(tarefa),
+          credentials: "include",
         }
       );
 

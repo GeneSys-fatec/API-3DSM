@@ -22,7 +22,7 @@ public class TokenService {
 
     public String generateToken(UsuarioModel usuarioModel) {
         try {
-            Algorithm algorithm = Algorithm.HMAC256(secret); // Algoritmo de assinatura.
+            Algorithm algorithm = Algorithm.HMAC256(secret); 
 
             String token = JWT.create()
                     .withIssuer("taskmngr-backend")
@@ -51,4 +51,5 @@ public class TokenService {
     private Instant generateExpirationDate(){
         return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00"));
     }
+
 }

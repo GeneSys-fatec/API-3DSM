@@ -3,9 +3,6 @@ package com.taskmanager.taskmngr_backend.controller.Projeto;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.taskmanager.taskmngr_backend.model.AdicionadorLinkUsuario;
-import com.taskmanager.taskmngr_backend.model.converter.UsuarioConverter;
-import com.taskmanager.taskmngr_backend.model.dto.UsuarioDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,8 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.projetos.ProjetoNaoEncontradoException;
 import com.taskmanager.taskmngr_backend.model.AdicionadorLinkProjetos;
+import com.taskmanager.taskmngr_backend.model.AdicionadorLinkUsuario;
 import com.taskmanager.taskmngr_backend.model.converter.ProjetoConverter;
+import com.taskmanager.taskmngr_backend.model.converter.UsuarioConverter;
 import com.taskmanager.taskmngr_backend.model.dto.ProjetoDTO;
+import com.taskmanager.taskmngr_backend.model.dto.usuario.UsuarioDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.ProjetoModel;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.service.ProjetoService;

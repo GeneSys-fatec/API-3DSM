@@ -17,6 +17,7 @@ export const createEquipe = async (payload: { equNome: string; equDescricao: str
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
+    credentials: "include",
   });
 
   const data = await response.text();
@@ -36,6 +37,7 @@ export const updateEquipe = async (equipeId: string, payload: { equNome: string;
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
+    credentials: "include",
   });
 
   const data = await response.text();
@@ -53,6 +55,7 @@ export const updateEquipe = async (equipeId: string, payload: { equNome: string;
 export const deleteEquipe = async (equipeId: string): Promise<string> => {
   const response = await authFetch(`${API_URL}/apagar/${equipeId}`, {
     method: "DELETE",
+    credentials: "include",
   });
   const data = await response.text();
   if (!response.ok) {
@@ -69,6 +72,7 @@ export const deleteEquipe = async (equipeId: string): Promise<string> => {
 export const sairDaEquipe = async (equipeId: string): Promise<string> => {
   const response = await authFetch(`${API_URL}/${equipeId}/sair`, {
     method: "POST",
+    credentials: "include",
   });
   const data = await response.text();
   if (!response.ok) {

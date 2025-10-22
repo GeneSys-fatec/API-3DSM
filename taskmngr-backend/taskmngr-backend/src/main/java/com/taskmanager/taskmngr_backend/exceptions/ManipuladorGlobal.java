@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.CredenciaisInvalidasException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.SenhasNaoCoincidemException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.TokenCriacaoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.autenticação.TokenInvalidoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.comentário.ComentarioEmBrancoException;
@@ -75,6 +76,13 @@ public class ManipuladorGlobal {
     // EmailJáCadastradoException
     @ExceptionHandler(EmailJaCadastradoException.class)
     public ResponseEntity<ErroRespostaDTO> manipularEmailJaCadastrado(EmailJaCadastradoException ex) {
+        ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
+    }
+
+    // SenhasNaoCoincidemException
+    @ExceptionHandler(SenhasNaoCoincidemException.class)
+    public ResponseEntity<ErroRespostaDTO> manipularSenhasNaoCoincidem(SenhasNaoCoincidemException ex) {
         ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
     }
