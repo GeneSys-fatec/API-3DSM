@@ -1,13 +1,13 @@
 package com.taskmanager.taskmngr_backend.model.converter;
 
-import com.taskmanager.taskmngr_backend.model.dto.ResponsavelTarefaDTO;
-import com.taskmanager.taskmngr_backend.model.entidade.ResponsavelTarefa;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Component;
 
+import com.taskmanager.taskmngr_backend.model.dto.ResponsavelTarefaDTO;
 import com.taskmanager.taskmngr_backend.model.dto.TarefaDTO;
+import com.taskmanager.taskmngr_backend.model.entidade.ResponsavelTarefa;
 import com.taskmanager.taskmngr_backend.model.entidade.TarefaModel;
-
-import java.util.stream.Collectors;
 
 @Component
 public class TarefaConverter {
@@ -35,6 +35,7 @@ public class TarefaConverter {
         model.setConcluidaNoPrazo(dto.getConcluidaNoPrazo());
         model.setProjId(dto.getProjId());
         model.setProjNome(dto.getProjNome());
+        model.setGoogleId(dto.getGoogleId());
 
         if (dto.getResponsaveis() != null) {
             model.setResponsaveis(
@@ -64,6 +65,7 @@ public class TarefaConverter {
         dto.setConcluidaNoPrazo(model.getConcluidaNoPrazo());
         dto.setProjId(model.getProjId());
         dto.setProjNome(model.getProjNome());
+        dto.setGoogleId(model.getGoogleId());
 
         if (model.getResponsaveis() != null) {
             dto.setResponsaveis(
