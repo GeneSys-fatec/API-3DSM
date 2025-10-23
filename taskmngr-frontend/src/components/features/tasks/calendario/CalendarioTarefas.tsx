@@ -14,6 +14,7 @@ import { localizer, eventStyleGetter as baseEventStyleGetter } from '@/config/ca
 import { useTarefas } from '@/hooks/useTarefas';
 import type { Tarefa } from "@/types/types";
 import { exchangeCode, fetchGoogleEvents, getAuthStatus, consumeOAuthCodeFromUrl, deleteGoogleEvent } from '@/services/googleCalendar';
+import { toast } from 'react-toastify';
 
 const CalendarioTarefas: React.FC = () => {
     const [view, setView] = useState<'month' | 'week'>('month');
@@ -42,9 +43,8 @@ const CalendarioTarefas: React.FC = () => {
         excluirTarefa
     } = useTarefas(selectedProjectId);
 
-    // Carrega status de autenticação e eventos do Google, se logado
     useEffect(() => {
-        if (!GOOGLE_ENABLED) return; // desabilita quando flag for false
+        if (!GOOGLE_ENABLED) return;
         let mounted = true;
         (async () => {
             try {
@@ -55,15 +55,13 @@ const CalendarioTarefas: React.FC = () => {
                     await carregarEventosGoogle();
                 }
             } catch {
-                // ignora
             }
         })();
         return () => { mounted = false; };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     
     useEffect(() => {
-        if (!GOOGLE_ENABLED) return; // desabilita quando flag for false
+        if (!GOOGLE_ENABLED) return;
         const extracted = consumeOAuthCodeFromUrl();
         if (!extracted) return;
 
@@ -85,35 +83,30 @@ const CalendarioTarefas: React.FC = () => {
                 }
             }
         })();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
 
     const carregarEventosGoogle = async () => {
-        if (!GOOGLE_ENABLED) return; // desabilita quando flag for false
+        if (!GOOGLE_ENABLED) return;
         try {
             const events = await fetchGoogleEvents();
             setGoogleEvents(events);
         } catch (e) {
             console.error(e);
-            // Falha silenciosa para não quebrar a UX
         }
     };
 
-    // SOMENTE tarefas do aplicativo (sem eventos do Google)
     const allEvents = React.useMemo(
         () => eventosFiltrados,
         [eventosFiltrados]
     );
 
-    // Estilo padrão (sem destaque especial para Google)
     const eventStyleGetter = (event: any) => {
         return baseEventStyleGetter(event);
     };
 
     const handleSelectEvent = (event: any, e: any) => {
         e.preventDefault();
-        // Nenhuma filtragem necessária, pois eventos do Google não serão carregados
         setModalPosition({ x: e.clientX, y: e.clientY });
         setSelectedTask(event);
         setShowModal(true);
@@ -146,8 +139,6 @@ const CalendarioTarefas: React.FC = () => {
         }));
         if (modalContext) modalContext.closeModal();
 
-        // Opcional: após criar tarefa, você pode também recarregar eventos do Google
-        // caso seu backend crie o evento correspondente.
         if (isGoogleLogged) {
             setTimeout(() => {
                 carregarEventosGoogle().catch(() => {});
@@ -239,7 +230,6 @@ const CalendarioTarefas: React.FC = () => {
         return () => {
             window.removeEventListener('taskUpdated', handleTaskUpdate as EventListener);
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedProjectId, carregarTarefas, isGoogleLogged]);
 
     useEffect(() => {
@@ -372,7 +362,7 @@ const CalendarioTarefas: React.FC = () => {
                             " será excluída permanentemente.
                         </p>
                     }
-                    onConfirm={() => executarExclusao()}   // executar somente aqui
+                    onConfirm={() => executarExclusao()}
                     onCancel={() => setTarefaParaExcluir(null)}
                     confirmText="Excluir"
                     cancelText="Cancelar"
@@ -389,7 +379,7 @@ const CalendarioTarefas: React.FC = () => {
                         await carregarEventosGoogle();
                     } catch (e) {
                         console.error(e);
-                        alert('Falha ao conectar com Google. Tente novamente.');
+                        toast.error('Falha ao conectar com Google. Tente novamente.');
                     } finally {
                         setShowGoogleModal(false);
                     }
