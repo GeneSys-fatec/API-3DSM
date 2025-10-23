@@ -15,6 +15,7 @@ interface FormularioTarefaProps {
   handleRemoveAnexo: (file: File) => void;
   handleRemoverAnexoExistente?: (nomeArquivo: string) => void;
   onVisualizaImagem?: (url: string) => void;
+  selectedProjectId?: string; // novo: projId para carregar colunas/status
 }
 
 async function baixarAnexo(tarefaId: string, nomeArquivo: string) {
@@ -189,7 +190,42 @@ export default function FormularioTarefa({
   handleRemoveAnexo,
   handleRemoverAnexoExistente,
   onVisualizaImagem,
+  selectedProjectId,
 }: FormularioTarefaProps) {
+  const [colunas, setColunas] = useState<any[]>([]);
+
+  useEffect(() => {
+    const projId = selectedProjectId || (tarefa?.projId as string | undefined);
+    if (!projId) {
+      setColunas([]);
+      return;
+    }
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await authFetch(
+          `http://localhost:8080/colunas/por-projeto/${projId}`
+        );
+        if (!res.ok) {
+          setColunas([]);
+          return;
+        }
+        const data = await res.json();
+        const normalized = (data || []).map((it: any, i: number) => ({
+          id: it.colId || it.id || `col-${i}`,
+          titulo: it.colTitulo || it.titulo || it.Titulo || "",
+        }));
+        if (mounted) setColunas(normalized);
+      } catch (err) {
+        console.error("Erro ao carregar colunas:", err);
+        if (mounted) setColunas([]);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [selectedProjectId, tarefa?.projId]);
+
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -357,12 +393,25 @@ export default function FormularioTarefa({
               <select
                 className="block w-full rounded-md border-gray-300 shadow-sm p-2"
                 name="tarStatus"
-                value={tarefa.tarStatus || "Pendente"} // Default para "Pendente"
+                value={
+                  tarefa.tarStatus ||
+                  (colunas.length > 0 ? colunas[0].titulo : "Pendente")
+                }
                 onChange={handleChange}
               >
-                <option value="Pendente">Pendente</option>
-                <option value="Em Andamento">Em Andamento</option>
-                <option value="Concluída">Concluída</option>
+                {colunas.length > 0 ? (
+                  colunas.map((c) => (
+                    <option key={c.id} value={c.titulo}>
+                      {c.titulo}
+                    </option>
+                  ))
+                ) : (
+                  <>
+                    <option value="Pendente">Pendente</option>
+                    <option value="Em Desenvolvimento">Em Desenvolvimento</option>
+                    <option value="Concluída">Concluída</option>
+                  </>
+                )}
               </select>
             </div>
 

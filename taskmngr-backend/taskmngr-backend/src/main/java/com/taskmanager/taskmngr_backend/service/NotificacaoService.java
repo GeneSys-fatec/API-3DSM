@@ -55,6 +55,37 @@ public class NotificacaoService {
         return salvarSeValido(notificacao, usuarioOrigemId);
     }
 
+    public NotificacaoModel criarNotificacaoEdicaoTarefa(String usuarioOrigemId, String usuarioDestinoId, String tarefaId, String tituloTarefa, String nomeEditor) {
+        NotificacaoModel notificacao = new NotificacaoModel();
+        notificacao.setNotUsuarioId(usuarioDestinoId);
+        notificacao.setNotTarefaId(tarefaId);
+        notificacao.setNotTipo("TAREFA_EDITADA");
+        notificacao.setNotMensagem("A tarefa '" + tituloTarefa + "' foi editada por " + nomeEditor + ".");
+        notificacao.setNotDataCriacao(LocalDateTime.now());
+        notificacao.setNotLida(false);
+        return salvarSeValido(notificacao, usuarioOrigemId);
+    }
+
+    public NotificacaoModel criarNotificacaoAdicaoEquipe(String usuarioOrigemId, String usuarioDestinoId, String nomeEquipe, String nomeResponsavel) {
+        NotificacaoModel notificacao = new NotificacaoModel();
+        notificacao.setNotUsuarioId(usuarioDestinoId);
+        notificacao.setNotTipo("EQUIPE_ADICIONADA");
+        notificacao.setNotMensagem("Você foi adicionado à equipe '" + nomeEquipe + "' por " + nomeResponsavel   + ".");
+        notificacao.setNotDataCriacao(LocalDateTime.now());
+        notificacao.setNotLida(false);
+        return salvarSeValido(notificacao, usuarioOrigemId);
+    }
+
+    public NotificacaoModel criarNotificacaoRemocaoEquipe(String usuarioOrigemId, String usuarioDestinoId, String nomeEquipe, String nomeResponsavel) {
+        NotificacaoModel notificacao = new NotificacaoModel();
+        notificacao.setNotUsuarioId(usuarioDestinoId);
+        notificacao.setNotTipo("EQUIPE_REMOVIDA");
+        notificacao.setNotMensagem("Você foi removido da equipe '" + nomeEquipe + "' por " + nomeResponsavel    + ".");
+        notificacao.setNotDataCriacao(LocalDateTime.now());
+        notificacao.setNotLida(false);
+        return salvarSeValido(notificacao, usuarioOrigemId);
+    }
+
     public NotificacaoModel criarNotificacaoComentario(String usuarioOrigemId, String usuarioDestinoId, String nomeComentador, String tarefaId) {
         NotificacaoModel notificacao = new NotificacaoModel();
         notificacao.setNotUsuarioId(usuarioDestinoId);

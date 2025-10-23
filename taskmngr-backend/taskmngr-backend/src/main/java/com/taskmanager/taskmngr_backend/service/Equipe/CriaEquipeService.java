@@ -10,6 +10,7 @@ import com.taskmanager.taskmngr_backend.model.dto.EquipeDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.EquipeModel;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.EquipeRepository;
+import com.taskmanager.taskmngr_backend.service.NotificacaoService;
 
 @Service
 public class CriaEquipeService {
@@ -17,6 +18,8 @@ public class CriaEquipeService {
     private EquipeRepository equipeRepository;
     @Autowired
     private ValidacaoEquipeService validacaoEquipeService;
+    @Autowired
+    private NotificacaoService notificacaoService;
 
     public EquipeModel criar(EquipeDTO dto, UsuarioModel criador) {
         validacaoEquipeService.validarNomeUnico(dto.getEquNome(), null);
@@ -33,6 +36,17 @@ public class CriaEquipeService {
         equipe.setCriadorId(criador.getUsuId());
         equipe.setUsuarios(membros);
 
-        return equipeRepository.save(equipe);
+        EquipeModel equipeSalva = equipeRepository.save(equipe);
+
+        for (UsuarioModel membro : outrosMembros) {
+            notificacaoService.criarNotificacaoAdicaoEquipe(
+                criador.getUsuId(),
+                membro.getUsuId(),
+                equipeSalva.getEquNome(),
+                criador.getUsuNome()
+            );
+        }
+
+        return equipeSalva;
     }
 }

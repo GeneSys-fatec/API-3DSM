@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,11 +21,6 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
 
-import com.taskmanager.taskmngr_backend.model.converter.TarefaConverter;
-import com.taskmanager.taskmngr_backend.model.dto.ResponsavelTarefaDTO;
-import com.taskmanager.taskmngr_backend.model.dto.TarefaDTO;
-import com.taskmanager.taskmngr_backend.model.entidade.*;
-import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -39,9 +35,16 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.AnexoTamanhoExcedente;
+import com.taskmanager.taskmngr_backend.model.converter.TarefaConverter;
+import com.taskmanager.taskmngr_backend.model.dto.ResponsavelTarefaDTO;
+import com.taskmanager.taskmngr_backend.model.dto.TarefaDTO;
+import com.taskmanager.taskmngr_backend.model.entidade.AnexoTarefaModel;
+import com.taskmanager.taskmngr_backend.model.entidade.ProjetoModel;
+import com.taskmanager.taskmngr_backend.model.entidade.ResponsavelTarefa;
+import com.taskmanager.taskmngr_backend.model.entidade.TarefaModel;
+import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.TarefaRepository;
-
-import java.security.SecureRandom;
+import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
 
 @Service
 public class TarefaService {
@@ -150,9 +153,24 @@ public class TarefaService {
             tarefa.setConcluidaNoPrazo(null);
         }
 
-        // 5. Salva (sem notificação de atribuição, pois é uma atualização)
-        //    (Se quiser notificar sobre *mudança* de responsável, a lógica seria mais complexa)
-        return salvarSemNotificacao(tarefa);
+        TarefaModel tarefaAtualizada = salvarSemNotificacao(tarefa);
+
+        if (tarefaAtualizada.getResponsaveis() != null) {
+            for (ResponsavelTarefa responsavel : tarefaAtualizada.getResponsaveis()) {
+                String idResponsavel = responsavel.getUsuId();
+                if (!idResponsavel.equals(usuarioLogado.getUsuId())) {
+                    notificacaoService.criarNotificacaoEdicaoTarefa(
+                            usuarioLogado.getUsuId(),
+                            idResponsavel,
+                            tarefaAtualizada.getTarId(),
+                            tarefaAtualizada.getTarTitulo(),
+                            usuarioLogado.getUsuNome()
+                    );
+                }
+            }
+        }
+
+        return tarefaAtualizada;
     }
 
     private List<ResponsavelTarefa> buildResponsaveisList(List<ResponsavelTarefaDTO> responsaveisDto) {
@@ -205,14 +223,14 @@ public class TarefaService {
                     notificacaoService.criarNotificacaoPrazo(
                             tarefa.getTarId(),
                             tarefa.getTarTitulo(),
-                            responsavel.getUsuId() // <<< MUDANÇA
+                            responsavel.getUsuId() 
                     );
                 }
             }
         }
     }
 
-    @Scheduled(cron = "0 0 8 * * ?") // roda todo dia às 08:00
+    @Scheduled(cron = "0 0 8 * * ?") // todo dia às 08:00
     public void notificarTarefasVencidas() {
         LocalDate hoje = LocalDate.now();
 
