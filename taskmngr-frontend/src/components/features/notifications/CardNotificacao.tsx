@@ -1,5 +1,5 @@
-import React from 'react';
-import { AlertTriangle, MessageSquare, ClipboardList, MoreVertical } from 'lucide-react';
+import React, { useRef, useEffect } from 'react';
+import { AlertTriangle, MessageSquare, ClipboardList, Users, UserMinus, Edit3, MoreVertical } from "lucide-react";
 import { Notificacao } from '@/types/types';
 import MenuNotificacao from './MenuNotificacao';
 
@@ -22,6 +22,25 @@ const IconDesignado = () => (
   </div>
 );
 
+const IconEquipeAdd = () => (
+  <div className="p-2 rounded-full bg-green-100 text-green-600">
+    <Users />
+  </div>
+);
+
+const IconEquipeRemove = () => (
+  <div className="p-2 rounded-full bg-yellow-100 text-yellow-600">
+    <UserMinus />
+  </div>
+);
+
+const IconEdicaoTarefa = () => (
+  <div className="p-2 rounded-full bg-purple-100 text-purple-600">
+    <Edit3 />
+  </div>
+);
+
+
 
 interface CardNotificacaoProps {
   notificacao: Notificacao;
@@ -33,49 +52,80 @@ const CardNotificacao: React.FC<CardNotificacaoProps> = ({ notificacao, onDelete
 
   const [menuAberto, setMenuAberto] = React.useState(false);
 
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickFora = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuAberto(false);
+      }
+    };
+
+    if (menuAberto) {
+      document.addEventListener('mousedown', handleClickFora);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickFora);
+    };
+  }, [menuAberto]);
+
+
   const getIcon = () => {
     switch (notificacao.tipo) {
-      case 'comentario':
+      case "comentario":
         return <IconeComentario />;
-      case 'atribuido':
+      case "atribuido":
         return <IconDesignado />;
+      case "adicaoEquipe":
+        return <IconEquipeAdd />;
+      case "remocaoEquipe":
+        return <IconEquipeRemove />;
+      case "edicaoTarefa":
+        return <IconEdicaoTarefa />;
       default:
         return <IconeExpirado />;
     }
   };
 
   const getMessageContent = () => {
-    const { tipo, tarNome, } = notificacao;
+    const { tipo, tarNome } = notificacao;
 
-    if (tipo === 'expirado') {
-      return (
-        <>
-          <span className="font-semibold text-red-600">{tarNome} </span>
-        </>
-      );
+    switch (tipo) {
+      case "expirado":
+        return <span className="font-semibold text-red-600">{tarNome}</span>;
+      case "comentario":
+        return <span className="font-semibold text-gray-700">{tarNome}</span>;
+      case "atribuido":
+        return <span className="font-semibold text-blue-700">{tarNome}</span>;
+      case "adicaoEquipe":
+        return <span className="font-semibold text-green-700">{tarNome}</span>;
+      case "remocaoEquipe":
+        return <span className="font-semibold text-yellow-700">{tarNome}</span>;
+      case "edicaoTarefa":
+        return <span className="font-semibold text-purple-700">{tarNome}</span>;
+      default:
+        return <span className="font-semibold text-gray-700">{tarNome}</span>;
     }
+  };
 
-    if (tipo === 'comentario') {
-      return (
-        <>
-          <span className="font-semibold text-gray-700">{tarNome}</span>.
-        </>
-      );
+  const getSubtitle = () => {
+    switch (notificacao.tipo) {
+      case "expirado":
+        return "Tarefa em atraso";
+      case "comentario":
+        return "Novo comentário";
+      case "atribuido":
+        return "Nova tarefa atribuída";
+      case "adicaoEquipe":
+        return "Adicionado a uma equipe";
+      case "remocaoEquipe":
+        return "Removido de uma equipe";
+      case "edicaoTarefa":
+        return "Tarefa atualizada";
+      default:
+        return "Notificação";
     }
-
-    if (tipo === 'atribuido') {
-      return (
-        <>
-          <span className="font-semibold text-blue-700">{tarNome}</span>
-        </>
-      );
-    }
-
-    else {
-      return (
-        <span className='font-semibold text-yellow-700'>{tarNome}</span>
-      );
-    };
   };
 
   return (
@@ -87,7 +137,7 @@ const CardNotificacao: React.FC<CardNotificacaoProps> = ({ notificacao, onDelete
             {getMessageContent()}
           </p>
           <p className="text-xs text-gray-500 mt-1">
-            {notificacao.tipo === 'expirado' ? 'Tarefa em atraso' : (notificacao.tipo === 'comentario' ? 'Novo comentário' : 'Nova tarefa atribuída')} • {notificacao.data}
+            {getSubtitle()} • {notificacao.data}
           </p>
         </div>
       </div>
@@ -95,17 +145,19 @@ const CardNotificacao: React.FC<CardNotificacaoProps> = ({ notificacao, onDelete
         <div
           className="text-gray-400 hover:text-gray-600 p-1 rounded-full transition-colors relative"
           onClick={(e) => {
-            e.stopPropagation(); 
+            e.stopPropagation();
             setMenuAberto(!menuAberto);
           }}
         >
           <MoreVertical />
           {menuAberto && (
-            <MenuNotificacao
-              notificacao={notificacao}
-              onClose={() => setMenuAberto(false)}
-              onDelete={onDelete}
-            />
+            <div ref={menuRef}>
+              <MenuNotificacao
+                notificacao={notificacao}
+                onClose={() => setMenuAberto(false)}
+                onDelete={onDelete}
+              />
+            </div>
           )}
         </div>
       </div>

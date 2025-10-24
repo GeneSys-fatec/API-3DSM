@@ -5,7 +5,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.security.SecureRandom;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,11 +22,6 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
 
-import com.taskmanager.taskmngr_backend.model.converter.TarefaConverter;
-import com.taskmanager.taskmngr_backend.model.dto.ResponsavelTarefaDTO;
-import com.taskmanager.taskmngr_backend.model.dto.TarefaDTO;
-import com.taskmanager.taskmngr_backend.model.entidade.*;
-import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -39,9 +36,16 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.AnexoTamanhoExcedente;
+import com.taskmanager.taskmngr_backend.model.converter.TarefaConverter;
+import com.taskmanager.taskmngr_backend.model.dto.ResponsavelTarefaDTO;
+import com.taskmanager.taskmngr_backend.model.dto.TarefaDTO;
+import com.taskmanager.taskmngr_backend.model.entidade.AnexoTarefaModel;
+import com.taskmanager.taskmngr_backend.model.entidade.ProjetoModel;
+import com.taskmanager.taskmngr_backend.model.entidade.ResponsavelTarefa;
+import com.taskmanager.taskmngr_backend.model.entidade.TarefaModel;
+import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.TarefaRepository;
-
-import java.security.SecureRandom;
+import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
 
 @Service
 public class TarefaService {
@@ -150,9 +154,24 @@ public class TarefaService {
             tarefa.setConcluidaNoPrazo(null);
         }
 
-        // 5. Salva (sem notificação de atribuição, pois é uma atualização)
-        //    (Se quiser notificar sobre *mudança* de responsável, a lógica seria mais complexa)
-        return salvarSemNotificacao(tarefa);
+        TarefaModel tarefaAtualizada = salvarSemNotificacao(tarefa);
+
+        if (tarefaAtualizada.getResponsaveis() != null) {
+            for (ResponsavelTarefa responsavel : tarefaAtualizada.getResponsaveis()) {
+                String idResponsavel = responsavel.getUsuId();
+                if (!idResponsavel.equals(usuarioLogado.getUsuId())) {
+                    notificacaoService.criarNotificacaoEdicaoTarefa(
+                            usuarioLogado.getUsuId(),
+                            idResponsavel,
+                            tarefaAtualizada.getTarId(),
+                            tarefaAtualizada.getTarTitulo(),
+                            usuarioLogado.getUsuNome()
+                    );
+                }
+            }
+        }
+
+        return tarefaAtualizada;
     }
 
     private List<ResponsavelTarefa> buildResponsaveisList(List<ResponsavelTarefaDTO> responsaveisDto) {
@@ -192,43 +211,65 @@ public class TarefaService {
         return tarefaSalva;
     }
 
-    // 1 dia antes do prazo
-    @Scheduled(cron = "0 0 8 * * ?") // todo dia às 08:00
+    @Scheduled(cron = "0 0 8 * * ?")
     public void notificarTarefasProximoVencimento() {
         LocalDate hoje = LocalDate.now();
-        LocalDate prazoProximo = hoje.plusDays(1); // 1 dia antes
-        List<TarefaModel> tarefas = tarefaRepository.findByTarPrazo(prazoProximo);
+        LocalDate prazoProximo = hoje.plusDays(1);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        List<TarefaModel> tarefas = tarefaRepository.findAll(); 
 
         for (TarefaModel tarefa : tarefas) {
-            if (tarefa.getResponsaveis() != null) {
-                for (ResponsavelTarefa responsavel : tarefa.getResponsaveis()) {
-                    notificacaoService.criarNotificacaoPrazo(
-                            tarefa.getTarId(),
-                            tarefa.getTarTitulo(),
-                            responsavel.getUsuId() // <<< MUDANÇA
-                    );
+            try {
+                if (tarefa.getTarPrazo() == null || tarefa.getTarPrazo().isBlank()) continue;
+
+                LocalDate prazo = LocalDate.parse(tarefa.getTarPrazo(), formatter);
+
+                if (prazo.equals(prazoProximo)) {
+                    if (tarefa.getResponsaveis() != null) {
+                        for (ResponsavelTarefa responsavel : tarefa.getResponsaveis()) {
+                            notificacaoService.criarNotificacaoPrazo(
+                                    tarefa.getTarId(),
+                                    tarefa.getTarTitulo(),
+                                    responsavel.getUsuId()
+                            );
+                        }
+                    }
                 }
+            } catch (Exception e) {
+                System.out.println("Erro ao converter data da tarefa " + tarefa.getTarId() + ": " + e.getMessage());
             }
         }
     }
 
-    @Scheduled(cron = "0 0 8 * * ?") // roda todo dia às 08:00
+    @Scheduled(cron = "0 0 8 * * ?") // todo dia às 08:00
     public void notificarTarefasVencidas() {
         LocalDate hoje = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        
+        List<TarefaModel> tarefas = tarefaRepository.findAll();
 
-        // busca tarefas com prazo anterior a hoje e que ainda não estão concluídas
-        List<TarefaModel> vencidas = tarefaRepository.findByTarPrazoBeforeAndTarStatusNot(hoje, "Concluída");
+        for (TarefaModel tarefa : tarefas) {
+            try {
+                if (tarefa.getTarPrazo() == null || tarefa.getTarPrazo().isBlank()) continue;
+                if ("Concluída".equalsIgnoreCase(tarefa.getTarStatus())) continue;
 
-        for (TarefaModel tarefa : vencidas) {
-            if (tarefa.getResponsaveis() != null) {
-                for (ResponsavelTarefa responsavel : tarefa.getResponsaveis()) {
-                    notificacaoService.criarNotificacaoPrazoExpirado(
-                            tarefa.getTarId(),
-                            tarefa.getTarTitulo(),
-                            responsavel.getUsuId()
-                    );
+                LocalDate prazo = LocalDate.parse(tarefa.getTarPrazo(), formatter);
+
+                if (prazo.isBefore(hoje)) {
+                    if (tarefa.getResponsaveis() != null) {
+                        for (ResponsavelTarefa responsavel : tarefa.getResponsaveis()) {
+                            notificacaoService.criarNotificacaoPrazoExpirado(
+                                    tarefa.getTarId(),
+                                    tarefa.getTarTitulo(),
+                                    responsavel.getUsuId()
+                            );
+                        }
+                    }
                 }
-            }
+            } catch (Exception e) {
+                System.out.println("Erro ao converter data da tarefa " + tarefa.getTarId() + ": " + e.getMessage());
+            }    
         }
     }
 
