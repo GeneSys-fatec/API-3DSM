@@ -8,6 +8,7 @@ import java.nio.file.StandardCopyOption;
 import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -114,7 +115,21 @@ public class TarefaService {
         if (tarefa.getGoogleId() == null || tarefa.getGoogleId().isBlank()) {
             tarefa.setGoogleId(generateGoogleEventId());
         }
+        
+        if ("Concluída".equalsIgnoreCase(tarefa.getTarStatus())) {
+            String dataConclusao = LocalDate.now().toString();
+            tarefa.setTarDataConclusao(dataConclusao);
 
+            try {
+                LocalDate prazo = LocalDate.parse(tarefa.getTarPrazo());
+                LocalDate conclusao = LocalDate.parse(dataConclusao);
+
+                tarefa.setConcluidaNoPrazo(!conclusao.isAfter(prazo));
+
+            } catch (DateTimeParseException e) {
+                tarefa.setConcluidaNoPrazo(false);
+            }
+        }
         // 3. Salva e envia a notificação
         return salvarEEnviarNotificacao(tarefa, usuarioLogado);
     }
@@ -122,7 +137,8 @@ public class TarefaService {
     public TarefaModel atualizarTarefa(String tarId, TarefaDTO dto, UsuarioModel usuarioLogado) {
         // 1. Busca a tarefa existente
         TarefaModel tarefa = buscarPorId(tarId)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com id: " + tarId)); // Crie uma exceção melhor
+                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com id: " + tarId)); // Crie uma exceção
+                                                                                                    // melhor
 
         // 2. Atualiza os campos simples (Lógica que estava no EditaTarefaController)
         tarefa.setTarTitulo(dto.getTarTitulo());
@@ -165,8 +181,7 @@ public class TarefaService {
                             idResponsavel,
                             tarefaAtualizada.getTarId(),
                             tarefaAtualizada.getTarTitulo(),
-                            usuarioLogado.getUsuNome()
-                    );
+                            usuarioLogado.getUsuNome());
                 }
             }
         }
@@ -204,8 +219,7 @@ public class TarefaService {
                         responsavel.getUsuId(),
                         usuarioLogado.getUsuNome(),
                         tarefaSalva.getTarId(),
-                        tarefaSalva.getTarTitulo()
-                );
+                        tarefaSalva.getTarTitulo());
             }
         }
         return tarefaSalva;
@@ -217,11 +231,12 @@ public class TarefaService {
         LocalDate prazoProximo = hoje.plusDays(1);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-        List<TarefaModel> tarefas = tarefaRepository.findAll(); 
+        List<TarefaModel> tarefas = tarefaRepository.findAll();
 
         for (TarefaModel tarefa : tarefas) {
             try {
-                if (tarefa.getTarPrazo() == null || tarefa.getTarPrazo().isBlank()) continue;
+                if (tarefa.getTarPrazo() == null || tarefa.getTarPrazo().isBlank())
+                    continue;
 
                 LocalDate prazo = LocalDate.parse(tarefa.getTarPrazo(), formatter);
 
@@ -231,8 +246,7 @@ public class TarefaService {
                             notificacaoService.criarNotificacaoPrazo(
                                     tarefa.getTarId(),
                                     tarefa.getTarTitulo(),
-                                    responsavel.getUsuId()
-                            );
+                                    responsavel.getUsuId());
                         }
                     }
                 }
@@ -246,13 +260,15 @@ public class TarefaService {
     public void notificarTarefasVencidas() {
         LocalDate hoje = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        
+
         List<TarefaModel> tarefas = tarefaRepository.findAll();
 
         for (TarefaModel tarefa : tarefas) {
             try {
-                if (tarefa.getTarPrazo() == null || tarefa.getTarPrazo().isBlank()) continue;
-                if ("Concluída".equalsIgnoreCase(tarefa.getTarStatus())) continue;
+                if (tarefa.getTarPrazo() == null || tarefa.getTarPrazo().isBlank())
+                    continue;
+                if ("Concluída".equalsIgnoreCase(tarefa.getTarStatus()))
+                    continue;
 
                 LocalDate prazo = LocalDate.parse(tarefa.getTarPrazo(), formatter);
 
@@ -262,14 +278,13 @@ public class TarefaService {
                             notificacaoService.criarNotificacaoPrazoExpirado(
                                     tarefa.getTarId(),
                                     tarefa.getTarTitulo(),
-                                    responsavel.getUsuId()
-                            );
+                                    responsavel.getUsuId());
                         }
                     }
                 }
             } catch (Exception e) {
                 System.out.println("Erro ao converter data da tarefa " + tarefa.getTarId() + ": " + e.getMessage());
-            }    
+            }
         }
     }
 
@@ -279,163 +294,6 @@ public class TarefaService {
 
     public void deletar(String id) {
         tarefaRepository.deleteById(id);
-    }
-
-    // -----METRICAS-----
-
-    // GRAFICO 1
-
-    public List<Map<String, Object>> calcularPrazosPorMembro(String projId) {
-        List<TarefaModel> tarefas = tarefaRepository.findByProjId(projId);
-
-        // filtra apenas tarefas concluídas
-        List<TarefaModel> concluidas = tarefas.stream()
-                .filter(t -> "Concluída".equalsIgnoreCase(t.getTarStatus()))
-                .toList();
-
-        if (concluidas.isEmpty())
-            return List.of();
-
-        // "Achata" a lista: Se 1 tarefa tem 3 usuários,
-        // ela vira 3 entradas (Usuario1, Tarefa), (Usuario2, Tarefa), etc.
-        Map<String, List<TarefaModel>> tarefasPorMembro = concluidas.stream()
-                .filter(t -> t.getResponsaveis() != null && !t.getResponsaveis().isEmpty())
-                .flatMap(tarefa -> tarefa.getResponsaveis().stream()
-                        .map(resp -> Map.entry(resp.getUsuNome(), tarefa)) // Cria uma "Entry" temporária
-                )
-                .collect(Collectors.groupingBy(
-                        Map.Entry::getKey, // Agrupa pelo nome (a chave da Entry)
-                        Collectors.mapping(Map.Entry::getValue, Collectors.toList()) // Coleta as tarefas (o valor da Entry)
-                ));
-
-        List<Map<String, Object>> resultado = new ArrayList<>();
-
-        for (Map.Entry<String, List<TarefaModel>> entry : tarefasPorMembro.entrySet()) {
-            String usuario = entry.getKey();
-            List<TarefaModel> tarefasUsuario = entry.getValue();
-
-            long dentroPrazo = tarefasUsuario.stream()
-                    .filter(t -> Boolean.TRUE.equals(t.getConcluidaNoPrazo()))
-                    .count();
-
-            long foraPrazo = tarefasUsuario.stream()
-                    .filter(t -> Boolean.FALSE.equals(t.getConcluidaNoPrazo()))
-                    .count();
-
-            Map<String, Object> dados = new HashMap<>();
-            dados.put("usuNome", usuario);
-            dados.put("dentroPrazo", dentroPrazo);
-            dados.put("foraPrazo", foraPrazo);
-
-            resultado.add(dados);
-        }
-
-        return resultado;
-    }
-
-    // GRAFICO 1 - Total de tarefas dentro e fora do prazo (geral do projeto)
-    public Map<String, Long> calcularPrazosGerais(String projId) {
-        List<TarefaModel> tarefas = tarefaRepository.findByProjId(projId);
-
-        // Filtra apenas tarefas concluídas
-        List<TarefaModel> concluidas = tarefas.stream()
-                .filter(t -> "Concluída".equalsIgnoreCase(t.getTarStatus()))
-                .toList();
-
-        if (concluidas.isEmpty()) {
-            return Map.of("dentroPrazo", 0L, "foraPrazo", 0L);
-        }
-
-        long dentroPrazo = concluidas.stream()
-                .filter(t -> Boolean.TRUE.equals(t.getConcluidaNoPrazo()))
-                .count();
-
-        long foraPrazo = concluidas.stream()
-                .filter(t -> Boolean.FALSE.equals(t.getConcluidaNoPrazo()))
-                .count();
-
-        return Map.of(
-                "dentroPrazo", dentroPrazo,
-                "foraPrazo", foraPrazo);
-    }
-
-    // GRAFICO 2
-    public List<Map<String, Object>> contarTarefasConcluidasPorMembro(String projId) {
-        List<TarefaModel> tarefas = tarefaRepository.findByProjId(projId);
-
-        // ve as tarefas concluidas
-        List<TarefaModel> concluídas = tarefas.stream()
-                .filter(t -> "Concluída".equalsIgnoreCase(t.getTarStatus()))
-                .toList();
-
-        // "Achata" a lista e conta por nome de responsável
-        Map<String, Long> agrupadas = concluídas.stream()
-                .filter(t -> t.getResponsaveis() != null && !t.getResponsaveis().isEmpty())
-                .flatMap(tarefa -> tarefa.getResponsaveis().stream()) // Gera um stream de ResponsavelTarefa
-                .collect(Collectors.groupingBy(
-                        ResponsavelTarefa::getUsuNome, // Agrupa pelo nome
-                        Collectors.counting() // Conta as ocorrências
-                ));
-
-        // transforma em lista para JSON
-        List<Map<String, Object>> resultado = new ArrayList<>();
-        agrupadas.forEach((usuNome, count) -> {
-            Map<String, Object> entry = new HashMap<>();
-            entry.put("usuNome", usuNome);
-            entry.put("tarefasConcluidas", count);
-            resultado.add(entry);
-        });
-
-        return resultado;
-    }
-
-    // GRAFICO 3
-    public List<Map<String, Object>> calcularProdutividadePorMembro(String projId) {
-        List<TarefaModel> tarefas = tarefaRepository.findByProjId(projId);
-
-        if (tarefas.isEmpty())
-            return List.of();
-
-        // <<< MUDANÇA: Agrupar por responsável usando flatMap
-        // Mesma lógica do 'calcularPrazosPorMembro'
-        Map<String, List<TarefaModel>> tarefasPorMembro = tarefas.stream()
-                .filter(t -> t.getResponsaveis() != null && !t.getResponsaveis().isEmpty())
-                .flatMap(tarefa -> tarefa.getResponsaveis().stream()
-                        .map(resp -> Map.entry(resp.getUsuNome(), tarefa))
-                )
-                .collect(Collectors.groupingBy(
-                        Map.Entry::getKey,
-                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())
-                ));
-
-
-        List<Map<String, Object>> resultado = new ArrayList<>();
-
-        for (Map.Entry<String, List<TarefaModel>> entry : tarefasPorMembro.entrySet()) {
-            String usuario = entry.getKey();
-            List<TarefaModel> tarefasUsuario = entry.getValue();
-
-            long total = tarefasUsuario.size();
-            long concluidasNoPrazo = tarefasUsuario.stream()
-                    .filter(t -> Boolean.TRUE.equals(t.getConcluidaNoPrazo()))
-                    .count();
-
-            double produtividade = total > 0 ? (concluidasNoPrazo * 100.0) / total : 0.0;
-
-            Map<String, Object> dados = new HashMap<>();
-            dados.put("usuNome", usuario);
-            dados.put("produtividade", Math.round(produtividade * 10.0) / 10.0);
-            dados.put("tarefasTotal", total);
-            dados.put("tarefasNoPrazo", concluidasNoPrazo);
-
-            resultado.add(dados);
-        }
-
-        resultado.sort((a, b) -> Double.compare(
-                (double) b.get("produtividade"),
-                (double) a.get("produtividade")));
-
-        return resultado;
     }
 
     public AnexoTarefaModel adicionarAnexo(String tarefaId, MultipartFile arquivo) throws IOException {
@@ -614,7 +472,7 @@ public class TarefaService {
 
     // Compactação adaptativa de imagens (JPG/PNG): redimensiona e ajusta qualidade
     private File comprimirImagemAdaptativa(MultipartFile arquivo, String contentType, int maxWidth,
-                                           float initialJpegQuality) throws IOException {
+            float initialJpegQuality) throws IOException {
         BufferedImage original = ImageIO.read(arquivo.getInputStream());
         if (original == null)
             throw new IOException("Imagem inválida.");
@@ -689,10 +547,11 @@ public class TarefaService {
     // Gera ID compatível com Google Calendar (base32hex), tamanho ~30 com prefixo
     private String generateGoogleEventId() {
         String prefix = "taskmngr"; // opcional, ajuda a identificar
-        int len = 22;               // total ~ 7 + 22 = 29 caracteres (entre 5 e 1024)
+        int len = 22; // total ~ 7 + 22 = 29 caracteres (entre 5 e 1024)
         char[] buf = new char[prefix.length() + len];
         // copia prefixo
-        for (int i = 0; i < prefix.length(); i++) buf[i] = prefix.charAt(i);
+        for (int i = 0; i < prefix.length(); i++)
+            buf[i] = prefix.charAt(i);
         // preenche randômico base32hex
         for (int i = prefix.length(); i < buf.length; i++) {
             buf[i] = BASE32HEX[RNG.nextInt(BASE32HEX.length)];
