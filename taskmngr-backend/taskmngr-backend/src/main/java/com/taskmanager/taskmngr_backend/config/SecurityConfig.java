@@ -40,6 +40,13 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.POST,"/auth/login").permitAll()
             .requestMatchers("/google/**").authenticated()
             .requestMatchers(HttpMethod.POST,"/auth/cadastrar").permitAll()
+            .requestMatchers(
+				        "/boasvindas",
+				        "/login/usuario",
+				        "/swagger-ui/**",
+				        "/v3/api-docs/**",
+				        "/swagger-ui.html"
+				 ).permitAll()
             .anyRequest().authenticated())
         .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
