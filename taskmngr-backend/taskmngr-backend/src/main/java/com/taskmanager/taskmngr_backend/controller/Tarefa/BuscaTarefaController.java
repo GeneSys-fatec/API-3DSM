@@ -92,47 +92,6 @@ public class BuscaTarefaController {
         return ResponseEntity.ok(dtos);
     }
 
-    @GetMapping("/prazos/{projId}")
-    public ResponseEntity<?> prazosPorMembro(@PathVariable String projId) {
-        List<Map<String, Object>> resultado = tarefaService.calcularPrazosPorMembro(projId);
-
-        if (resultado.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-        }
-
-        return ResponseEntity.ok(resultado);
-    }
-
-    @GetMapping("/prazos-geral/{projId}")
-    public ResponseEntity<?> prazosGerais(@PathVariable String projId) {
-        Map<String, Long> resultado = tarefaService.calcularPrazosGerais(projId);
-
-        if (resultado.get("dentroPrazo") == 0 && resultado.get("foraPrazo") == 0) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-        }
-
-        return ResponseEntity.ok(resultado);
-    }
-
-    @GetMapping("/tarefas-concluidas/{projId}")
-    public ResponseEntity<List<Map<String, Object>>> TarefasConcluidas(@PathVariable String projId) {
-        List<Map<String, Object>> ranking = tarefaService.contarTarefasConcluidasPorMembro(projId);
-        if (ranking.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-        }
-        return ResponseEntity.ok(ranking);
-    }
-
-    @GetMapping("/produtividade/{projId}")
-    public ResponseEntity<?> produtividadePorMembro(@PathVariable String projId) {
-        List<Map<String, Object>> resultado = tarefaService.calcularProdutividadePorMembro(projId);
-
-        if (resultado.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-        }
-
-        return ResponseEntity.ok(resultado);
-    }
 
     @GetMapping("/{tarId}/anexos/{nomeArquivo}")
     public ResponseEntity<?> baixarAnexo(@PathVariable String tarId, @PathVariable String nomeArquivo) {
