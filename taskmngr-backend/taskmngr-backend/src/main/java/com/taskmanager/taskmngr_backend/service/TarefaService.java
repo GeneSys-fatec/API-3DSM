@@ -245,20 +245,31 @@ public class TarefaService {
     @Scheduled(cron = "0 0 8 * * ?") // todo dia às 08:00
     public void notificarTarefasVencidas() {
         LocalDate hoje = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        
+        List<TarefaModel> tarefas = tarefaRepository.findAll();
 
-        // busca tarefas com prazo anterior a hoje e que ainda não estão concluídas
-        List<TarefaModel> vencidas = tarefaRepository.findByTarPrazoBeforeAndTarStatusNot(hoje, "Concluída");
+        for (TarefaModel tarefa : tarefas) {
+            try {
+                if (tarefa.getTarPrazo() == null || tarefa.getTarPrazo().isBlank()) continue;
+                if ("Concluída".equalsIgnoreCase(tarefa.getTarStatus())) continue;
 
-        for (TarefaModel tarefa : vencidas) {
-            if (tarefa.getResponsaveis() != null) {
-                for (ResponsavelTarefa responsavel : tarefa.getResponsaveis()) {
-                    notificacaoService.criarNotificacaoPrazoExpirado(
-                            tarefa.getTarId(),
-                            tarefa.getTarTitulo(),
-                            responsavel.getUsuId()
-                    );
+                LocalDate prazo = LocalDate.parse(tarefa.getTarPrazo(), formatter);
+
+                if (prazo.isBefore(hoje)) {
+                    if (tarefa.getResponsaveis() != null) {
+                        for (ResponsavelTarefa responsavel : tarefa.getResponsaveis()) {
+                            notificacaoService.criarNotificacaoPrazoExpirado(
+                                    tarefa.getTarId(),
+                                    tarefa.getTarTitulo(),
+                                    responsavel.getUsuId()
+                            );
+                        }
+                    }
                 }
-            }
+            } catch (Exception e) {
+                System.out.println("Erro ao converter data da tarefa " + tarefa.getTarId() + ": " + e.getMessage());
+            }    
         }
     }
 
