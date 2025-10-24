@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { AlertTriangle, MessageSquare, ClipboardList, Users, UserMinus, Edit3, MoreVertical } from "lucide-react";
 import { Notificacao } from '@/types/types';
 import MenuNotificacao from './MenuNotificacao';
@@ -51,6 +51,25 @@ interface CardNotificacaoProps {
 const CardNotificacao: React.FC<CardNotificacaoProps> = ({ notificacao, onDelete }) => {
 
   const [menuAberto, setMenuAberto] = React.useState(false);
+
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickFora = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuAberto(false);
+      }
+    };
+
+    if (menuAberto) {
+      document.addEventListener('mousedown', handleClickFora);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickFora);
+    };
+  }, [menuAberto]);
+
 
   const getIcon = () => {
     switch (notificacao.tipo) {
@@ -132,11 +151,13 @@ const CardNotificacao: React.FC<CardNotificacaoProps> = ({ notificacao, onDelete
         >
           <MoreVertical />
           {menuAberto && (
-            <MenuNotificacao
-              notificacao={notificacao}
-              onClose={() => setMenuAberto(false)}
-              onDelete={onDelete}
-            />
+            <div ref={menuRef}>
+              <MenuNotificacao
+                notificacao={notificacao}
+                onClose={() => setMenuAberto(false)}
+                onDelete={onDelete}
+              />
+            </div>
           )}
         </div>
       </div>

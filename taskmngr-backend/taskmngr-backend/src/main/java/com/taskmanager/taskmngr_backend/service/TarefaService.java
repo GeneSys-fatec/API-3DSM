@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.security.SecureRandom;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -210,22 +211,33 @@ public class TarefaService {
         return tarefaSalva;
     }
 
-    // 1 dia antes do prazo
-    @Scheduled(cron = "0 0 8 * * ?") // todo dia às 08:00
+    @Scheduled(cron = "0 0 8 * * ?")
     public void notificarTarefasProximoVencimento() {
         LocalDate hoje = LocalDate.now();
-        LocalDate prazoProximo = hoje.plusDays(1); // 1 dia antes
-        List<TarefaModel> tarefas = tarefaRepository.findByTarPrazo(prazoProximo);
+        LocalDate prazoProximo = hoje.plusDays(1);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        List<TarefaModel> tarefas = tarefaRepository.findAll(); 
 
         for (TarefaModel tarefa : tarefas) {
-            if (tarefa.getResponsaveis() != null) {
-                for (ResponsavelTarefa responsavel : tarefa.getResponsaveis()) {
-                    notificacaoService.criarNotificacaoPrazo(
-                            tarefa.getTarId(),
-                            tarefa.getTarTitulo(),
-                            responsavel.getUsuId() 
-                    );
+            try {
+                if (tarefa.getTarPrazo() == null || tarefa.getTarPrazo().isBlank()) continue;
+
+                LocalDate prazo = LocalDate.parse(tarefa.getTarPrazo(), formatter);
+
+                if (prazo.equals(prazoProximo)) {
+                    if (tarefa.getResponsaveis() != null) {
+                        for (ResponsavelTarefa responsavel : tarefa.getResponsaveis()) {
+                            notificacaoService.criarNotificacaoPrazo(
+                                    tarefa.getTarId(),
+                                    tarefa.getTarTitulo(),
+                                    responsavel.getUsuId()
+                            );
+                        }
+                    }
                 }
+            } catch (Exception e) {
+                System.out.println("Erro ao converter data da tarefa " + tarefa.getTarId() + ": " + e.getMessage());
             }
         }
     }
