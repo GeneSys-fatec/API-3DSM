@@ -8,7 +8,7 @@ import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.Usuar
 import com.taskmanager.taskmngr_backend.model.dto.usuario.UsuarioLoginDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
-import com.taskmanager.taskmngr_backend.service.TokenService;
+import com.taskmanager.taskmngr_backend.service.Token.CriaTokenService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,7 +18,7 @@ public class LoginUsuarioService {
     
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
-    private final TokenService tokenService;
+    private final CriaTokenService criaTokenService;
 
     private UsuarioModel validarCredenciais(UsuarioLoginDTO body) {
         UsuarioModel usuario = this.usuarioRepository.findByEmail(body.getUsuEmail().toLowerCase())
@@ -38,6 +38,6 @@ public class LoginUsuarioService {
 
     public String generateTokenForUser(UsuarioLoginDTO body) {
         UsuarioModel usuario = this.validarCredenciais(body);
-        return this.tokenService.generateToken(usuario);
+        return this.criaTokenService.generateToken(usuario);
     }
 }

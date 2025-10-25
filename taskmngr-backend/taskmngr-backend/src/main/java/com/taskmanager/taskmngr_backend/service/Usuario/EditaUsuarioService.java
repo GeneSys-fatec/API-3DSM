@@ -1,7 +1,4 @@
-package com.taskmanager.taskmngr_backend.service;
-
-import java.util.List;
-import java.util.Optional;
+package com.taskmanager.taskmngr_backend.service.Usuario;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -11,27 +8,11 @@ import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
 
 @Service
-public class UsuarioService {
+public class EditaUsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;
     @Autowired
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-    
-    public List<UsuarioModel> listarTodas() {
-        return usuarioRepository.findAll();
-    }
-
-    public Optional<UsuarioModel> buscarPorId(String id) {
-        return usuarioRepository.findById(id);
-    }
-
-    public Optional<UsuarioModel> buscarPorEmail(String email) {
-        return usuarioRepository.findByEmail(email);
-    }
-
-    public List<UsuarioModel> buscarPorEmails(List<String> emails) {
-        return usuarioRepository.findAllByEmails(emails);
-    }
 
     public UsuarioModel salvar(UsuarioModel usuario) {
         usuario.setUsuSenha(encoder.encode(usuario.getUsuSenha()));
@@ -40,9 +21,5 @@ public class UsuarioService {
 
     public UsuarioModel atualizar(UsuarioModel usuario) {
         return usuarioRepository.save(usuario);
-    }
-
-    public void deletar(String id) {
-        usuarioRepository.deleteById(id);
     }
 }

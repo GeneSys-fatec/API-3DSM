@@ -7,17 +7,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.taskmanager.taskmngr_backend.service.ColunaService;
+import com.taskmanager.taskmngr_backend.service.Coluna.ExcluiColunaService;
 
 @RestController
 @RequestMapping("/colunas")
 public class ExcluiColunaController {
     @Autowired
-    private ColunaService colunaService;
+    private ExcluiColunaService excluiColunaService;
 
     @DeleteMapping("/deletar/{id}")
     public ResponseEntity<Void> deletarColuna(@PathVariable String id) {
-        colunaService.deletarColuna(id);
+        excluiColunaService.deletarColuna(id);
         return ResponseEntity.noContent().build();
     }
 }

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import com.taskmanager.taskmngr_backend.model.converter.NotificacaoConverter;
 import com.taskmanager.taskmngr_backend.model.dto.NotificacaoDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
-import com.taskmanager.taskmngr_backend.service.NotificacaoService;
+import com.taskmanager.taskmngr_backend.service.Notificacao.BuscaNotificacaoService;
 
 @RestController
 @RequestMapping("/notificacao")
@@ -19,7 +19,7 @@ import com.taskmanager.taskmngr_backend.service.NotificacaoService;
 public class BuscaNotificacaoController {
 
     @Autowired
-    private NotificacaoService notificacaoService;
+    private BuscaNotificacaoService buscaNotificacaoService;
 
     @Autowired
     private NotificacaoConverter notificacaoConverter;
@@ -28,7 +28,7 @@ public class BuscaNotificacaoController {
     public ResponseEntity<List<NotificacaoDTO>> listarPorUsuario(
             @AuthenticationPrincipal UsuarioModel usuarioLogado) {
 
-        List<NotificacaoDTO> notificacoes = notificacaoService
+        List<NotificacaoDTO> notificacoes = buscaNotificacaoService
                 .listarPorUsuario(usuarioLogado.getUsuId())
                 .stream()
                 .map(notificacao -> notificacaoConverter.modelParaDto(notificacao))

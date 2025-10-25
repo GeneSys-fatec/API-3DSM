@@ -23,14 +23,14 @@ import com.taskmanager.taskmngr_backend.model.dto.ProjetoDTO;
 import com.taskmanager.taskmngr_backend.model.dto.usuario.UsuarioDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.ProjetoModel;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
-import com.taskmanager.taskmngr_backend.service.ProjetoService;
+import com.taskmanager.taskmngr_backend.service.Projeto.BuscaProjetoService;
 
 @RestController
 @RequestMapping("/projeto")
 @CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*")
 public class BuscaProjetoController {
     @Autowired
-    private ProjetoService projetoService;
+    private BuscaProjetoService buscaProjetoService;
     @Autowired
     private AdicionadorLinkProjetos adicionadorLink;
     @Autowired
@@ -42,7 +42,7 @@ public class BuscaProjetoController {
 
     @GetMapping("/meus-projetos")
     public ResponseEntity<List<ProjetoDTO>> listarProjetosDoUsuario(@AuthenticationPrincipal UsuarioModel usuario) {
-        List<ProjetoModel> projetos = projetoService.listarPorUsuario(usuario);
+        List<ProjetoModel> projetos = buscaProjetoService.listarPorUsuario(usuario);
         List<ProjetoDTO> dtos = projetos.stream()
                 .map(projetoConverterService::modelParaDto)
                 .collect(Collectors.toList());
@@ -52,7 +52,7 @@ public class BuscaProjetoController {
 
     @GetMapping("/{projId}")
     public ResponseEntity<ProjetoDTO> buscarPorId(@PathVariable String projId) {
-        ProjetoModel projeto = projetoService.buscarPorId(projId)
+        ProjetoModel projeto = buscaProjetoService.buscarPorId(projId)
                 .orElseThrow(() -> new ProjetoNaoEncontradoException(
                         "Projeto não encontrado",
                         "Projeto com id " + projId + " não foi encontrado"));
@@ -64,7 +64,7 @@ public class BuscaProjetoController {
 
     @GetMapping("/listar")
     public ResponseEntity<List<ProjetoDTO>> listarTodas() {
-        List<ProjetoModel> projetos = projetoService.listarTodas();
+        List<ProjetoModel> projetos = buscaProjetoService.listarTodas();
         List<ProjetoDTO> dtos = projetos.stream().map(projetoConverterService::modelParaDto)
                 .collect(Collectors.toList());
         adicionadorLink.adicionarLink(dtos);
@@ -73,7 +73,7 @@ public class BuscaProjetoController {
 
     @GetMapping("/{projId}/membros")
     public ResponseEntity<List<UsuarioDTO>> listarMembrosDoProjeto(@PathVariable String projId) {
-        List<UsuarioModel> membros = projetoService.buscarMembrosDoProjeto(projId);
+        List<UsuarioModel> membros = buscaProjetoService.buscarMembrosDoProjeto(projId);
 
         if (membros.isEmpty()) {
             return ResponseEntity.noContent().build();

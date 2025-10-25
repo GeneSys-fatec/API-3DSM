@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.taskmanager.taskmngr_backend.model.converter.ColunaConverter;
 import com.taskmanager.taskmngr_backend.model.dto.ColunaDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.ColunaModel;
-import com.taskmanager.taskmngr_backend.service.ColunaService;
+import com.taskmanager.taskmngr_backend.service.Coluna.CriaColunaService;
 
 import jakarta.validation.Valid;
 
@@ -19,7 +19,7 @@ import jakarta.validation.Valid;
 @RequestMapping("/colunas")
 public class CriaColunaController {
     @Autowired
-    private ColunaService colunaService;
+    private CriaColunaService criaColunaService;
 
     @Autowired
     private ColunaConverter colunaConverter;
@@ -28,7 +28,7 @@ public class CriaColunaController {
     public ResponseEntity<ColunaDTO> criarColuna(@Valid @RequestBody ColunaDTO colunaDTO) {
        ColunaModel colunaParaSalvar = colunaConverter.dtoParaModel(colunaDTO);
 
-        ColunaModel colunaSalva = colunaService.criarColuna(colunaParaSalvar);
+        ColunaModel colunaSalva = criaColunaService.criarColuna(colunaParaSalvar);
 
         ColunaDTO dtoDeResposta = colunaConverter.modelParaDto(colunaSalva);
 

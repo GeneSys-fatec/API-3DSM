@@ -1,50 +1,20 @@
-package com.taskmanager.taskmngr_backend.service;
+package com.taskmanager.taskmngr_backend.service.Notificacao;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.taskmanager.taskmngr_backend.model.converter.NotificacaoConverter;
 import com.taskmanager.taskmngr_backend.model.entidade.NotificacaoModel;
 import com.taskmanager.taskmngr_backend.repository.NotificacaoRepository;
 
 @Service
-public class NotificacaoService {
-
+public class CriaNotificacaoService {
     @Autowired
     private NotificacaoRepository repository;
 
     @Autowired
-    private NotificacaoConverter converter;
-
-    public List<NotificacaoModel> listarTodas() {
-        return repository.findAll();
-    }
-
-    public Optional<NotificacaoModel> listarPorId(String id) {
-        return repository.findById(id);
-    }
-
-    public List<NotificacaoModel> listarPorUsuario(String usuarioId) {
-        if (usuarioId == null || usuarioId.isBlank()) {
-            return Collections.emptyList();
-        }
-        return repository.findByNotUsuarioIdOrderByNotDataCriacaoDesc(usuarioId);
-    }
-
-    private NotificacaoModel salvarSeValido(NotificacaoModel notificacao, String usuarioOrigemId) {
-        if (notificacao.getNotUsuarioId().equals(usuarioOrigemId)) {
-            return null;
-        }
-
-        notificacao.setNotDataCriacao(LocalDateTime.now());
-        notificacao.setNotLida(false);
-        return repository.save(notificacao);
-    }
+    private ValidaNotificacaoService validaNotificacaoService;
 
     public NotificacaoModel criarNotificacaoAtribuicao(String usuarioOrigemId, String usuarioDestinoId, String nomeCriador, String tarefaId, String nomeTarefa) {
         NotificacaoModel notificacao = new NotificacaoModel();
@@ -52,7 +22,7 @@ public class NotificacaoService {
         notificacao.setNotTarefaId(tarefaId);
         notificacao.setNotTipo("ATRIBUICAO");
         notificacao.setNotMensagem("A tarefa " + nomeTarefa + " foi atribuída a você por " + nomeCriador + ".");
-        return salvarSeValido(notificacao, usuarioOrigemId);
+        return validaNotificacaoService.salvarSeValido(notificacao, usuarioOrigemId);
     }
 
     public NotificacaoModel criarNotificacaoEdicaoTarefa(String usuarioOrigemId, String usuarioDestinoId, String tarefaId, String tituloTarefa, String nomeEditor) {
@@ -63,7 +33,7 @@ public class NotificacaoService {
         notificacao.setNotMensagem("A tarefa '" + tituloTarefa + "' foi editada por " + nomeEditor + ".");
         notificacao.setNotDataCriacao(LocalDateTime.now());
         notificacao.setNotLida(false);
-        return salvarSeValido(notificacao, usuarioOrigemId);
+        return validaNotificacaoService.salvarSeValido(notificacao, usuarioOrigemId);
     }
 
     public NotificacaoModel criarNotificacaoAdicaoEquipe(String usuarioOrigemId, String usuarioDestinoId, String nomeEquipe, String nomeResponsavel) {
@@ -73,7 +43,7 @@ public class NotificacaoService {
         notificacao.setNotMensagem("Você foi adicionado à equipe '" + nomeEquipe + "' por " + nomeResponsavel   + ".");
         notificacao.setNotDataCriacao(LocalDateTime.now());
         notificacao.setNotLida(false);
-        return salvarSeValido(notificacao, usuarioOrigemId);
+        return validaNotificacaoService.salvarSeValido(notificacao, usuarioOrigemId);
     }
 
     public NotificacaoModel criarNotificacaoRemocaoEquipe(String usuarioOrigemId, String usuarioDestinoId, String nomeEquipe, String nomeResponsavel) {
@@ -83,7 +53,7 @@ public class NotificacaoService {
         notificacao.setNotMensagem("Você foi removido da equipe '" + nomeEquipe + "' por " + nomeResponsavel    + ".");
         notificacao.setNotDataCriacao(LocalDateTime.now());
         notificacao.setNotLida(false);
-        return salvarSeValido(notificacao, usuarioOrigemId);
+        return validaNotificacaoService.salvarSeValido(notificacao, usuarioOrigemId);
     }
 
     public NotificacaoModel criarNotificacaoComentario(String usuarioOrigemId, String usuarioDestinoId, String nomeComentador, String tarefaId) {
@@ -92,7 +62,7 @@ public class NotificacaoService {
         notificacao.setNotTarefaId(tarefaId);
         notificacao.setNotTipo("COMENTARIO");
         notificacao.setNotMensagem(nomeComentador + " comentou em uma tarefa atribuída a você.");
-        return salvarSeValido(notificacao, usuarioOrigemId);
+        return validaNotificacaoService.salvarSeValido(notificacao, usuarioOrigemId);
     }
 
     public NotificacaoModel criarNotificacaoPrazo(String tarefaId, String tituloTarefa,  String usuarioDestinoId ) {
@@ -114,32 +84,5 @@ public class NotificacaoService {
         notificacao.setNotDataCriacao(LocalDateTime.now());
         notificacao.setNotLida(false);
         return repository.save(notificacao);
-    }
-
-    public NotificacaoModel marcarComoLida(String id) {
-        Optional<NotificacaoModel> notificacaoOpt = repository.findById(id);
-
-        if (notificacaoOpt.isPresent()) {
-            NotificacaoModel notificacao = notificacaoOpt.get();
-            notificacao.setNotLida(true);
-            return repository.save(notificacao);
-        }
-
-        return null;
-    }
-
-    public void marcarTodasComoLidas(String usuarioId) {
-        List<NotificacaoModel> naoLidas = repository.findByNotUsuarioIdAndNotLidaFalse(usuarioId);
-
-        for (NotificacaoModel notificacao : naoLidas) {
-            notificacao.setNotLida(true);
-        }
-
-        repository.saveAll(naoLidas);
-    }
-
-
-    public void deletarNotificacao(String id) {
-        repository.deleteById(id);
     }
 }

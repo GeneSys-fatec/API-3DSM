@@ -1,4 +1,4 @@
-package com.taskmanager.taskmngr_backend.service;
+package com.taskmanager.taskmngr_backend.service.Usuario;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

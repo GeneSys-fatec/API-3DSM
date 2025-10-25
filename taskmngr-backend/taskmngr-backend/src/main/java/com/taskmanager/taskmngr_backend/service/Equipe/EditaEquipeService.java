@@ -11,7 +11,7 @@ import com.taskmanager.taskmngr_backend.model.dto.EquipeDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.EquipeModel;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 import com.taskmanager.taskmngr_backend.repository.EquipeRepository;
-import com.taskmanager.taskmngr_backend.service.NotificacaoService;
+import com.taskmanager.taskmngr_backend.service.Notificacao.CriaNotificacaoService;
 
 @Service
 public class EditaEquipeService {
@@ -20,9 +20,9 @@ public class EditaEquipeService {
     @Autowired
     private BuscaEquipeService buscaEquipeService;
     @Autowired
-    private ValidacaoEquipeService validacaoEquipeService;
+    private ValidaEquipeService validacaoEquipeService;
     @Autowired
-    private NotificacaoService notificacaoService;
+    private CriaNotificacaoService criaNotificacaoService;
 
     public EquipeModel editar(String id, EquipeDTO dto, UsuarioModel usuarioLogado) {
         EquipeModel equipe = buscaEquipeService.getEquipeById(id);
@@ -58,7 +58,7 @@ public class EditaEquipeService {
                     .collect(Collectors.toList());
 
             for (UsuarioModel membro : adicionados) {
-                notificacaoService.criarNotificacaoAdicaoEquipe(
+                criaNotificacaoService.criarNotificacaoAdicaoEquipe(
                     usuarioLogado.getUsuId(),
                     membro.getUsuId(),
                     equipe.getEquNome(),
@@ -67,7 +67,7 @@ public class EditaEquipeService {
             }
 
             for (UsuarioModel membro : removidos) {
-                notificacaoService.criarNotificacaoRemocaoEquipe(
+                criaNotificacaoService.criarNotificacaoRemocaoEquipe(
                     usuarioLogado.getUsuId(),
                     membro.getUsuId(),
                     equipe.getEquNome(),

@@ -14,18 +14,26 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.taskmanager.taskmngr_backend.model.entidade.AnexoTarefaModel;
 import com.taskmanager.taskmngr_backend.model.entidade.TarefaModel;
-import com.taskmanager.taskmngr_backend.service.TarefaService;
+import com.taskmanager.taskmngr_backend.service.Tarefa.BuscaTarefaService;
+import com.taskmanager.taskmngr_backend.service.Tarefa.ExcluiTarefaService;
+import com.taskmanager.taskmngr_backend.service.Tarefa.NotificacaoTarefaService;
 
 @RestController
 @RequestMapping("/tarefa")
 @CrossOrigin(origins = "http://localhost:5173")
 public class ExcluiTarefaController {
     @Autowired
-    private TarefaService tarefaService;
+    private BuscaTarefaService buscaTarefaService;
+
+    @Autowired
+    private NotificacaoTarefaService notificacaoTarefaService;
+
+    @Autowired
+    private ExcluiTarefaService excluiTarefaService;
 
     @DeleteMapping("/{tarId}/anexos/{nomeArquivo}")
     public ResponseEntity<?> removerAnexo(@PathVariable String tarId, @PathVariable String nomeArquivo) {
-        Optional<TarefaModel> tarefaOpt = tarefaService.buscarPorId(tarId);
+        Optional<TarefaModel> tarefaOpt = buscaTarefaService.buscarPorId(tarId);
         if (tarefaOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Tarefa não encontrada");
         }
@@ -42,7 +50,7 @@ public class ExcluiTarefaController {
         }
 
         tarefa.getTarAnexos().remove(anexo);
-        tarefaService.salvarSemNotificacao(tarefa);
+        notificacaoTarefaService.salvarSemNotificacao(tarefa);
 
         File arquivo = new File(anexo.getArquivoCaminho());
         if (arquivo.exists()) {
@@ -56,9 +64,9 @@ public class ExcluiTarefaController {
 
     @DeleteMapping("/apagar/{tarId}")
     public ResponseEntity<String> apagarTarefa(@PathVariable String tarId) {
-        Optional<TarefaModel> tarefaExistente = tarefaService.buscarPorId(tarId);
+        Optional<TarefaModel> tarefaExistente = buscaTarefaService.buscarPorId(tarId);
         if (tarefaExistente.isPresent()) {
-            tarefaService.deletar(tarId);
+            excluiTarefaService.deletar(tarId);
             return ResponseEntity.ok("Tarefa apagada com sucesso");
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

@@ -1,4 +1,4 @@
-package com.taskmanager.taskmngr_backend.service;
+package com.taskmanager.taskmngr_backend.service.Google;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -42,7 +42,7 @@ public class GoogleOAuthService {
     }
 
     private static long withSkew(long expiresInSec) {
-        return now() + (expiresInSec * 1000L) - 30_000L; // -30s de margem
+        return now() + (expiresInSec * 1000L) - 30_000L;
     }
 
     public void exchangeCode(String userKey, String code, String bodyRedirectUri) {

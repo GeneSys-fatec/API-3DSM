@@ -15,14 +15,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.InvalidTaskDataException;
 import com.taskmanager.taskmngr_backend.model.dto.TarefaDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
-import com.taskmanager.taskmngr_backend.service.TarefaService;
+import com.taskmanager.taskmngr_backend.service.Tarefa.EditaTarefaService;
 
 @RestController
 @RequestMapping("/tarefa")
 @CrossOrigin(origins = "http://localhost:5173")
 public class EditaTarefaController {
     @Autowired
-    private TarefaService tarefaService;
+    private EditaTarefaService editaTarefaService;
 
     @PutMapping("/atualizar/{tarId}")
     public ResponseEntity<String> atualizarTarefa(@PathVariable String tarId, @RequestBody TarefaDTO dto,
@@ -35,7 +35,7 @@ public class EditaTarefaController {
                     "Título, descrição e data são obrigatórios.");
         }
         try {
-            tarefaService.atualizarTarefa(tarId, dto, usuarioLogado);
+            editaTarefaService.atualizarTarefa(tarId, dto, usuarioLogado);
             return ResponseEntity.ok("Tarefa atualizada com sucesso!");
 
         } catch (RuntimeException e) { // <<< Idealmente, troque por uma exceção mais específica (ex: TarefaNotFoundException)

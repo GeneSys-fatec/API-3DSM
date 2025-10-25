@@ -10,16 +10,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.taskmanager.taskmngr_backend.model.dto.ColunaDTO;
-import com.taskmanager.taskmngr_backend.service.ColunaService;
+import com.taskmanager.taskmngr_backend.service.Coluna.BuscaColunaService;
 
 @RestController
 @RequestMapping("/colunas")
 public class BuscaColunaController {
     @Autowired
-    private ColunaService colunaService;
+    private BuscaColunaService buscaColunaService;
 
     @GetMapping("/por-projeto/{projId}")
     public ResponseEntity<List<ColunaDTO>> listarColunasPorProjeto(@PathVariable String projId) {
-        return ResponseEntity.ok(colunaService.listarPorProjeto(projId));
+        return ResponseEntity.ok(buscaColunaService.listarPorProjeto(projId));
     }
 }
