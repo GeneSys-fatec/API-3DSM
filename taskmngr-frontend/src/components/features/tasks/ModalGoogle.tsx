@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 interface ModalGoogleProps {
   open: boolean;
@@ -6,8 +6,8 @@ interface ModalGoogleProps {
   onLoginCode?: (code: string) => void;
 }
 
-const CLIENT_ID = "472190232103-t2mfcfugbmg073901q238tspuv69bs9u.apps.googleusercontent.com"; 
-const SCOPE = "https://www.googleapis.com/auth/calendar";
+const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
+const SCOPE = (import.meta.env.VITE_GOOGLE_CALENDAR_SCOPE as string) || "https://www.googleapis.com/auth/calendar";
 
 declare global {
   interface Window {
@@ -18,8 +18,27 @@ declare global {
 const ModalGoogle: React.FC<ModalGoogleProps> = ({ open, onClose, onLoginCode }) => {
   if (!open) return null;
 
+  const [sdkReady, setSdkReady] = useState<boolean>(!!window.google);
+
+  useEffect(() => {
+    if (!open) return;
+    if (window.google) {
+      setSdkReady(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.onload = () => setSdkReady(true);
+    script.onerror = () => setSdkReady(false);
+    document.body.appendChild(script);
+    return () => {
+      // Não remove para reaproveitar o SDK
+    };
+  }, [open]);
+
   const handleGoogleLogin = () => {
-    if (!window.google) {
+    if (!window.google || !sdkReady) {
       alert("Google SDK não carregado.");
       return;
     }
@@ -27,8 +46,16 @@ const ModalGoogle: React.FC<ModalGoogleProps> = ({ open, onClose, onLoginCode })
       client_id: CLIENT_ID,
       scope: SCOPE,
       ux_mode: "popup",
-      callback: (response: { code: string }) => {
-        if (response.code && onLoginCode) onLoginCode(response.code);
+      // Solicitar consentimento e refresh token (offline) no fluxo do backend
+      prompt: "consent",
+      access_type: "offline",
+      callback: (response: { code?: string; error?: string }) => {
+        if (response?.code) {
+          onLoginCode?.(response.code);
+        } else if (response?.error) {
+          console.error("Erro no login Google:", response.error);
+          alert("Falha no login com Google. Tente novamente.");
+        }
         onClose();
       },
     });
@@ -66,6 +93,8 @@ const ModalGoogle: React.FC<ModalGoogleProps> = ({ open, onClose, onLoginCode })
             type="button"
             className="w-1/2 flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-3 rounded-lg transition-colors shadow"
             onClick={handleGoogleLogin}
+            disabled={!sdkReady}
+            title={sdkReady ? "" : "Carregando SDK do Google..."}
           >
             <i className="fa-brands fa-google"></i>
             Conectar com Google

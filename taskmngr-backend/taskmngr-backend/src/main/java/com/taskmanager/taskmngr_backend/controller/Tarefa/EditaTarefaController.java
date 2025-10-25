@@ -1,7 +1,6 @@
 package com.taskmanager.taskmngr_backend.controller.Tarefa;
 
-import java.util.Optional;
-
+// <<< MUDANÇA: Imports desnecessários removidos (Optional, Collectors, ResponsavelTarefa, TarefaModel)
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,21 +14,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.InvalidTaskDataException;
 import com.taskmanager.taskmngr_backend.model.dto.TarefaDTO;
-import com.taskmanager.taskmngr_backend.model.entidade.TarefaModel;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
-import com.taskmanager.taskmngr_backend.service.TarefaService;
+import com.taskmanager.taskmngr_backend.service.Tarefa.EditaTarefaService;
 
 @RestController
 @RequestMapping("/tarefa")
 @CrossOrigin(origins = "http://localhost:5173")
 public class EditaTarefaController {
     @Autowired
-    private TarefaService tarefaService;
+    private EditaTarefaService editaTarefaService;
 
     @PutMapping("/atualizar/{tarId}")
     public ResponseEntity<String> atualizarTarefa(@PathVariable String tarId, @RequestBody TarefaDTO dto,
-            @AuthenticationPrincipal UsuarioModel usuarioLogado) {
-
+                                                  @AuthenticationPrincipal UsuarioModel usuarioLogado) {
         if (dto.getTarTitulo() == null || dto.getTarTitulo().isBlank() ||
                 dto.getTarDescricao() == null || dto.getTarDescricao().isBlank() ||
                 dto.getTarPrazo() == null || dto.getTarPrazo().isBlank()) {
@@ -37,41 +34,12 @@ public class EditaTarefaController {
             throw new InvalidTaskDataException("Erro ao cadastrar tarefa",
                     "Título, descrição e data são obrigatórios.");
         }
-
-        Optional<TarefaModel> tarefaExistente = tarefaService.buscarPorId(tarId);
-        if (tarefaExistente.isPresent()) {
-            TarefaModel t = tarefaExistente.get();
-
-            t.setTarTitulo(dto.getTarTitulo());
-            t.setTarDescricao(dto.getTarDescricao());
-            t.setTarStatus(dto.getTarStatus());
-            t.setTarPrioridade(dto.getTarPrioridade());
-            t.setTarPrazo(dto.getTarPrazo());
-            t.setTarDataAtualizacao(dto.getTarDataAtualizacao());
-            t.setUsuId(dto.getUsuId());
-            t.setUsuNome(dto.getUsuNome());
-            t.setProjId(dto.getProjId());
-            t.setProjNome(dto.getProjNome());
-
-            // pega a data atual se o status for concluida:
-            if ("Concluída".equalsIgnoreCase(dto.getTarStatus())) {
-                String dataConclusao = java.time.LocalDate.now().toString();
-                t.setTarDataConclusao(dataConclusao);
-
-                // compara com o prazo
-                java.time.LocalDate prazo = java.time.LocalDate.parse(t.getTarPrazo());
-                java.time.LocalDate conclusao = java.time.LocalDate.parse(dataConclusao);
-
-                t.setConcluidaNoPrazo(!conclusao.isAfter(prazo));
-            } else {
-                t.setTarDataConclusao(null);
-                t.setConcluidaNoPrazo(null);
-            }
-
-            tarefaService.salvarSemNotificacao(t);
+        try {
+            editaTarefaService.atualizarTarefa(tarId, dto, usuarioLogado);
             return ResponseEntity.ok("Tarefa atualizada com sucesso!");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Tarefa não encontrada");
+
+        } catch (RuntimeException e) { // <<< Idealmente, troque por uma exceção mais específica (ex: TarefaNotFoundException)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 

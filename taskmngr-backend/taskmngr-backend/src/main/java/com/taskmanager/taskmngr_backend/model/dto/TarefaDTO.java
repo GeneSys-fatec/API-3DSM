@@ -21,8 +21,8 @@ public class TarefaDTO extends RepresentationModel<TarefaDTO>{
     private String tarDataAtualizacao;
     private String tarDataConclusao;
     private Boolean concluidaNoPrazo; // true = dentro do prazo, false = fora
-    private String usuId;
-    private String usuNome;
+    private List<ResponsavelTarefaDTO> responsaveis;
     private String projId;
     private String projNome;
+    private String googleId; // ID do evento no Google Calendar
 }

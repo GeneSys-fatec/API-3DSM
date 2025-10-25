@@ -10,9 +10,11 @@ import ModalGoogle from "../ModalGoogle";
 import CalendarLegenda from './CalendarioLegenda';
 import CalendarioToolbar from './CalendarioToolbar';
 import CalendarioComponent from './CalendarioComponent';
-import { localizer, eventStyleGetter } from '@/config/calendarioConfig';
+import { localizer, eventStyleGetter as baseEventStyleGetter } from '@/config/calendarioConfig';
 import { useTarefas } from '@/hooks/useTarefas';
 import type { Tarefa } from "@/types/types";
+import { exchangeCode, fetchGoogleEvents, getAuthStatus, consumeOAuthCodeFromUrl, deleteGoogleEvent } from '@/services/googleCalendar';
+import { toast } from 'react-toastify';
 
 const CalendarioTarefas: React.FC = () => {
     const [view, setView] = useState<'month' | 'week'>('month');
@@ -23,6 +25,9 @@ const CalendarioTarefas: React.FC = () => {
     const [tarefaParaExcluir, setTarefaParaExcluir] = useState<Tarefa | null>(null);
     const [showGoogleModal, setShowGoogleModal] = useState(false);
     const [isGoogleLogged, setIsGoogleLogged] = useState(false);
+    const [googleEvents, setGoogleEvents] = useState<any[]>([]);
+
+    const GOOGLE_ENABLED = import.meta.env.VITE_GOOGLE_CALENDAR_ENABLED === 'true';
 
     const modalContext = useContext(ModalContext);
     const { selectedProjectId } = useOutletContext<{ selectedProjectId: string | null }>();
@@ -37,6 +42,68 @@ const CalendarioTarefas: React.FC = () => {
         carregarTarefas,
         excluirTarefa
     } = useTarefas(selectedProjectId);
+
+    useEffect(() => {
+        if (!GOOGLE_ENABLED) return;
+        let mounted = true;
+        (async () => {
+            try {
+                const { loggedIn } = await getAuthStatus();
+                if (!mounted) return;
+                setIsGoogleLogged(loggedIn);
+                if (loggedIn) {
+                    await carregarEventosGoogle();
+                }
+            } catch {
+            }
+        })();
+        return () => { mounted = false; };
+    }, []);
+    
+    useEffect(() => {
+        if (!GOOGLE_ENABLED) return;
+        const extracted = consumeOAuthCodeFromUrl();
+        if (!extracted) return;
+
+        (async () => {
+            if (extracted.error) {
+                console.error('Erro OAuth Google:', extracted.error);
+                return;
+            }
+            if (extracted.code) {
+                try {
+                    await exchangeCode(extracted.code);
+                    setIsGoogleLogged(true);
+                    await carregarEventosGoogle();
+                } catch (e) {
+                    console.error(e);
+                    alert('Falha ao conectar com Google. Tente novamente.');
+                } finally {
+                    setShowGoogleModal(false);
+                }
+            }
+        })();
+    }, []);
+
+
+    const carregarEventosGoogle = async () => {
+        if (!GOOGLE_ENABLED) return;
+        try {
+            const events = await fetchGoogleEvents();
+            setGoogleEvents(events);
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const allEvents = React.useMemo(
+        () => eventosFiltrados,
+        [eventosFiltrados]
+    );
+
+    const eventStyleGetter = (event: any) => {
+        return baseEventStyleGetter(event);
+    };
 
     const handleSelectEvent = (event: any, e: any) => {
         e.preventDefault();
@@ -71,32 +138,66 @@ const CalendarioTarefas: React.FC = () => {
             } 
         }));
         if (modalContext) modalContext.closeModal();
+
+        if (isGoogleLogged) {
+            setTimeout(() => {
+                carregarEventosGoogle().catch(() => {});
+            }, 500);
+        }
     };
 
     const handleDeleteTask = () => {
-        if (selectedTask) {
-            setShowModal(false);
-            setTarefaParaExcluir(selectedTask.resource.tarefaCompleta);
-            setSelectedTask(null);
-        }
+        if (!selectedTask) return;
+
+        setShowModal(false);
+
+        const tarefaBase = selectedTask.resource?.tarefaCompleta as Tarefa;
+        const googleEventId =
+            (tarefaBase as any)?.googleId ??
+            selectedTask?.resource?.googleId ??
+            selectedTask?.resource?.raw?.id ??
+            undefined;
+
+        const tarefaComGoogleId = { ...(tarefaBase as any), googleId: googleEventId };
+        setTarefaParaExcluir(tarefaComGoogleId); 
+        setSelectedTask(null);
     };
 
-    const executarExclusao = async () => {
-        if (!tarefaParaExcluir) return;
-        const ok = await excluirTarefa(tarefaParaExcluir.tarId);
+    const executarExclusao = async (alvo?: (Tarefa & { googleId?: string }) | null) => {
+        const tarefa = alvo ?? tarefaParaExcluir;
+        if (!tarefa) return;
+
+        const googleEventId = (tarefa as any)?.googleId;
+        const ok = await excluirTarefa(tarefa.tarId);
+
         if (ok) {
-            window.dispatchEvent(new CustomEvent('taskUpdated', { 
-                detail: { 
-                    action: 'deleted', 
+            window.dispatchEvent(new CustomEvent('taskUpdated', {
+                detail: {
+                    action: 'deleted',
                     projectId: selectedProjectId,
-                    taskId: tarefaParaExcluir.tarId,
+                    taskId: tarefa.tarId,
                     timestamp: Date.now()
-                } 
+                }
             }));
+
+            if (isGoogleLogged && googleEventId) {
+                try {
+                    deleteGoogleEvent(googleEventId);
+                } catch (e) {
+                    console.warn('Falha ao excluir evento do Google Calendar.', e);
+                }
+            }
         } else {
             alert('Erro ao excluir tarefa. Verifique o console para mais detalhes.');
         }
+
         setTarefaParaExcluir(null);
+
+        if (isGoogleLogged) {
+            setTimeout(() => {
+                carregarEventosGoogle().catch(() => {});
+            }, 500);
+        }
     };
 
     const handleSelectSlot = (slotInfo: { start: Date }) => {
@@ -119,6 +220,9 @@ const CalendarioTarefas: React.FC = () => {
             if (projectId === selectedProjectId) {
                 if (action === 'created' || action === 'deleted' || action === 'updated') {
                     carregarTarefas();
+                    if (isGoogleLogged) {
+                        carregarEventosGoogle().catch(() => {});
+                    }
                 }
             }
         };
@@ -126,7 +230,7 @@ const CalendarioTarefas: React.FC = () => {
         return () => {
             window.removeEventListener('taskUpdated', handleTaskUpdate as EventListener);
         };
-    }, [selectedProjectId, carregarTarefas]);
+    }, [selectedProjectId, carregarTarefas, isGoogleLogged]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -161,20 +265,6 @@ const CalendarioTarefas: React.FC = () => {
                 <div className="text-center">
                     <i className="fa-solid fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
                     <p className="text-gray-600">Carregando calendário...</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (mensagemVazia) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className="text-center">
-                    <i className="fa-solid fa-calendar-xmark text-6xl text-gray-400 mb-4"></i>
-                    <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                        Calendário Vazio
-                    </h3>
-                    <p className="text-gray-500 mb-4">{mensagemVazia}</p>
                 </div>
             </div>
         );
@@ -233,13 +323,18 @@ const CalendarioTarefas: React.FC = () => {
                         responsaveis={responsaveis}
                         responsavelSelecionado={responsavelSelecionado}
                         setResponsavelSelecionado={setResponsavelSelecionado}
-                        carregarTarefas={carregarTarefas}
+                        carregarTarefas={async () => {
+                            await carregarTarefas();
+                            if (GOOGLE_ENABLED && isGoogleLogged) {
+                                await carregarEventosGoogle();
+                            }
+                        }}
                     />
                 </div>
                 <div className="h-96 sm:h-[500px] lg:h-[650px]">
                     <CalendarioComponent
                         localizer={localizer}
-                        eventosFiltrados={eventosFiltrados}
+                        eventosFiltrados={allEvents}
                         view={view}
                         setView={setView}
                         currentDate={currentDate}
@@ -267,7 +362,7 @@ const CalendarioTarefas: React.FC = () => {
                             " será excluída permanentemente.
                         </p>
                     }
-                    onConfirm={executarExclusao}
+                    onConfirm={() => executarExclusao()}
                     onCancel={() => setTarefaParaExcluir(null)}
                     confirmText="Excluir"
                     cancelText="Cancelar"
@@ -277,10 +372,17 @@ const CalendarioTarefas: React.FC = () => {
             <ModalGoogle
                 open={showGoogleModal}
                 onClose={() => setShowGoogleModal(false)}
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                onLogincode={(_usuEmail: string, _usuSenha: string) => {
-                    setShowGoogleModal(false);
-                    setIsGoogleLogged(true);
+                onLoginCode={async (code: string) => {
+                    try {
+                        await exchangeCode(code);
+                        setIsGoogleLogged(true);
+                        await carregarEventosGoogle();
+                    } catch (e) {
+                        console.error(e);
+                        toast.error('Falha ao conectar com Google. Tente novamente.');
+                    } finally {
+                        setShowGoogleModal(false);
+                    }
                 }}
             />
         </div>

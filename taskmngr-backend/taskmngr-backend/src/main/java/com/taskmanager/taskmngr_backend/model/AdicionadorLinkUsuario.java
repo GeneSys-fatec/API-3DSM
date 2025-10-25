@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import com.taskmanager.taskmngr_backend.controller.Usuario.BuscaUsuarioController;
 import com.taskmanager.taskmngr_backend.controller.Usuario.EditaUsuarioController;
 import com.taskmanager.taskmngr_backend.controller.Usuario.ExcluiUsuarioController;
-import com.taskmanager.taskmngr_backend.model.dto.UsuarioDTO;
+import com.taskmanager.taskmngr_backend.model.dto.usuario.UsuarioDTO;
 
 @Component
 public class AdicionadorLinkUsuario {

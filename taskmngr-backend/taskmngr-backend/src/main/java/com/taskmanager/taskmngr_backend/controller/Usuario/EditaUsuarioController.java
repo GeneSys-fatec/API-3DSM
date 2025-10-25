@@ -10,19 +10,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.taskmanager.taskmngr_backend.model.dto.UsuarioDTO;
+import com.taskmanager.taskmngr_backend.model.dto.usuario.UsuarioDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
-import com.taskmanager.taskmngr_backend.service.UsuarioService;
-
+import com.taskmanager.taskmngr_backend.service.Usuario.BuscaUsuarioService;
+import com.taskmanager.taskmngr_backend.service.Usuario.EditaUsuarioService;
 @RestController
 @RequestMapping("/usuario")
 public class EditaUsuarioController {
     @Autowired
-    private UsuarioService usuarioService;
+    private BuscaUsuarioService buscaUsuarioService;
+    @Autowired
+    private EditaUsuarioService editaUsuarioService;
 
     @PutMapping("/atualizar/{usuId}")
     public ResponseEntity<String> atualizarUsuario(@PathVariable String usuId, @RequestBody UsuarioDTO dto) {
-        Optional<UsuarioModel> usuarioExistente = usuarioService.buscarPorId(usuId);
+        Optional<UsuarioModel> usuarioExistente = buscaUsuarioService.buscarPorId(usuId);
       
         if (usuarioExistente.isPresent()) {
             UsuarioModel u = usuarioExistente.get();
@@ -30,10 +32,9 @@ public class EditaUsuarioController {
             u.setUsuNome(dto.getUsuNome());
             u.setUsuEmail(dto.getUsuEmail());
             u.setUsuCaminhoFoto(dto.getUsuCaminhoFoto());
-            u.setUsuSenha(dto.getUsuSenha());
             u.setUsuDataCriacao(dto.getUsuDataCriacao());
             u.setUsuDataAtualizacao(dto.getUsuDataAtualizacao());
-            usuarioService.salvar(u);
+            editaUsuarioService.salvar(u);
             return ResponseEntity.ok("Usuário atualizado com sucesso!");
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

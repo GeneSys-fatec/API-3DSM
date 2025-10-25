@@ -13,15 +13,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.taskmanager.taskmngr_backend.model.AdicionadorLinkUsuario;
 import com.taskmanager.taskmngr_backend.model.converter.UsuarioConverter;
-import com.taskmanager.taskmngr_backend.model.dto.UsuarioDTO;
+import com.taskmanager.taskmngr_backend.model.dto.usuario.UsuarioDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
-import com.taskmanager.taskmngr_backend.service.UsuarioService;
+import com.taskmanager.taskmngr_backend.service.Usuario.BuscaUsuarioService;
 
 @RestController
 @RequestMapping("/usuario")
 public class BuscaUsuarioController {
     @Autowired
-    private UsuarioService usuarioService;
+    private BuscaUsuarioService buscaUsuarioService;
     @Autowired
     private AdicionadorLinkUsuario adicionadorLink;
     @Autowired
@@ -29,7 +29,7 @@ public class BuscaUsuarioController {
 
     @GetMapping("/{usuId}")
     public ResponseEntity<UsuarioDTO> buscarPorId(@PathVariable String usuId) {
-        Optional<UsuarioModel> usuarioOpt = usuarioService.buscarPorId(usuId);
+        Optional<UsuarioModel> usuarioOpt = buscaUsuarioService.buscarPorId(usuId);
         if (usuarioOpt.isPresent()) {
             UsuarioDTO dto = usuarioConverterService.modelParaDto(usuarioOpt.get());
             adicionadorLink.adicionarLink(dto);
@@ -41,7 +41,7 @@ public class BuscaUsuarioController {
 
     @GetMapping("/buscar/{usuEmail}")
     public ResponseEntity<UsuarioDTO> buscarPorEmail(@PathVariable String usuEmail) {
-        Optional<UsuarioModel> usuarioOpt = usuarioService.buscarPorEmail(usuEmail);
+        Optional<UsuarioModel> usuarioOpt = buscaUsuarioService.buscarPorEmail(usuEmail);
         if (usuarioOpt.isPresent()) {
             UsuarioDTO dto = usuarioConverterService.modelParaDto(usuarioOpt.get());
             adicionadorLink.adicionarLink(dto);
@@ -53,7 +53,7 @@ public class BuscaUsuarioController {
 
     @GetMapping("/listar")
     public ResponseEntity<List<UsuarioDTO>> listarUsuario() {
-        List<UsuarioModel> usuarios = usuarioService.listarTodas();
+        List<UsuarioModel> usuarios = buscaUsuarioService.listarTodas();
         List<UsuarioDTO> dtos = usuarios.stream()
             .map(usuarioConverterService::modelParaDto)
             .toList();

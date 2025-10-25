@@ -6,9 +6,9 @@ import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.stereotype.Component;
 
-import com.taskmanager.taskmngr_backend.controller.Tarefa.EditaComentarioController;
-import com.taskmanager.taskmngr_backend.controller.Tarefa.BuscaComentarioController;
-import com.taskmanager.taskmngr_backend.controller.Tarefa.ExcluiComentarioController;
+import com.taskmanager.taskmngr_backend.controller.Comentario.BuscaComentarioController;
+import com.taskmanager.taskmngr_backend.controller.Comentario.EditaComentarioController;
+import com.taskmanager.taskmngr_backend.controller.Comentario.ExcluiComentarioController;
 import com.taskmanager.taskmngr_backend.model.dto.ComentarioDTO;
 
 @Component

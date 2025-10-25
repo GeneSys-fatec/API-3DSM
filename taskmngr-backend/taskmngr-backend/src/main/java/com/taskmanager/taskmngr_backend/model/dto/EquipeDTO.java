@@ -1,6 +1,8 @@
 package com.taskmanager.taskmngr_backend.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.taskmanager.taskmngr_backend.model.dto.usuario.UsuarioDTO;
+
 import lombok.Data;
 import org.springframework.hateoas.RepresentationModel;
 import java.util.List;

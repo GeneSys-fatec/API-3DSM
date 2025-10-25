@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
+import useMediaQuery from "@/hooks/MediaQuerie";
 import CardTarefa from "@/components/features/tasks/CardTarefa";
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { Tarefa } from "@/types/types";
 
 interface ColunaKanbanProps {
@@ -20,6 +23,7 @@ interface ColunaKanbanProps {
   isEditing: boolean;
   onStartEditing: (id: string | null) => void;
   onFinishEditing: (id: string, newTitle: string) => void;
+  isOverlay?: boolean;
 }
 
 export default function ColunaKanban(props: ColunaKanbanProps) {
@@ -36,6 +40,7 @@ export default function ColunaKanban(props: ColunaKanbanProps) {
     isEditing,
     onStartEditing,
     onFinishEditing,
+    isOverlay,
   } = props;
 
   const { setNodeRef } = useDroppable({ id });
@@ -43,6 +48,28 @@ export default function ColunaKanban(props: ColunaKanbanProps) {
   const tarefasIds = tarefas.map((t) => t.tarId);
 
   const [tempTitle, setTempTitle] = useState(titulo);
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setSortableNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: id,
+    data: {
+      type: "column",
+      coluna: props,
+    },
+    disabled: isEditing || !isDesktop,
+  });
+  const style = {
+    transition,
+    transform: CSS.Transform.toString(transform),
+    opacity: isDragging ? 0.5 : 1,
+  };
 
   const mapaDeCoresBorda: { [key: string]: string } = {
     "orange-400": "border-orange-400",
@@ -51,6 +78,7 @@ export default function ColunaKanban(props: ColunaKanbanProps) {
     "purple-400": "border-purple-400",
     "red-400": "border-red-400",
   };
+  
   const classeBordaHeader = mapaDeCoresBorda[corClasse] || "border-gray-400";
 
   useEffect(() => {
@@ -68,11 +96,22 @@ export default function ColunaKanban(props: ColunaKanbanProps) {
 
   return (
     <div
-      ref={setNodeRef}
-      className="flex flex-col w-full lg:w-96 lg:flex-shrink-0 bg-gray-100 rounded-lg max-h-[80vh] lg:h-full shadow-md"
+      ref={(node) => {
+        setSortableNodeRef(node);
+        setNodeRef(node);
+      }}
+      style={style}
+      {...attributes}
+      className={`
+    flex flex-col w-full lg:w-96 lg:flex-shrink-0 bg-gray-100 rounded-lg max-h-[80vh] lg:h-full shadow-md
+    ${isOverlay ? "ring-2 ring-indigo-500" : ""}
+  `}
     >
       <div
-        className={`group p-3 border-t-4 ${classeBordaHeader} rounded-t-lg ${corFundo} flex items-center justify-between`}
+        {...listeners}
+        className={`group p-3 border-t-4 ${classeBordaHeader} rounded-t-lg ${corFundo} flex items-center justify-between 
+      ${isDesktop ? "cursor-grab active:cursor-grabbing" : ""} 
+    `}
       >
         {isEditing ? (
           <input

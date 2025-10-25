@@ -89,8 +89,6 @@ export default class ModalEditarProjetos extends React.Component<ModalProps, Mod
 
     this.setState({ saving: true, error: null });
 
-    const token = localStorage.getItem('token');
-
     authFetch(`http://localhost:8080/projeto/atualizar/${projeto.projId}`, {
       method: "PUT",
       headers: {

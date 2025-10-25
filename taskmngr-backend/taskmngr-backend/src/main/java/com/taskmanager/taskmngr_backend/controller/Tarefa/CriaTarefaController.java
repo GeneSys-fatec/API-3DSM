@@ -23,17 +23,21 @@ import com.taskmanager.taskmngr_backend.model.dto.TarefaDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.AnexoTarefaModel;
 import com.taskmanager.taskmngr_backend.model.entidade.TarefaModel;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
-import com.taskmanager.taskmngr_backend.service.TarefaService;
+import com.taskmanager.taskmngr_backend.service.Anexo.CriaAnexoService;
+import com.taskmanager.taskmngr_backend.service.Tarefa.CriaTarefaService;
 
 @RestController
 @RequestMapping("/tarefa")
 @CrossOrigin(origins = "http://localhost:5173")
 public class CriaTarefaController {
     @Autowired
-    private TarefaService tarefaService;
+    private CriaTarefaService criaTarefaService;
 
     @Autowired
     private TarefaConverter tarefaConverterService;
+
+    @Autowired
+    private CriaAnexoService criaAnexoService;
 
     @PostMapping("/cadastrar")
     public ResponseEntity<?> cadastrarTarefa(@RequestBody TarefaDTO dto,
@@ -47,7 +51,7 @@ public class CriaTarefaController {
                     "Título, descrição e data são obrigatórios.");
         }
         TarefaModel tarefa = tarefaConverterService.dtoParaModel(dto);
-        TarefaModel salva = tarefaService.salvar(tarefa, usuarioLogado);
+        TarefaModel salva = criaTarefaService.criarTarefa(dto, usuarioLogado);
         TarefaDTO dtoDeResposta = tarefaConverterService.modelParaDto(salva);
         return ResponseEntity.status(HttpStatus.CREATED).body(dtoDeResposta);
     }
@@ -55,7 +59,7 @@ public class CriaTarefaController {
     @PostMapping("/{tarId}/upload")
     public ResponseEntity<?> uploadAnexo(@PathVariable String tarId, @RequestParam("file") MultipartFile file) {
         try {
-            AnexoTarefaModel anexo = tarefaService.adicionarAnexo(tarId, file);
+            AnexoTarefaModel anexo = criaAnexoService.adicionarAnexo(tarId, file);
             return ResponseEntity.ok(anexo);
         } catch (AnexoTamanhoExcedente e) {
             return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)

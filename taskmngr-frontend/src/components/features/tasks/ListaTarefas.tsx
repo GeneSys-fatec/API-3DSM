@@ -3,7 +3,7 @@ import { useOutletContext } from "react-router-dom";
 import ModalCriarTarefas from "./ModalCriarTarefas";
 import ModalEditarTarefas from "./ModalEditarTarefas";
 import { ModalContext } from "@/context/ModalContext";
-import type { Tarefa } from "@/types/types";
+import type { ResponsavelTarefa, Tarefa } from "@/types/types";
 import { authFetch } from "@/utils/api";
 import { formatDateToDDMMYYYY } from "@/utils/dateUtils";
 
@@ -39,6 +39,26 @@ const getPrioridadeClass = (prioridade: string | null | undefined) => {
   }
 };
 
+const AvatarCircle: React.FC<{ responsavel: ResponsavelTarefa }> = ({
+  responsavel,
+}) => (
+  <div
+    className="w-7 h-7 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs font-bold border-2 border-white"
+    title={responsavel.usuNome}
+  >
+    {responsavel.usuNome?.charAt(0)?.toUpperCase() || "?"}
+  </div>
+);
+
+const AvatarCountCircle: React.FC<{ count: number }> = ({ count }) => (
+  <div
+    className="w-7 h-7 rounded-full bg-gray-300 text-gray-700 flex items-center justify-center text-xs font-bold border-2 border-white"
+    title={`${count} mais responsáveis`}
+  >
+    +{count}
+  </div>
+);
+
 export default function ListaTarefas() {
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
   const [loading, setLoading] = useState(false);
@@ -71,15 +91,16 @@ export default function ListaTarefas() {
           `Erro na requisição: ${response.statusText}. Resposta: ${errorBody}`
         );
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const data: any[] = await response.json();
 
       const tarefasConvertidas: Tarefa[] = data.map((item) => ({
         tarId: item.tarId,
         tarTitulo: item.tarTitulo,
         tarStatus: item.tarStatus,
-        usuNome: item.usuNome,
-        usuId: item.usuId,
+
+        responsaveis: item.responsaveis || [],
+
         tarPrazo: item.tarPrazo ?? "-",
         tarPrioridade: item.tarPrioridade,
         tarDescricao: item.tarDescricao,
@@ -108,6 +129,7 @@ export default function ListaTarefas() {
         `http://localhost:8080/tarefa/apagar/${tarefaParaExcluir}`,
         {
           method: "DELETE",
+          credentials: "include",
         }
       );
 
@@ -211,9 +233,25 @@ export default function ListaTarefas() {
                   <div className="text-sm text-gray-800 text-center truncate">
                     {tarefa.tarTitulo}
                   </div>
-                  <div className="text-sm text-gray-800 text-center">
-                    {tarefa.usuNome}
+
+                  <div className="flex justify-center items-center -space-x-2 px-2">
+                    {tarefa.responsaveis && tarefa.responsaveis.length > 0 ? (
+                      <>
+                        {tarefa.responsaveis.slice(0, 2).map((r) => (
+                          <AvatarCircle key={r.usuId} responsavel={r} />
+                        ))}
+
+                        {tarefa.responsaveis.length > 2 && (
+                          <AvatarCountCircle
+                            count={tarefa.responsaveis.length - 2}
+                          />
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-sm text-gray-500">-</span>
+                    )}
                   </div>
+
                   <div className="flex justify-center">
                     <span className="text-xs font-semibold bg-gray-200 text-gray-700 px-2 py-1 rounded-md hover:bg-gray-300 transition-colors whitespace-nowrap">
                       {formatDateToDDMMYYYY(tarefa.tarPrazo)}
@@ -316,15 +354,26 @@ export default function ListaTarefas() {
                     </div>
                     <div className="space-y-2 text-base">
                       <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center min-w-0 flex-1">
-                          <span className="text-gray-600 font-medium flex-shrink-0">
+                        <div className="flex items-start min-w-0 flex-1">
+                          <span className="text-gray-600 font-medium flex-shrink-0 pt-1">
                             Responsável:
                           </span>
-                          <span className="text-gray-800 font-medium pl-2 break-words">
-                            {tarefa.usuNome}
-                          </span>
+
+                          <div className="flex items-center -space-x-2 pl-2">
+                            {tarefa.responsaveis &&
+                            tarefa.responsaveis.length > 0 ? (
+                              tarefa.responsaveis.map((r) => (
+                                <AvatarCircle key={r.usuId} responsavel={r} />
+                              ))
+                            ) : (
+                              <span className="text-sm text-gray-500 pt-1">
+                                -
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
+
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center min-w-0 flex-1">
                           <span className="text-gray-600 font-medium flex-shrink-0">

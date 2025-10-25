@@ -6,19 +6,21 @@ import com.taskmanager.taskmngr_backend.model.converter.ProjetoConverter;
 import com.taskmanager.taskmngr_backend.model.dto.ProjetoDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.ProjetoModel;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
-import com.taskmanager.taskmngr_backend.service.ProjetoService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import com.taskmanager.taskmngr_backend.service.Projeto.CriaProjetoService;
+
 @RestController
 @RequestMapping("/projeto")
 @CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*")
 public class CriaProjetoController {
     @Autowired
-    private ProjetoService projetoService;
+    private CriaProjetoService criaProjetoService;
     @Autowired
     private ProjetoConverter projetoConverter;
 
@@ -36,7 +38,7 @@ public class CriaProjetoController {
         }
 
         ProjetoModel projeto = projetoConverter.dtoParaModel(dto);
-        projetoService.criarNovoProjeto(projeto, dto.getEquipeId());
+        criaProjetoService.criarNovoProjeto(projeto, dto.getEquipeId());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)

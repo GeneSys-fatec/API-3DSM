@@ -47,7 +47,8 @@ export default function ProjetoItem({
         onClick={onOpenOptions}
         className={`fa-solid fa-ellipsis-vertical cursor-pointer p-0 rounded-full flex-shrink-0 transition-opacity duration-200 ${
           isExpanded ? "opacity-100" : "opacity-0"
-        } ${
+        } lg:opacity-0 lg:group-hover:opacity-100
+        ${
           isActive ? "text-indigo-600" : "text-slate-400 hover:bg-slate-200"
         } focus:outline-none focus:ring-2 focus:ring-indigo-400`}
       />

@@ -20,6 +20,7 @@ import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.Equipe
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.EquipeSemInformacaoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.NomeDeEquipeJaExisteException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.equipes.UsuarioNaoEMembroException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.métricas.DashboardSemDadosException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.projetos.ProjetoNaoEncontradoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.projetos.ProjetoSemInformacaoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.AnexoTamanhoExcedente;
@@ -27,7 +28,8 @@ import com.taskmanager.taskmngr_backend.exceptions.personalizados.tarefas.Invali
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.EmailJaCadastradoException;
 import com.taskmanager.taskmngr_backend.exceptions.personalizados.usuário.UsuarioNaoEncontradoException;
 import com.taskmanager.taskmngr_backend.model.dto.ErroRespostaDTO;
-
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.coluna.NomeDeColunaJaExisteException;
+import com.taskmanager.taskmngr_backend.exceptions.personalizados.coluna.LimiteDeColunasExcedidoException;
 
 @ControllerAdvice
 public class ManipuladorGlobal {
@@ -159,10 +161,28 @@ public class ManipuladorGlobal {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
     }
 
-     // ConteudoInapropriadoException
+    // ConteudoInapropriadoException
     @ExceptionHandler(ConteudoInapropriadoException.class)
     public ResponseEntity<ErroRespostaDTO> manipularComentarioInapropriado(ConteudoInapropriadoException ex) {
         ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
+    }
+
+    @ExceptionHandler(NomeDeColunaJaExisteException.class)
+    public ResponseEntity<ErroRespostaDTO> manipularNomeDeColunaJaExiste(NomeDeColunaJaExisteException ex) {
+        ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(erro); // 409
+    }
+
+    @ExceptionHandler(LimiteDeColunasExcedidoException.class)
+    public ResponseEntity<ErroRespostaDTO> manipularLimiteDeColunas(LimiteDeColunasExcedidoException ex) {
+        ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro); // 400
+    }
+
+    @ExceptionHandler(DashboardSemDadosException.class)
+    public ResponseEntity<ErroRespostaDTO> manipularDashboardSemDados(DashboardSemDadosException ex) {
+        ErroRespostaDTO erro = new ErroRespostaDTO(ex.getMessage(), ex.getMensagem());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
     }
 }

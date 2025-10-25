@@ -5,11 +5,19 @@ import FormularioTarefa from "./FormularioTarefa";
 import type { Tarefa, Usuario, Anexo } from "@/types/types";
 import { authFetch } from "@/utils/api";
 import { getFileIcon } from "@/utils/fileUtils";
-import { showErrorToastFromResponse, showValidationToast } from "@/utils/errorUtils";
+import {
+  showErrorToastFromResponse,
+  showValidationToast,
+} from "@/utils/errorUtils";
 import { uploadTaskAttachments } from "@/utils/taskUtils";
 import ListaComentarios from "./ListaComentarios";
 import imageCompression from "browser-image-compression";
 import ModalConfirmacao from "../../ui/ModalConfirmacao";
+import {
+  getAuthStatus,
+  updateGoogleEvent,
+  buildGoogleEventBodyFromTask,
+} from "@/services/googleCalendar";
 
 type AnexoParaExcluir = {
   nome: string;
@@ -31,42 +39,54 @@ export default function ModalEditarTarefas({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const lastSubmitRef = React.useRef<number>(0);
   const submittingRef = React.useRef<boolean>(false);
-  const lastPayloadKeyRef = React.useRef<string>("");
-  const lastPayloadAtRef = React.useRef<number>(0);
-  const [visualizaImagemUrl, setVisualizaImagemUrl] = useState<string | null>(null);
 
-  const [anexoParaExcluir, setAnexoParaExcluir] = useState<AnexoParaExcluir>(null); 
+  const projId = tarefaInicial.projId;
+  const [visualizaImagemUrl, setVisualizaImagemUrl] = useState<string | null>(
+    null
+  );
 
+  const [anexoParaExcluir, setAnexoParaExcluir] =
+    useState<AnexoParaExcluir>(null);
 
   useEffect(() => {
-    authFetch("http://localhost:8080/usuario/listar")
-      .then((res) => res.json())
-      .then(setUsuarios)
-      .catch((err) => console.error("Erro ao buscar usuários:", err));
+    if (projId) {
+      //
+      authFetch(`http://localhost:8080/projeto/${projId}/membros`) //
+        .then((res) => res.json())
+        .then(setUsuarios)
+        .catch((err) =>
+          console.error("Erro ao buscar usuários do projeto:", err)
+        );
+    } else {
+      console.warn("ID do projeto não fornecido para o modal de edição.");
+    }
 
-    authFetch(`http://localhost:8080/tarefa/${tarefaInicial.tarId}/anexos`)
+    authFetch(`http://localhost:8080/tarefa/${tarefaInicial.tarId}/anexos`) //
       .then((res) => res.json())
       .then(setAnexosExistentes)
       .catch((err) => console.error("Erro ao buscar anexos:", err));
-  }, [tarefaInicial.tarId]);
+  }, [tarefaInicial.tarId, projId]);
 
   const MAX_FILES = 10;
   const MAX_TOTAL_BYTES = 30 * 1024 * 1024;
   const MAX_BYTES_COMPRESSIVE = 20 * 1024 * 1024;
   const MAX_BYTES_NON_COMPRESSIVE = 2 * 1024 * 1024;
-  const COMPRESS_THRESHOLD = 2 * 1024 * 1024; // 2MB
+  const COMPRESS_THRESHOLD = 2 * 1024 * 1024;
 
   const isImage = (f: File) =>
     f.type.match(/^image\/(jpeg|jpg|png)$/i) || /\.(jpe?g|png)$/i.test(f.name);
   const isPdf = (f: File) =>
     f.type === "application/pdf" || /\.pdf$/i.test(f.name);
   const isDocx = (f: File) =>
-    f.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    f.type ===
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
     /\.docx$/i.test(f.name);
   const isXlsx = (f: File) =>
-    f.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+    f.type ===
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
     /\.xlsx$/i.test(f.name);
-  const isAllowed = (f: File) => isImage(f) || isPdf(f) || isDocx(f) || isXlsx(f);
+  const isAllowed = (f: File) =>
+    isImage(f) || isPdf(f) || isDocx(f) || isXlsx(f);
 
   async function tryCompressFile(file: File): Promise<File> {
     if (!isImage(file) && !isPdf(file)) return file;
@@ -90,7 +110,10 @@ export default function ModalEditarTarefas({
     }
   }
 
-  async function validateAndCompressFiles(newFiles: File[], currentFiles: File[] = []) {
+  async function validateAndCompressFiles(
+    newFiles: File[],
+    currentFiles: File[] = []
+  ) {
     const errors: string[] = [];
     const accepted: File[] = [];
 
@@ -111,9 +134,16 @@ export default function ModalEditarTarefas({
         f = await tryCompressFile(f);
       }
 
-      const sizeLimit = (isImage(f) || isPdf(f)) ? MAX_BYTES_COMPRESSIVE : MAX_BYTES_NON_COMPRESSIVE;
+      const sizeLimit =
+        isImage(f) || isPdf(f)
+          ? MAX_BYTES_COMPRESSIVE
+          : MAX_BYTES_NON_COMPRESSIVE;
       if (f.size > sizeLimit) {
-        errors.push(`${f.name}: tamanho excede o limite de ${Math.round(sizeLimit / 1024 / 1024)}MB.`);
+        errors.push(
+          `${f.name}: tamanho excede o limite de ${Math.round(
+            sizeLimit / 1024 / 1024
+          )}MB.`
+        );
         continue;
       }
 
@@ -138,7 +168,10 @@ export default function ModalEditarTarefas({
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const novos = Array.from(e.target.files || []);
-    const { accepted, errors } = await validateAndCompressFiles(novos, novosAnexos);
+    const { accepted, errors } = await validateAndCompressFiles(
+      novos,
+      novosAnexos
+    );
     if (errors.length > 0) showValidationToast(errors, "Anexos inválidos");
     if (accepted.length > 0) setNovosAnexos((prev) => [...prev, ...accepted]);
     e.target.value = "";
@@ -151,7 +184,7 @@ export default function ModalEditarTarefas({
   const handleRemoverAnexoExistente = (nomeArquivo: string) => {
     setAnexoParaExcluir({ nome: nomeArquivo });
   };
-  
+
   const executarExclusaoAnexo = async () => {
     if (!anexoParaExcluir || !tarefa.tarId) return;
     const nomeArquivo = anexoParaExcluir.nome;
@@ -160,10 +193,14 @@ export default function ModalEditarTarefas({
 
     try {
       await authFetch(
-        `http://localhost:8080/tarefa/${tarefa.tarId}/anexos/${encodeURIComponent(nomeArquivo)}`,
-        { method: "DELETE" }
+        `http://localhost:8080/tarefa/${
+          tarefa.tarId
+        }/anexos/${encodeURIComponent(nomeArquivo)}`,
+        { method: "DELETE", credentials: "include" }
       );
-      setAnexosExistentes((prev) => prev.filter((a) => a.arquivoNome !== nomeArquivo));
+      setAnexosExistentes((prev) =>
+        prev.filter((a) => a.arquivoNome !== nomeArquivo)
+      );
       toast.success("Anexo removido.");
     } catch (err) {
       console.error("Falha ao remover anexo:", err);
@@ -180,9 +217,13 @@ export default function ModalEditarTarefas({
     lastSubmitRef.current = now;
 
     const validationErrors: string[] = [];
-    if (!tarefa.tarTitulo?.trim()) validationErrors.push("O título da tarefa é obrigatório.");
-    if (!tarefa.usuId) validationErrors.push("Selecione um responsável pela tarefa.");
-    if (!tarefa.tarPrazo) validationErrors.push("Informe um prazo para a tarefa.");
+    if (!tarefa.tarTitulo?.trim())
+      validationErrors.push("O título da tarefa é obrigatório.");
+    if (!tarefa.responsaveis || tarefa.responsaveis.length === 0) {
+      validationErrors.push("Selecione ao menos um responsável pela tarefa.");
+    }
+    if (!tarefa.tarPrazo)
+      validationErrors.push("Informe um prazo para a tarefa.");
 
     if (validationErrors.length > 0) {
       showValidationToast(validationErrors, "Erros de validação");
@@ -192,7 +233,10 @@ export default function ModalEditarTarefas({
     submittingRef.current = true;
     setIsSubmitting(true);
 
-    const { accepted, errors: anexErrors } = await validateAndCompressFiles(novosAnexos, []);
+    const { accepted, errors: anexErrors } = await validateAndCompressFiles(
+      novosAnexos,
+      []
+    );
     if (anexErrors.length > 0) {
       showValidationToast(anexErrors, "Anexos inválidos");
       setIsSubmitting(false);
@@ -207,6 +251,7 @@ export default function ModalEditarTarefas({
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(tarefa),
+          credentials: "include",
         }
       );
 
@@ -221,6 +266,26 @@ export default function ModalEditarTarefas({
           toast.error("Falha ao anexar novos arquivos.");
           return;
         }
+      }
+
+      try {
+        const { loggedIn } = await getAuthStatus();
+        if (loggedIn) {
+          const googleEventId =
+            (tarefa as any)?.googleId || (tarefaInicial as any)?.googleId;
+          if (googleEventId && tarefa.tarTitulo && tarefa.tarPrazo) {
+            const eventBody = buildGoogleEventBodyFromTask({
+              tarTitulo: tarefa.tarTitulo,
+              tarDescricao: tarefa.tarDescricao,
+              tarPrazo: tarefa.tarPrazo as any,
+
+              tarPrazoFim: (tarefa as any)?.tarPrazoFim,
+            });
+            await updateGoogleEvent(String(googleEventId), eventBody);
+          }
+        }
+      } catch (e) {
+        console.warn("Falha ao sincronizar atualização no Google Calendar:", e);
       }
 
       toast.success("Tarefa atualizada com sucesso!");
@@ -248,7 +313,10 @@ export default function ModalEditarTarefas({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col flex-grow overflow-hidden"
+        >
           <div className="px-8 flex-grow overflow-y-auto">
             <FormularioTarefa
               tarefa={tarefa}
@@ -263,7 +331,9 @@ export default function ModalEditarTarefas({
             />
             <div className="flex-grow overflow-y-auto pt-4">
               <div className="flex flex-col gap-2">
-                <h3 className="text-lg font-semibold text-gray-800">Comentários</h3>
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Comentários
+                </h3>
                 {tarefa.tarId && <ListaComentarios tarId={tarefa.tarId} />}
               </div>
             </div>
@@ -297,15 +367,16 @@ export default function ModalEditarTarefas({
           titulo={"Excluir Anexo?"}
           mensagem={
             <p>
-              O anexo "<span className="font-bold">{anexoParaExcluir.nome}</span>" 
-              será excluído permanentemente.
+              O anexo "
+              <span className="font-bold">{anexoParaExcluir.nome}</span>" será
+              excluído permanentemente.
             </p>
           }
           onConfirm={executarExclusaoAnexo}
           onCancel={() => setAnexoParaExcluir(null)}
         />
       )}
-      
+
       {visualizaImagemUrl && (
         <div
           className="fixed inset-0 bg-black bg-opacity-80 z-[60] flex items-center justify-center p-4"
