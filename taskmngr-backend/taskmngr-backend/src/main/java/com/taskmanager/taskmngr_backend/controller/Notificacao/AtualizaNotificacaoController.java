@@ -5,8 +5,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
-import com.taskmanager.taskmngr_backend.service.NotificacaoService;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
+import com.taskmanager.taskmngr_backend.service.Notificacao.MarcaComoLidaNotificacaoService;
 
 
 @RestController
@@ -15,17 +17,17 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 public class AtualizaNotificacaoController {
 
     @Autowired
-    private NotificacaoService notificacaoService;
+    private MarcaComoLidaNotificacaoService marcaComoLidaNotificacaoService;
 
     @PutMapping("/marcar-lida/{id}")
     public ResponseEntity<Void> marcarComoLida(@PathVariable String id) {
-        notificacaoService.marcarComoLida(id);
+        marcaComoLidaNotificacaoService.marcarComoLida(id);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/marcar-todas")
     public ResponseEntity<Void> marcarTodasComoLidas(@AuthenticationPrincipal UsuarioModel usuario) {
-        notificacaoService.marcarTodasComoLidas(usuario.getUsuId());
+        marcaComoLidaNotificacaoService.marcarTodasComoLidas(usuario.getUsuId());
         return ResponseEntity.ok().build();
     }
 }

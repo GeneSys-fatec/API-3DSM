@@ -1,4 +1,4 @@
-package com.taskmanager.taskmngr_backend.service;
+package com.taskmanager.taskmngr_backend.service.Metrica;
 
 import java.time.LocalDate;
 import java.time.YearMonth;

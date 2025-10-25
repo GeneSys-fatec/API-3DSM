@@ -1,4 +1,4 @@
-package com.taskmanager.taskmngr_backend.controller.Tarefa;
+package com.taskmanager.taskmngr_backend.controller.Comentario;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -10,14 +10,14 @@ import org.springframework.web.bind.annotation.*;
 import com.taskmanager.taskmngr_backend.model.AdicionadorLinkComentario;
 import com.taskmanager.taskmngr_backend.model.converter.ComentarioConverter;
 import com.taskmanager.taskmngr_backend.model.dto.ComentarioDTO;
-import com.taskmanager.taskmngr_backend.service.ComentarioService;
+import com.taskmanager.taskmngr_backend.service.Comentario.BuscaComentarioService;
 
 @RestController
 @RequestMapping("/comentario")
 @CrossOrigin(origins = "http://localhost:5173")
 public class BuscaComentarioController {
     @Autowired
-    private ComentarioService comentarioService;
+    private BuscaComentarioService buscaComentarioService;
     @Autowired
     private AdicionadorLinkComentario adicionadorLink;
     @Autowired
@@ -25,7 +25,7 @@ public class BuscaComentarioController {
 
 @GetMapping("/listar")
     public ResponseEntity<List<ComentarioDTO>> listarTodos() {
-        List<ComentarioDTO> dtos = comentarioService.listarTodos().stream()
+        List<ComentarioDTO> dtos = buscaComentarioService.listarTodos().stream()
                 .map(comentarioConverterService::modelParaDto).collect(Collectors.toList());
         adicionadorLink.adicionarLink(dtos);
         return ResponseEntity.ok(dtos);
@@ -33,7 +33,7 @@ public class BuscaComentarioController {
 
     @GetMapping("/tarefa/{tarId}")
     public ResponseEntity<List<ComentarioDTO>> listarComentariosPorTarefa(@PathVariable String tarId) {
-        List<ComentarioDTO> dtos = comentarioService.listarPorTarefa(tarId).stream()
+        List<ComentarioDTO> dtos = buscaComentarioService.listarPorTarefa(tarId).stream()
                 .map(comentarioConverterService::modelParaDto).collect(Collectors.toList());
         adicionadorLink.adicionarLink(dtos);
         return ResponseEntity.ok(dtos);
@@ -41,7 +41,7 @@ public class BuscaComentarioController {
 
     @GetMapping("/{comId}")
     public ResponseEntity<ComentarioDTO> listarPorId(@PathVariable String comId) {
-        ComentarioDTO dto = comentarioService.listarPorId(comId).map(comentarioConverterService::modelParaDto)
+        ComentarioDTO dto = buscaComentarioService.listarPorId(comId).map(comentarioConverterService::modelParaDto)
                 .orElse(null);
         if (dto != null) {
             adicionadorLink.adicionarLink(dto);

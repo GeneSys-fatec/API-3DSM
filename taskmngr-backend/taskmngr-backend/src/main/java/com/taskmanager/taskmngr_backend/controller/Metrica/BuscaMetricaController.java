@@ -1,4 +1,4 @@
-package com.taskmanager.taskmngr_backend.controller.Tarefa;
+package com.taskmanager.taskmngr_backend.controller.Metrica;
 
 import java.util.List;
 import java.util.Map;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.taskmanager.taskmngr_backend.service.MetricaService;
+import com.taskmanager.taskmngr_backend.service.Metrica.MetricaService;
 
 @RestController
 @RequestMapping("/dashboard")

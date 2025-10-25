@@ -16,7 +16,7 @@ import com.taskmanager.taskmngr_backend.repository.EquipeRepository;
 import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
 
 @Service
-public class ValidacaoEquipeService {
+public class ValidaEquipeService {
     @Autowired
     private EquipeRepository equipeRepository;
     @Autowired

@@ -1,4 +1,4 @@
-package com.taskmanager.taskmngr_backend.controller.Tarefa;
+package com.taskmanager.taskmngr_backend.controller.Comentario;
 
 import java.util.Date;
 
@@ -13,14 +13,14 @@ import com.taskmanager.taskmngr_backend.model.converter.ComentarioConverter;
 import com.taskmanager.taskmngr_backend.model.dto.ComentarioDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.ComentarioModel;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
-import com.taskmanager.taskmngr_backend.service.ComentarioService;
+import com.taskmanager.taskmngr_backend.service.Comentario.CriaComentarioService;
 
 @RestController
 @RequestMapping("/comentario")
 @CrossOrigin(origins = "http://localhost:5173")
 public class CriaComentarioController {
     @Autowired
-    private ComentarioService comentarioService;
+    private CriaComentarioService criaComentarioService;
     @Autowired
     private AdicionadorLinkComentario adicionadorLink;
     @Autowired
@@ -34,7 +34,7 @@ public class CriaComentarioController {
             comentario.setUsuNome(usuarioLogado.getUsuNome());
             comentario.setComDataAtualizacao(new Date());
         }
-        ComentarioModel salvo = comentarioService.adicionarComentario(comentario, usuarioLogado);
+        ComentarioModel salvo = criaComentarioService.adicionarComentario(comentario, usuarioLogado);
         ComentarioDTO dtoSalvo = comentarioConverterService.modelParaDto(salvo);
         adicionadorLink.adicionarLink(dtoSalvo);
         return ResponseEntity.status(HttpStatus.CREATED).body(dtoSalvo);

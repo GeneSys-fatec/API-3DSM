@@ -338,44 +338,6 @@ export default function ModalEditarTarefas({
               </div>
             </div>
 
-            {anexosExistentes.length > 0 && (
-              <div className="mt-4 p-3 border rounded-md bg-gray-50">
-                <h4 className="font-semibold text-sm mb-2">
-                  Anexos existentes
-                </h4>
-                <ul className="space-y-2">
-                  {anexosExistentes.map((anexo) => (
-                    <li
-                      key={anexo.arquivoNome}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-2 truncate">
-                        {getFileIcon(anexo.arquivoTipo || "")}
-                        <a
-                          href={`http://localhost:8080/tarefa/${
-                            tarefa.tarId
-                          }/anexos/${encodeURIComponent(anexo.arquivoNome)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="truncate text-blue-600 hover:underline"
-                        >
-                          {anexo.arquivoNome}
-                        </a>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleRemoverAnexoExistente(anexo.arquivoNome)
-                        }
-                        className="text-red-500"
-                      >
-                        &times;
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
 
           <div className="p-8 pt-4 flex justify-end gap-x-4">

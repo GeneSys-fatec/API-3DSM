@@ -11,19 +11,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
-import com.taskmanager.taskmngr_backend.service.UsuarioService;
-
+import com.taskmanager.taskmngr_backend.service.Usuario.BuscaUsuarioService;
+import com.taskmanager.taskmngr_backend.service.Usuario.ExcluiUsuarioService;
 @RestController
 @RequestMapping("/usuario")
 public class ExcluiUsuarioController {
     @Autowired
-    private UsuarioService usuarioService;
+    private ExcluiUsuarioService excluiUsuarioService;
+    @Autowired
+    private BuscaUsuarioService buscaUsuarioService;
 
     @DeleteMapping("/apagar/{usuId}")
     public ResponseEntity<String> apagarUsuario(@PathVariable String usuId) { 
-        Optional<UsuarioModel> usuarioExistente = usuarioService.buscarPorId(usuId);
+        Optional<UsuarioModel> usuarioExistente = buscaUsuarioService.buscarPorId(usuId);
         if (usuarioExistente.isPresent()){
-            usuarioService.deletar(usuId);
+            excluiUsuarioService.deletar(usuId);
             return ResponseEntity.ok("Usuário apagado com sucesso!");
         }
         else {

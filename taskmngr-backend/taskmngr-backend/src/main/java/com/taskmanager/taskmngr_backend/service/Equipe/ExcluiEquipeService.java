@@ -14,7 +14,7 @@ public class ExcluiEquipeService {
     @Autowired
     private BuscaEquipeService buscaEquipeService;
     @Autowired
-    private ValidacaoEquipeService validacaoEquipeService;
+    private ValidaEquipeService validacaoEquipeService;
 
     public void excluir(String id, UsuarioModel usuarioLogado) {
         EquipeModel equipe = buscaEquipeService.getEquipeById(id);

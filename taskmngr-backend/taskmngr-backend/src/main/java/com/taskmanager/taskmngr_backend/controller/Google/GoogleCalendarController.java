@@ -8,7 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import com.taskmanager.taskmngr_backend.service.GoogleOAuthService;
+import com.taskmanager.taskmngr_backend.service.Google.GoogleOAuthService;
 
 @RestController
 @RequestMapping("/google")
