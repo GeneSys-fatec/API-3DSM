@@ -40,23 +40,25 @@ O sistema contará com as seguintes funcionalidades principais:
  
 <br>
  
-ID |          Prioridade           |                     User Story                      | Sprint | 
-:---: | :-------------------: | :----------------------------------------------------------: | :-----------:
-US01 | Alta |Como usuário, quero criar, editar e excluir tarefas, para organizar de forma eficiente minhas atividades. | 1
-US02 | Alta |Como usuário, quero visualizar tarefas em aberto, em andamento e concluídas, para acompanhar o progresso das minhas atividades pessoais ou da minha equipe. | 1 |
-US03 | Alta |Como usuário, quero me cadastrar informando nome, e-mail válido e senha, para garantir a segurança do meu acesso e facilitar meu ingresso no sistema. | 1 |
-US04 | Alta |Como usuário, quero iniciar sessão informando meu e-mail e senha cadastrados, para acessar e utilizar todas as funcionalidades do sistema.| 1 |  
-US05 | Alta |Como usuário, quero criar e gerenciar projetos pessoais ou de equipe, para organizar e acompanhar minhas atividades de forma centralizada e eficiente. | 1 |
-US06 | Alta |Como usuário, quero anexar arquivos nos formatos PDF, Word, Excel e imagens de diferentes extensões, para comprovar a realização das tarefas. | 2 |
-US07 | Média |Como usuário, quero criar equipes e gerenciar seus membros, para que todos colaborem e participem ativamente das atividades. | 2 |
-US08 | Média |Como membro de uma equipe, quero atribuir tarefas a outros participantes, para promover a colaboração e a divisão de responsabilidades.  | 2| 
-US09 | Média |Como usuário, quero visualizar minhas tarefas em um calendário mensal e semanal, para ter uma visão organizada das atividades no tempo. | 2 | 
-US10 | Média |Como usuário, quero adicionar comentários em qualquer tarefa, para registrar o andamento das atividades e fornecer feedback a outros colaboradores. | 2 | 
-US11 | Média |Como usuário, quero receber notificações sobre tarefas atribuídas e comentários adicionados, para acompanhar em tempo real as atualizações relacionadas às minhas atividades. | 2 | 
-US12 | Baixa |Como gestor, quero acessar um dashboard com KPIs da equipe (tarefas concluídas, prazos e produtividade), para acompanhar a performance e melhorar o planejamento. | 2 | 
-US13 | Baixa |Como usuário, quero gerenciar os dados da minha conta (redefinir senha, alterar nome, e-mail e foto de perfil), para manter minhas informações seguras e atualizadas.| 3 | 
-US14 | Baixa |Como usuário, quero filtrar minhas tarefas por palavra-chave, por prioridade e por responsável, para localizar rapidamente atividades específicas. | 3 | 
- 
+|  ID  | Prioridade | User Story                                                                                                                                                  | Sprint |
+| :--: | :--------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------- | :----: |
+| US01 |    Alta    | Como usuário, quero criar, editar e excluir tarefas, para organizar de forma eficiente minhas atividades.                                                   |    1   |
+| US02 |    Alta    | Como usuário, quero visualizar tarefas em aberto, em andamento e concluídas, para acompanhar o progresso das minhas atividades pessoais ou da minha equipe. |    1   |
+| US03 |    Alta    | Como usuário, quero me cadastrar informando nome, e-mail válido e senha, para garantir a segurança do meu acesso e facilitar meu ingresso no sistema.       |    1   |
+| US04 |    Alta    | Como usuário, quero iniciar sessão informando meu e-mail e senha cadastrados, para acessar e utilizar todas as funcionalidades do sistema.                  |    1   |
+| US05 |    Alta    | Como usuário, quero criar e gerenciar projetos pessoais ou de equipe, para organizar e acompanhar minhas atividades de forma centralizada e eficiente.      |    1   |
+| US06 |    Alta    | Como usuário, quero anexar arquivos nos formatos PDF, Word, Excel e imagens de diferentes extensões, para comprovar a realização das tarefas.               |    2   |
+| US07 |    Alta    | Como usuário, quero criar equipes e gerenciar seus membros, para que todos colaborem e participem ativamente das atividades.                                |    2   |
+| US08 |    Alta    | Como membro de uma equipe, quero atribuir tarefas a outros participantes, para promover a colaboração e a divisão de responsabilidades.                     |    2   |
+| US09 |    Alta    | Como usuário, quero visualizar minhas tarefas em um calendário mensal e semanal, para ter uma visão organizada das atividades no tempo.                     |    2   |
+| US10 |    Média   | Como usuário, quero adicionar comentários em qualquer tarefa, para registrar o andamento das atividades e fornecer feedback a outros colaboradores.         |    2   |
+| US11 |    Média   | Como usuário, quero receber notificações sobre novas interações, para acompanhar em tempo real as atualizações relacionadas às minhas atividades.           |    2   |
+| US12 |    Baixa   | Como usuário, quero acessar um dashboard com KPIs individuais e de equipe, para acompanhar a performance e melhorar o planejamento.                         |    2   |
+| US13 |    Baixa   | Como usuário, quero acessar o histórico das alterações feitas por mim e por outros colaboradores, para acompanhar a evolução e as modificações realizadas.  |    3   |
+| US14 |    Baixa   | Como usuário, quero filtrar minhas tarefas por palavras-chave e por responsável, para localizar rapidamente atividades específicas.                         |    3   |
+| US15 |    Baixa   | Como usuário, quero gerenciar os dados da minha conta, para manter minhas informações atualizadas e meu perfil personalizado.                               |    3   |
+| US16 |    Baixa   | Como usuário, quero acessar um modo de ajuda em cada página do sistema, para entender facilmente onde encontrar e como usar as principais funcionalidades.  |    3   |
+
 <br>
  
 <span id="dor-dod">
@@ -64,30 +66,15 @@ US14 | Baixa |Como usuário, quero filtrar minhas tarefas por palavra-chave, por
 ## 📍 DoR Definition of Ready
 **:link: Clique no link abaixo para visualizar o DoR do projeto:**  
 > [Definition of Ready](https://docs.google.com/document/d/1hIY7ZO-mqmuPyatN_c0C_M0vLosW4f5t4ho94eYAT-o/edit?usp=sharing)
- 
-<br>
- 
-Tópicos utilizados para definir o DoR das Sprints:
-* Resumo - Empresa GSW;
-* Desafio Proposto;
-* Requisitos do Projeto;
-* Possíveis Usuários;
-* User stories detalhadas e bem definidas;
-* Critérios de Aceitação;
-* Cenários de Testes;
-* Mockup específico para a história;
-* Dicionário de dados específico para a história;
- 
+
+
 <br>
 
 ## 📍 DoD Definition of Done
 **:link: Clique no link abaixo para visualizar o DoD do projeto:**
 > [Definition of Done](https://docs.google.com/document/d/1M_z4ewjxnl0ZRcF8LDUnpuOYvtZM9DJmg4pRREf-3II/edit?usp=sharing)
 
-<br>
 
-Tópicos utilizados para definir o DoD das Sprints:
-* Testes e comprovações;
 
 <br>
 <span id="manual-usuario">
@@ -103,8 +90,8 @@ Tópicos utilizados para definir o DoD das Sprints:
 Sprint | Previsão | Status | Relatório | Vídeo do Projeto |
 |------|--------|------|---------|----------|
 |01 | 08/09/2025 - 28/09/2025 |✔️ Concluído| [Ver Relatório](https://github.com/GeneSys-fatec/API-3DSM/blob/updates-sprint1/README.md) | <a href='https://youtu.be/GnxCSIv_jP4?si=REm8HHhPtJweiITJ'>Ver Vídeo</a> |
-|02|  06/10/2025 - 26/10/2025 |⌛ Em andamento| [Ver Relatório](https://github.com/GeneSys-fatec/API-3DSM/blob/updates-sprint2/README.md) | <a href=''>Ver Vídeo</a> |
-|03| 03/11/2025 - 23/11/2025 |🕗 Pendente| [Ver Relatório](https://github.com/GeneSys-fatec/API-3DSM/blob/updates-sprint3/README.md) | <a href=''>Ver Vídeo</a> |
+|02|  06/10/2025 - 26/10/2025 |✔️ Concluído| [Ver Relatório](https://github.com/GeneSys-fatec/API-3DSM/blob/updates-sprint2/README.md) | <a href='https://youtu.be/mlh4uSfiOS8'>Ver Vídeo</a> |
+|03| 03/11/2025 - 23/11/2025 |⌛ Em andamento| [Ver Relatório](https://github.com/GeneSys-fatec/API-3DSM/blob/updates-sprint3/README.md) | <a href=''>Ver Vídeo</a> |
 <br>
  
 <span id="tecnologias">
@@ -113,7 +100,7 @@ Sprint | Previsão | Status | Relatório | Vídeo do Projeto |
  
 As seguintes ferramentas, linguagens, bibliotecas e tecnologias foram usadas na construção do projeto:
  
-![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white) ![Java](https://img.shields.io/badge/Java-red?style=for-the-badge&logo=java&logoColor=white) ![Spring](https://img.shields.io/badge/Spring-6DB33F?style=for-the-badge&logo=spring&logoColor=white)  ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black) ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) ![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white) ![Git](https://img.shields.io/badge/GIT-E44C30?style=for-the-badge&logo=git&logoColor=white) ![Jira](https://img.shields.io/badge/jira-%230A0FFF.svg?style=for-the-badge&logo=jira&logoColor=white) ![Figma](https://img.shields.io/badge/Figma-696969?style=for-the-badge&logo=figma&logoColor=figma)
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white) ![Java](https://img.shields.io/badge/Java-red?style=for-the-badge&logo=java&logoColor=white) ![Spring](https://img.shields.io/badge/Spring-6DB33F?style=for-the-badge&logo=spring&logoColor=white)  ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black) ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) ![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white) ![Git](https://img.shields.io/badge/GIT-E44C30?style=for-the-badge&logo=git&logoColor=white) ![Jira](https://img.shields.io/badge/jira-%230A0FFF.svg?style=for-the-badge&logo=jira&logoColor=white) ![Figma](https://img.shields.io/badge/Figma-696969?style=for-the-badge&logo=figma&logoColor=figma) ![Swagger](https://img.shields.io/badge/Swagger-696969?style=for-the-badge&logo=swagger&logoColor=figma) 
 <br>
  
 <span id="instalacao">
