@@ -6,7 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.taskmanager.taskmngr_backend.model.AdicionadorLinkComentario;
 import com.taskmanager.taskmngr_backend.model.converter.ComentarioConverter;
@@ -17,7 +20,6 @@ import com.taskmanager.taskmngr_backend.service.Comentario.CriaComentarioService
 
 @RestController
 @RequestMapping("/comentario")
-@CrossOrigin(origins = "http://localhost:5173")
 public class CriaComentarioController {
     @Autowired
     private CriaComentarioService criaComentarioService;

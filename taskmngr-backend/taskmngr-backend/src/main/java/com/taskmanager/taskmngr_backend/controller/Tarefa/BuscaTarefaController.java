@@ -2,12 +2,8 @@ package com.taskmanager.taskmngr_backend.controller.Tarefa;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -15,7 +11,6 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,7 +28,6 @@ import com.taskmanager.taskmngr_backend.service.Tarefa.BuscaTarefaService;
 
 @RestController
 @RequestMapping("/tarefa")
-@CrossOrigin(origins = "http://localhost:5173")
 public class BuscaTarefaController {
     @Autowired
     private BuscaTarefaService buscaTarefaService;
