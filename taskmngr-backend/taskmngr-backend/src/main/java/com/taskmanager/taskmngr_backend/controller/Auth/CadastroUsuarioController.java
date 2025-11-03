@@ -1,8 +1,6 @@
 package com.taskmanager.taskmngr_backend.controller.Auth;
 
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.taskmanager.taskmngr_backend.model.dto.ResponseDTO;
 import com.taskmanager.taskmngr_backend.model.dto.usuario.UsuarioCadastroDTO;
 import com.taskmanager.taskmngr_backend.service.Auth.CadastroUsuarioService;
-import com.taskmanager.taskmngr_backend.service.CookieService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,13 +20,11 @@ import lombok.RequiredArgsConstructor;
 public class CadastroUsuarioController {
 
     private final CadastroUsuarioService cadastroUsuarioService;
-    private final CookieService cookieService;
 
     @PostMapping("/cadastrar")
     public ResponseEntity cadastrar(@RequestBody @Valid UsuarioCadastroDTO body) {
-        String token = cadastroUsuarioService.cadastrarUsuario(body);
+        cadastroUsuarioService.cadastrarUsuario(body);
         ResponseDTO response = new ResponseDTO(body.getUsuNome());
-        ResponseCookie cookie = cookieService.createJWTCookie(token);
-        return ResponseEntity.status(HttpStatus.CREATED).header(HttpHeaders.SET_COOKIE, cookie.toString()).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

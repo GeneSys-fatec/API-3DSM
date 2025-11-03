@@ -4,10 +4,16 @@ import { toast } from "react-toastify";
 import FormularioTarefa from "./FormularioTarefa";
 import type { Tarefa, Usuario, ResponsavelTarefa, Coluna } from "@/types/types";
 import { authFetch } from "@/utils/api";
-import {showErrorToastFromResponse,showValidationToast,} from "@/utils/errorUtils";
+import {
+  showErrorToastFromResponse,
+  showValidationToast,
+} from "@/utils/errorUtils";
 import { uploadTaskAttachments } from "@/utils/taskUtils";
 import imageCompression from "browser-image-compression";
-import { getAuthStatus, createGoogleEventFromTask } from "@/services/googleCalendar";
+import {
+  getAuthStatus,
+  createGoogleEventFromTask,
+} from "@/services/googleCalendar";
 
 interface ModalCriarTarefasProps {
   onSuccess: () => void;
@@ -27,7 +33,7 @@ const estadoInicial: Partial<Tarefa> = {
 export default function ModalCriarTarefas({
   onSuccess,
   statusInicial,
-  selectedProjectId, // já existe aqui
+  selectedProjectId,
   tarPrazo,
 }: ModalCriarTarefasProps) {
   const modalContext = useContext(ModalContext);
@@ -52,7 +58,9 @@ export default function ModalCriarTarefas({
       authFetch(`http://localhost:8080/projeto/${selectedProjectId}/membros`)
         .then((res) => res.json())
         .then((data) => setUsuarios(data))
-        .catch((err) => console.error("Erro ao buscar usuários do projeto:", err));
+        .catch((err) =>
+          console.error("Erro ao buscar usuários do projeto:", err)
+        );
     }
   }, [selectedProjectId]);
 
@@ -65,18 +73,20 @@ export default function ModalCriarTarefas({
     let mounted = true;
     (async () => {
       try {
-        const res = await authFetch(`http://localhost:8080/colunas/por-projeto/${projId}`);
+        const res = await authFetch(
+          `http://localhost:8080/colunas/por-projeto/${projId}`
+        );
         if (!res.ok) {
           setColunas([]);
           return;
         }
         const data = await res.json();
-        // normalize fields: suporta diferentes formatos (colTitulo, titulo, Titulo, colId, id, Id)
+
         const normalized: Coluna[] = (data || []).map((it: any, i: number) => ({
           id: it.colId || it.id || it.Id || `col-${i}`,
           titulo: it.colTitulo || it.titulo || it.Titulo || "",
           ordem: it.colOrdem ?? it.ordem ?? i,
-          corClasse: "", // não precisamos de cor aqui
+          corClasse: "",
           corFundo: "",
         }));
         if (mounted) setColunas(normalized);
@@ -85,7 +95,9 @@ export default function ModalCriarTarefas({
         if (mounted) setColunas([]);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [selectedProjectId, tarefa?.projId]);
 
   const MAX_FILES = 10;
@@ -96,7 +108,7 @@ export default function ModalCriarTarefas({
   const isImage = (f: File) =>
     f.type.match(/^image\/(jpeg|jpg|png)$/i) || /\.(jpe?g|png)$/i.test(f.name);
   const isPdf = (f: File) =>
-    f.type === "application/pdf" || /\.pdf$/i.test(f.name); 
+    f.type === "application/pdf" || /\.pdf$/i.test(f.name);
   const isDocx = (f: File) =>
     f.type ===
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
@@ -105,7 +117,8 @@ export default function ModalCriarTarefas({
     f.type ===
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
     /\.xlsx$/i.test(f.name);
-  const isAllowed = (f: File) => isImage(f) || isPdf(f) || isDocx(f) || isXlsx(f);
+  const isAllowed = (f: File) =>
+    isImage(f) || isPdf(f) || isDocx(f) || isXlsx(f);
 
   async function validateAndCompressFiles(
     newFiles: File[],
@@ -139,7 +152,6 @@ export default function ModalCriarTarefas({
 
       let finalFile = f;
 
-      // Compress only images; PDFs are NOT compressible here
       if (isImage(f) && f.size > MAX_BYTES_NON_COMPRESSIVE) {
         try {
           const compressed = await imageCompression(f, {
@@ -151,13 +163,13 @@ export default function ModalCriarTarefas({
           if (compressed.size > sizeLimit) {
             errors.push(
               `${f.name}: mesmo após compressão excede o limite de ${(
-                sizeLimit / (1024 * 1024)
+                sizeLimit /
+                (1024 * 1024)
               ).toFixed(1)} MB`
             );
             continue;
           }
 
-          // imageCompression já retorna um File
           finalFile = new File([compressed], f.name, { type: f.type });
         } catch (err) {
           console.error("Erro ao comprimir arquivo:", err);
@@ -165,7 +177,6 @@ export default function ModalCriarTarefas({
           continue;
         }
       } else if (f.size > sizeLimit) {
-        // PDFs, DOCX e XLSX (e imagens pequenas) só passam na verificação de tamanho
         errors.push(`${f.name}: tamanho excede o limite permitido`);
         continue;
       }
@@ -184,13 +195,11 @@ export default function ModalCriarTarefas({
     return { accepted, errors };
   }
 
-// handlers
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const novos = Array.from(e.target.files || []);
     const { accepted, errors } = await validateAndCompressFiles(novos, anexos);
     if (errors.length > 0) showValidationToast(errors, "Anexos inválidos");
-    if (accepted.length > 0)
-      setAnexos((prev) => [...prev, ...accepted]);
+    if (accepted.length > 0) setAnexos((prev) => [...prev, ...accepted]);
     e.target.value = "";
   };
 
@@ -206,7 +215,8 @@ export default function ModalCriarTarefas({
     lastSubmitRef.current = now;
 
     const validationErrors: string[] = [];
-    if (!selectedProjectId) validationErrors.push("ID do projeto não encontrado.");
+    if (!selectedProjectId)
+      validationErrors.push("ID do projeto não encontrado.");
     if (!tarefa.tarTitulo?.trim())
       validationErrors.push("O título da tarefa é obrigatório.");
     if (!tarefa.responsaveis || tarefa.responsaveis.length === 0) {
@@ -215,7 +225,6 @@ export default function ModalCriarTarefas({
     if (!tarefa.tarPrazo)
       validationErrors.push("Informe um prazo para a tarefa.");
 
-    // Valida anexos novamente antes do envio
     const { errors: anexErrors } = await validateAndCompressFiles(anexos, []);
     if (anexErrors.length > 0) validationErrors.push(...anexErrors);
 
@@ -226,7 +235,7 @@ export default function ModalCriarTarefas({
 
     submittingRef.current = true;
     setIsSubmitting(true);
-    
+
     try {
       const res = await authFetch("http://localhost:8080/tarefa/cadastrar", {
         method: "POST",
@@ -259,7 +268,6 @@ export default function ModalCriarTarefas({
         }
       } catch (e) {
         console.warn("Falha ao criar evento no Google Calendar:", e);
-        // não bloqueia a criação da tarefa
       }
 
       toast.success("Tarefa criada com sucesso!");
@@ -278,7 +286,9 @@ export default function ModalCriarTarefas({
     <div className="fixed inset-0 bg-gray-600/60 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
         <div className="p-8 pb-4 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-800">Adicionar Nova Tarefa</h2>
+          <h2 className="text-2xl font-bold text-gray-800">
+            Adicionar Nova Tarefa
+          </h2>
           <button
             onClick={() => modalContext?.closeModal()}
             className="text-gray-400 hover:text-gray-600 text-3xl"
@@ -299,7 +309,7 @@ export default function ModalCriarTarefas({
               anexos={anexos}
               handleFileChange={handleFileChange}
               handleRemoveAnexo={handleRemoveAnexo}
-              selectedProjectId={selectedProjectId} // <--- encaminha projId
+              selectedProjectId={selectedProjectId}
             />
           </div>
 

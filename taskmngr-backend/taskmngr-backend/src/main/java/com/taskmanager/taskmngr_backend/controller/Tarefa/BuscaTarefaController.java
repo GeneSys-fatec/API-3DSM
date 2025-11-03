@@ -2,12 +2,8 @@ package com.taskmanager.taskmngr_backend.controller.Tarefa;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -15,7 +11,6 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,18 +23,17 @@ import com.taskmanager.taskmngr_backend.model.entidade.AnexoTarefaModel;
 import com.taskmanager.taskmngr_backend.model.entidade.ProjetoModel;
 import com.taskmanager.taskmngr_backend.model.entidade.TarefaModel;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
-import com.taskmanager.taskmngr_backend.service.ProjetoService;
-import com.taskmanager.taskmngr_backend.service.TarefaService;
+import com.taskmanager.taskmngr_backend.service.Projeto.BuscaProjetoService;
+import com.taskmanager.taskmngr_backend.service.Tarefa.BuscaTarefaService;
 
 @RestController
 @RequestMapping("/tarefa")
-@CrossOrigin(origins = "http://localhost:5173")
 public class BuscaTarefaController {
     @Autowired
-    private TarefaService tarefaService;
+    private BuscaTarefaService buscaTarefaService;
 
     @Autowired
-    private ProjetoService projetoService;
+    private BuscaProjetoService buscaProjetoService;
 
     @Autowired
     private AdicionadorLinkTarefa adicionadorLink;
@@ -49,9 +43,9 @@ public class BuscaTarefaController {
 
     @GetMapping("/listar-por-usuario")
     public ResponseEntity<List<TarefaDTO>> listarTarefasDoUsuario(@AuthenticationPrincipal UsuarioModel usuario) {
-        List<ProjetoModel> projetosDoUsuario = projetoService.listarPorUsuario(usuario);
+        List<ProjetoModel> projetosDoUsuario = buscaProjetoService.listarPorUsuario(usuario);
 
-        List<TarefaModel> tarefas = tarefaService.listarPorProjetos(projetosDoUsuario);
+        List<TarefaModel> tarefas = buscaTarefaService.listarPorProjetos(projetosDoUsuario);
 
         List<TarefaDTO> dtos = tarefas.stream()
                 .map(tarefaConverterService::modelParaDto)
@@ -62,7 +56,7 @@ public class BuscaTarefaController {
 
     @GetMapping("/{tarId}")
     public ResponseEntity<TarefaDTO> buscarPorId(@PathVariable String tarId) {
-        Optional<TarefaModel> tarefaOpt = tarefaService.buscarPorId(tarId);
+        Optional<TarefaModel> tarefaOpt = buscaTarefaService.buscarPorId(tarId);
         if (tarefaOpt.isPresent()) {
             TarefaDTO dto = tarefaConverterService.modelParaDto(tarefaOpt.get());
             adicionadorLink.adicionarLink(dto);
@@ -74,7 +68,7 @@ public class BuscaTarefaController {
 
     @GetMapping("/por-projeto/{projId}")
     public ResponseEntity<List<TarefaDTO>> listarTarefasPorProjeto(@PathVariable String projId) {
-        List<TarefaModel> tarefas = tarefaService.listarPorProjetoUnico(projId);
+        List<TarefaModel> tarefas = buscaTarefaService.listarPorProjetoUnico(projId);
         List<TarefaDTO> dtos = tarefas.stream()
                 .map(tarefaConverterService::modelParaDto)
                 .toList();
@@ -84,7 +78,7 @@ public class BuscaTarefaController {
 
     @GetMapping("/listar")
     public ResponseEntity<List<TarefaDTO>> listarTarefa() {
-        List<TarefaModel> tarefas = tarefaService.listarTodas();
+        List<TarefaModel> tarefas = buscaTarefaService.listarTodas();
         List<TarefaDTO> dtos = tarefas.stream()
                 .map(tarefaConverterService::modelParaDto)
                 .toList();
@@ -92,51 +86,10 @@ public class BuscaTarefaController {
         return ResponseEntity.ok(dtos);
     }
 
-    @GetMapping("/prazos/{projId}")
-    public ResponseEntity<?> prazosPorMembro(@PathVariable String projId) {
-        List<Map<String, Object>> resultado = tarefaService.calcularPrazosPorMembro(projId);
-
-        if (resultado.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-        }
-
-        return ResponseEntity.ok(resultado);
-    }
-
-    @GetMapping("/prazos-geral/{projId}")
-    public ResponseEntity<?> prazosGerais(@PathVariable String projId) {
-        Map<String, Long> resultado = tarefaService.calcularPrazosGerais(projId);
-
-        if (resultado.get("dentroPrazo") == 0 && resultado.get("foraPrazo") == 0) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-        }
-
-        return ResponseEntity.ok(resultado);
-    }
-
-    @GetMapping("/tarefas-concluidas/{projId}")
-    public ResponseEntity<List<Map<String, Object>>> TarefasConcluidas(@PathVariable String projId) {
-        List<Map<String, Object>> ranking = tarefaService.contarTarefasConcluidasPorMembro(projId);
-        if (ranking.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-        }
-        return ResponseEntity.ok(ranking);
-    }
-
-    @GetMapping("/produtividade/{projId}")
-    public ResponseEntity<?> produtividadePorMembro(@PathVariable String projId) {
-        List<Map<String, Object>> resultado = tarefaService.calcularProdutividadePorMembro(projId);
-
-        if (resultado.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-        }
-
-        return ResponseEntity.ok(resultado);
-    }
 
     @GetMapping("/{tarId}/anexos/{nomeArquivo}")
     public ResponseEntity<?> baixarAnexo(@PathVariable String tarId, @PathVariable String nomeArquivo) {
-        Optional<TarefaModel> tarefaOpt = tarefaService.buscarPorId(tarId);
+        Optional<TarefaModel> tarefaOpt = buscaTarefaService.buscarPorId(tarId);
         if (tarefaOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Tarefa não encontrada");
         }
@@ -172,7 +125,7 @@ public class BuscaTarefaController {
 
     @GetMapping("/{tarId}/anexos")
     public ResponseEntity<?> listarAnexos(@PathVariable String tarId) {
-        Optional<TarefaModel> tarefaOpt = tarefaService.buscarPorId(tarId);
+        Optional<TarefaModel> tarefaOpt = buscaTarefaService.buscarPorId(tarId);
         if (tarefaOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Tarefa não encontrada");
         }

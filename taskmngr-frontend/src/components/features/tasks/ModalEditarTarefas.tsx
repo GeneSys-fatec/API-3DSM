@@ -13,7 +13,11 @@ import { uploadTaskAttachments } from "@/utils/taskUtils";
 import ListaComentarios from "./ListaComentarios";
 import imageCompression from "browser-image-compression";
 import ModalConfirmacao from "../../ui/ModalConfirmacao";
-import { getAuthStatus, updateGoogleEvent, buildGoogleEventBodyFromTask } from "@/services/googleCalendar";
+import {
+  getAuthStatus,
+  updateGoogleEvent,
+  buildGoogleEventBodyFromTask,
+} from "@/services/googleCalendar";
 
 type AnexoParaExcluir = {
   nome: string;
@@ -37,13 +41,16 @@ export default function ModalEditarTarefas({
   const submittingRef = React.useRef<boolean>(false);
 
   const projId = tarefaInicial.projId;
-  const [visualizaImagemUrl, setVisualizaImagemUrl] = useState<string | null>(null);
+  const [visualizaImagemUrl, setVisualizaImagemUrl] = useState<string | null>(
+    null
+  );
 
-  const [anexoParaExcluir, setAnexoParaExcluir] = useState<AnexoParaExcluir>(null); 
+  const [anexoParaExcluir, setAnexoParaExcluir] =
+    useState<AnexoParaExcluir>(null);
 
-
- useEffect(() => {
-    if (projId) { //
+  useEffect(() => {
+    if (projId) {
+      //
       authFetch(`http://localhost:8080/projeto/${projId}/membros`) //
         .then((res) => res.json())
         .then(setUsuarios)
@@ -64,7 +71,7 @@ export default function ModalEditarTarefas({
   const MAX_TOTAL_BYTES = 30 * 1024 * 1024;
   const MAX_BYTES_COMPRESSIVE = 20 * 1024 * 1024;
   const MAX_BYTES_NON_COMPRESSIVE = 2 * 1024 * 1024;
-  const COMPRESS_THRESHOLD = 2 * 1024 * 1024; // 2MB
+  const COMPRESS_THRESHOLD = 2 * 1024 * 1024;
 
   const isImage = (f: File) =>
     f.type.match(/^image\/(jpeg|jpg|png)$/i) || /\.(jpe?g|png)$/i.test(f.name);
@@ -103,7 +110,10 @@ export default function ModalEditarTarefas({
     }
   }
 
-  async function validateAndCompressFiles(newFiles: File[], currentFiles: File[] = []) {
+  async function validateAndCompressFiles(
+    newFiles: File[],
+    currentFiles: File[] = []
+  ) {
     const errors: string[] = [];
     const accepted: File[] = [];
 
@@ -174,7 +184,7 @@ export default function ModalEditarTarefas({
   const handleRemoverAnexoExistente = (nomeArquivo: string) => {
     setAnexoParaExcluir({ nome: nomeArquivo });
   };
-  
+
   const executarExclusaoAnexo = async () => {
     if (!anexoParaExcluir || !tarefa.tarId) return;
     const nomeArquivo = anexoParaExcluir.nome;
@@ -186,7 +196,7 @@ export default function ModalEditarTarefas({
         `http://localhost:8080/tarefa/${
           tarefa.tarId
         }/anexos/${encodeURIComponent(nomeArquivo)}`,
-        { method: "DELETE", credentials: "include", }
+        { method: "DELETE", credentials: "include" }
       );
       setAnexosExistentes((prev) =>
         prev.filter((a) => a.arquivoNome !== nomeArquivo)
@@ -209,7 +219,7 @@ export default function ModalEditarTarefas({
     const validationErrors: string[] = [];
     if (!tarefa.tarTitulo?.trim())
       validationErrors.push("O título da tarefa é obrigatório.");
-   if (!tarefa.responsaveis || tarefa.responsaveis.length === 0) {
+    if (!tarefa.responsaveis || tarefa.responsaveis.length === 0) {
       validationErrors.push("Selecione ao menos um responsável pela tarefa.");
     }
     if (!tarefa.tarPrazo)
@@ -223,7 +233,10 @@ export default function ModalEditarTarefas({
     submittingRef.current = true;
     setIsSubmitting(true);
 
-    const { accepted, errors: anexErrors } = await validateAndCompressFiles(novosAnexos, []);
+    const { accepted, errors: anexErrors } = await validateAndCompressFiles(
+      novosAnexos,
+      []
+    );
     if (anexErrors.length > 0) {
       showValidationToast(anexErrors, "Anexos inválidos");
       setIsSubmitting(false);
@@ -255,7 +268,6 @@ export default function ModalEditarTarefas({
         }
       }
 
-      // Atualiza evento no Google Calendar com o MESMO payload da criação
       try {
         const { loggedIn } = await getAuthStatus();
         if (loggedIn) {
@@ -266,7 +278,7 @@ export default function ModalEditarTarefas({
               tarTitulo: tarefa.tarTitulo,
               tarDescricao: tarefa.tarDescricao,
               tarPrazo: tarefa.tarPrazo as any,
-              // tarPrazoFim é opcional; se existir no modelo, será considerado pelo helper
+
               tarPrazoFim: (tarefa as any)?.tarPrazoFim,
             });
             await updateGoogleEvent(String(googleEventId), eventBody);
@@ -326,44 +338,6 @@ export default function ModalEditarTarefas({
               </div>
             </div>
 
-            {anexosExistentes.length > 0 && (
-              <div className="mt-4 p-3 border rounded-md bg-gray-50">
-                <h4 className="font-semibold text-sm mb-2">
-                  Anexos existentes
-                </h4>
-                <ul className="space-y-2">
-                  {anexosExistentes.map((anexo) => (
-                    <li
-                      key={anexo.arquivoNome}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-2 truncate">
-                        {getFileIcon(anexo.arquivoTipo || "")}
-                        <a
-                          href={`http://localhost:8080/tarefa/${
-                            tarefa.tarId
-                          }/anexos/${encodeURIComponent(anexo.arquivoNome)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="truncate text-blue-600 hover:underline"
-                        >
-                          {anexo.arquivoNome}
-                        </a>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleRemoverAnexoExistente(anexo.arquivoNome)
-                        }
-                        className="text-red-500"
-                      >
-                        &times;
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
 
           <div className="p-8 pt-4 flex justify-end gap-x-4">
@@ -393,15 +367,16 @@ export default function ModalEditarTarefas({
           titulo={"Excluir Anexo?"}
           mensagem={
             <p>
-              O anexo "<span className="font-bold">{anexoParaExcluir.nome}</span>" 
-              será excluído permanentemente.
+              O anexo "
+              <span className="font-bold">{anexoParaExcluir.nome}</span>" será
+              excluído permanentemente.
             </p>
           }
           onConfirm={executarExclusaoAnexo}
           onCancel={() => setAnexoParaExcluir(null)}
         />
       )}
-      
+
       {visualizaImagemUrl && (
         <div
           className="fixed inset-0 bg-black bg-opacity-80 z-[60] flex items-center justify-center p-4"

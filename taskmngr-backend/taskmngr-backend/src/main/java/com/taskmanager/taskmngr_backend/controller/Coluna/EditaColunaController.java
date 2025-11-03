@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.taskmanager.taskmngr_backend.model.dto.ColunaDTO;
-import com.taskmanager.taskmngr_backend.service.ColunaService;
+import com.taskmanager.taskmngr_backend.service.Coluna.EditaColunaService;
 
 import jakarta.validation.Valid;
 
@@ -17,11 +17,11 @@ import jakarta.validation.Valid;
 @RequestMapping("/colunas")
 public class EditaColunaController {
     @Autowired
-    private ColunaService colunaService;
+    private EditaColunaService editaColunaService;
 
     @PutMapping("/atualizar/{id}")
     public ResponseEntity<ColunaDTO> atualizarColuna(@PathVariable String id, @Valid @RequestBody ColunaDTO colunaDTO) {
-        ColunaDTO colunaAtualizada = colunaService.atualizarColuna(id, colunaDTO);
+        ColunaDTO colunaAtualizada = editaColunaService.atualizarColuna(id, colunaDTO);
         return ResponseEntity.ok(colunaAtualizada);
     }
 }

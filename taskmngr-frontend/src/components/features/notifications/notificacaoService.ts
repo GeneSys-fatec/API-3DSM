@@ -13,18 +13,41 @@ export const buscarNotificacoes = async (): Promise<Notificacao[]> => {
 
   const data = await resposta.json();
 
-  return data.map((backend: any) => ({
-  id: backend.notId, 
-  tipo:
-    backend.notTipo === 'ATRIBUICAO'
-      ? 'atribuido'
-      : backend.notTipo === 'COMENTARIO'
-      ? 'comentario'
-      : 'expirado',
-  tarNome: backend.notMensagem, 
-  data: new Date(backend.notDataCriacao).toLocaleString(),
-  usuNome: backend.notUsuarioNome || '', 
-}));
+  return data.map((backend: any) => {
+  let tipo: Notificacao["tipo"];
+
+  switch (backend.notTipo) {
+    case "ATRIBUICAO":
+      tipo = "atribuido";
+      break;
+    case "COMENTARIO":
+      tipo = "comentario";
+      break;
+    case "PRAZO":
+      tipo = "proximoVencimento";
+      break;
+    case "EQUIPE_ADICIONADA":
+      tipo = "adicaoEquipe";
+      break;
+    case "EQUIPE_REMOVIDA":
+      tipo = "remocaoEquipe";
+      break;
+    case "TAREFA_EDITADA":
+      tipo = "edicaoTarefa";
+      break;
+    default:
+      tipo = "expirado";
+  }
+
+  return {
+    id: backend.notId,
+    tipo,
+    tarNome: backend.notMensagem,
+    data: new Date(backend.notDataCriacao).toLocaleString(),
+    usuNome: backend.notUsuarioNome || "",
+    notLida: backend.notLida,
+  };
+});
 };
 
 export const buscarNotificacoesNaoLidas = async (): Promise<boolean> => {
