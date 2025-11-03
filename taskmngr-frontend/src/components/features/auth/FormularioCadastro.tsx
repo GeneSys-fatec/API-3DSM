@@ -61,7 +61,7 @@ const FormularioCadastro: React.FC = () => {
 
         for (const [campo, valor] of Object.entries(form)) {
             if (!valor.trim()) {
-                toast.error(`O ${campo.replace("usu", "").toLowerCase()} é obrigatório!`);
+                toast.error(`O ${campo.replace("usu", "").toLowerCase()}  é obrigatório!`);
                 return;
             }
         }
