@@ -5,14 +5,18 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired; // IMPORTAR
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.taskmanager.taskmngr_backend.model.dto.EquipeDTO;
-import com.taskmanager.taskmngr_backend.model.dto.ProjetoDTO; // IMPORTAR
+import com.taskmanager.taskmngr_backend.model.dto.ProjetoDTO;
 import com.taskmanager.taskmngr_backend.model.dto.usuario.UsuarioDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.EquipeModel;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
+
+import com.taskmanager.taskmngr_backend.model.entidade.ProjetoModel;
+import com.taskmanager.taskmngr_backend.repository.ProjetoRepository;
+import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
 
 @Component
 public class EquipeConverter {
@@ -21,6 +25,12 @@ public class EquipeConverter {
 
     @Autowired
     private ProjetoConverter projetoConverter;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private ProjetoRepository projetoRepository;
 
     public EquipeDTO modelParaDto(EquipeModel model) {
         if (model == null) {
@@ -39,14 +49,24 @@ public class EquipeConverter {
             dto.setEquDataAtualizacao(model.getEquDataAtualizacao().format(formatter));
         }
 
-        if (model.getUsuarios() != null) {
-            dto.setEquMembros(model.getUsuarios().stream()
+
+        List<String> usuarioIds = model.getUsuarioIds();
+
+        if (usuarioIds != null && !usuarioIds.isEmpty()) {
+            List<UsuarioModel> membros = usuarioRepository.findAllById(usuarioIds);
+
+            dto.setEquMembros(membros.stream()
                     .map(this::usuarioModelParaDto)
                     .collect(Collectors.toList()));
         }
 
-        if (model.getProjetos() != null) {
-            List<ProjetoDTO> projetosDto = model.getProjetos().stream()
+
+        List<String> projetoIds = model.getProjetoIds();
+
+        if (projetoIds != null && !projetoIds.isEmpty()) {
+            List<ProjetoModel> projetos = projetoRepository.findAllById(projetoIds);
+
+            List<ProjetoDTO> projetosDto = projetos.stream()
                     .filter(Objects::nonNull)
                     .map(projetoConverter::modelParaDto)
                     .collect(Collectors.toList());

@@ -2,6 +2,7 @@ package com.taskmanager.taskmngr_backend.service.Equipe;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,11 +31,15 @@ public class CriaEquipeService {
         membros.add(criador);
         membros.addAll(outrosMembros);
 
+        List<String> membroIds = membros.stream()
+                .map(UsuarioModel::getUsuId)
+                .collect(Collectors.toList());
+
         EquipeModel equipe = new EquipeModel();
         equipe.setEquNome(dto.getEquNome());
         equipe.setEquDescricao(dto.getEquDescricao());
         equipe.setCriadorId(criador.getUsuId());
-        equipe.setUsuarios(membros);
+        equipe.setUsuarioIds(membroIds);
 
         EquipeModel equipeSalva = equipeRepository.save(equipe);
 

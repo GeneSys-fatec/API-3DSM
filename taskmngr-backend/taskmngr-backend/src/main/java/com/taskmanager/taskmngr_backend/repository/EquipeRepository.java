@@ -9,6 +9,8 @@ import java.util.Optional;
 
 public interface EquipeRepository extends MongoRepository<EquipeModel, String> {
     Optional<EquipeModel> findByEquNome(String equNome);
-    @Query("{ 'usuarios.usuId' : ?0 }")
-    List<EquipeModel> findByUsuariosUsuId(String usuId);
+
+
+    @Query("{ 'usuarioIds' : ?0 }")
+    List<EquipeModel> findByUsuarioIds(String usuId);
 }

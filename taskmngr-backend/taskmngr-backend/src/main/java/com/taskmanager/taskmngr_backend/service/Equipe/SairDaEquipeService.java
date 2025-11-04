@@ -26,12 +26,14 @@ public class SairDaEquipeService {
         if (equipe.getCriadorId().equals(usuarioLogado.getUsuId())) {
             throw new CriadorNaoPodeSairException("Ação Inválida", "O criador não pode sair da própria equipe. Considere excluir a equipe ou transferir a propriedade.");
         }
+        List<String> membroIds = equipe.getUsuarioIds();
 
-        List<UsuarioModel> membros = equipe.getUsuarios();
-        boolean foiRemovido = membros.removeIf(membro -> membro.getUsuId().equals(usuarioLogado.getUsuId()));
+        boolean foiRemovido = membroIds.removeIf(membroId -> membroId.equals(usuarioLogado.getUsuId()));
+
         if (!foiRemovido) {
             throw new UsuarioNaoEMembroException("Ação Inválida", "Você não pode sair de uma equipe da qual não é membro.");
         }
+
         equipeRepository.save(equipe);
     }
 }

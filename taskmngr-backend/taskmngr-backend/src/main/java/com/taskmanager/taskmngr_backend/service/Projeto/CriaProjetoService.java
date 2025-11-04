@@ -25,10 +25,11 @@ public class CriaProjetoService {
         EquipeModel equipe = equipeRepository.findById(equipeId)
                 .orElseThrow(() -> new EquipeNaoEncontradaException("Equipe não encontrada", "A equipe com ID " + equipeId + " não existe."));
 
-        projeto.setEquipe(equipe);
+        projeto.setEquipeId(equipe.getEquId());
+
         ProjetoModel projetoSalvo = projetoRepository.save(projeto);
 
-        equipe.getProjetos().add(projetoSalvo);
+        equipe.getProjetoIds().add(projetoSalvo.getProjId());
         equipeRepository.save(equipe);
 
         criaColunasPadraoProjetoService.criarColunasPadraoParaProjeto(projetoSalvo.getProjId());

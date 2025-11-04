@@ -5,6 +5,7 @@ import com.taskmanager.taskmngr_backend.exceptions.personalizados.projetos.Proje
 import com.taskmanager.taskmngr_backend.model.dto.ProjetoDTO;
 import com.taskmanager.taskmngr_backend.model.entidade.ProjetoModel;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -29,8 +30,8 @@ public class EditaProjetoController {
 
         ProjetoModel projeto = buscaProjetoService.buscarPorId(projId)
                 .orElseThrow(() -> new ProjetoNaoEncontradoException("Projeto não encontrado", "Projeto com id " + projId + " não foi encontrado"));
-
-        boolean isMember = projeto.getEquipe().getUsuarios().stream()
+        List<UsuarioModel> membros = buscaProjetoService.buscarMembrosDoProjeto(projId);
+        boolean isMember = membros.stream()
                 .anyMatch(membro -> membro.getUsuId().equals(usuarioLogado.getUsuId()));
 
         if (!isMember) {

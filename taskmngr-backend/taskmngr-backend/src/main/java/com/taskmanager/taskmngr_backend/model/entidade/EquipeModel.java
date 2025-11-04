@@ -25,8 +25,8 @@ public class EquipeModel {
     private LocalDateTime equDataCriacao;
     @LastModifiedDate
     private LocalDateTime equDataAtualizacao;
-    @DBRef
-    private List<UsuarioModel> usuarios = new ArrayList<>();
-    @DBRef
-    private List<ProjetoModel> projetos = new ArrayList<>();
+
+    private List<String> usuarioIds = new ArrayList<>();
+
+    private List<String> projetoIds = new ArrayList<>();
 }

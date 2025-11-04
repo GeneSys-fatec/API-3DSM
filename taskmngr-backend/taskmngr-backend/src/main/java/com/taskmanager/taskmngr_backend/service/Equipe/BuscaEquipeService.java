@@ -30,13 +30,13 @@ public class BuscaEquipeService {
     }
 
     public List<EquipeModel> getEquipesPorIdUsuario(String usuarioId) {
-        return equipeRepository.findByUsuariosUsuId(usuarioId);
+        return equipeRepository.findByUsuarioIds(usuarioId);
     }
 
     public List<EquipeModel> getEquipesPorUsuario(UsuarioModel usuario) {
         if (usuario == null) {
             return Collections.emptyList();
         }
-        return equipeRepository.findByUsuariosUsuId(usuario.getUsuId());
+        return equipeRepository.findByUsuarioIds(usuario.getUsuId());
     }
 }

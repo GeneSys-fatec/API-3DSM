@@ -5,6 +5,8 @@ import com.taskmanager.taskmngr_backend.exceptions.personalizados.projetos.Proje
 import com.taskmanager.taskmngr_backend.model.entidade.ProjetoModel;
 import com.taskmanager.taskmngr_backend.model.entidade.UsuarioModel;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,8 +30,12 @@ public class ExcluiProjetoController {
         ProjetoModel projeto = buscaProjetoService.buscarPorId(projId)
                 .orElseThrow(() -> new ProjetoNaoEncontradoException("Projeto não encontrado", "Não foi possível deletar o projeto com id " + projId + ", pois não foi encontrado"));
 
-        boolean isMember = projeto.getEquipe().getUsuarios().stream()
+
+        List<UsuarioModel> membros = buscaProjetoService.buscarMembrosDoProjeto(projId);
+
+        boolean isMember = membros.stream()
                 .anyMatch(membro -> membro.getUsuId().equals(usuarioLogado.getUsuId()));
+
 
         if (!isMember) {
             throw new AcessoNaoAutorizadoException("Acesso Negado", "Você não tem permissão para apagar este projeto, pois não é membro da equipe.");

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.taskmanager.taskmngr_backend.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,8 @@ public class EditaEquipeService {
     private ValidaEquipeService validacaoEquipeService;
     @Autowired
     private CriaNotificacaoService criaNotificacaoService;
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
     public EquipeModel editar(String id, EquipeDTO dto, UsuarioModel usuarioLogado) {
         EquipeModel equipe = buscaEquipeService.getEquipeById(id);
@@ -42,42 +45,51 @@ public class EditaEquipeService {
             validacaoEquipeService.verificarSeUsuarioPodeAlterarMembros(equipe, usuarioLogado);
             List<UsuarioModel> novosMembros = validacaoEquipeService.buscarEValidarMembrosPorEmails(dto.getMembrosEmails());
 
-            Set<String> antigosIds = equipe.getUsuarios().stream()
+
+            List<String> antigosIdsList = equipe.getUsuarioIds();
+
+            List<UsuarioModel> antigosMembros = usuarioRepository.findAllById(antigosIdsList);
+
+            Set<String> antigosIdsSet = antigosMembros.stream()
                     .map(UsuarioModel::getUsuId)
                     .collect(Collectors.toSet());
-            Set<String> novosIds = novosMembros.stream()
+            Set<String> novosIdsSet = novosMembros.stream()
                     .map(UsuarioModel::getUsuId)
                     .collect(Collectors.toSet());
 
             List<UsuarioModel> adicionados = novosMembros.stream()
-                    .filter(u -> !antigosIds.contains(u.getUsuId()))
+                    .filter(u -> !antigosIdsSet.contains(u.getUsuId()))
                     .collect(Collectors.toList());
 
-            List<UsuarioModel> removidos = equipe.getUsuarios().stream()
-                    .filter(u -> !novosIds.contains(u.getUsuId()))
+            List<UsuarioModel> removidos = antigosMembros.stream()
+                    .filter(u -> !novosIdsSet.contains(u.getUsuId()))
                     .collect(Collectors.toList());
 
             for (UsuarioModel membro : adicionados) {
                 criaNotificacaoService.criarNotificacaoAdicaoEquipe(
-                    usuarioLogado.getUsuId(),
-                    membro.getUsuId(),
-                    equipe.getEquNome(),
-                    usuarioLogado.getUsuNome()
+                        usuarioLogado.getUsuId(),
+                        membro.getUsuId(),
+                        equipe.getEquNome(),
+                        usuarioLogado.getUsuNome()
                 );
             }
 
             for (UsuarioModel membro : removidos) {
                 criaNotificacaoService.criarNotificacaoRemocaoEquipe(
-                    usuarioLogado.getUsuId(),
-                    membro.getUsuId(),
-                    equipe.getEquNome(),
-                    usuarioLogado.getUsuNome()
+                        usuarioLogado.getUsuId(),
+                        membro.getUsuId(),
+                        equipe.getEquNome(),
+                        usuarioLogado.getUsuNome()
                 );
             }
 
-            equipe.setUsuarios(novosMembros);
-        }
+            List<String> novosMembrosIds = novosMembros.stream()
+                    .map(UsuarioModel::getUsuId)
+                    .collect(Collectors.toList());
 
+            equipe.setUsuarioIds(novosMembrosIds);
+
+        }
         return equipeRepository.save(equipe);
     }
 }

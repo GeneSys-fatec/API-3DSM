@@ -19,6 +19,5 @@ public class ProjetoModel {
     private String projDataCriacao;
     private String projDataAtualizacao;
 
-    @DBRef
-    private EquipeModel equipe;
+    private String equipeId;
 }
