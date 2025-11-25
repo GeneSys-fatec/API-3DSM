@@ -8,7 +8,8 @@ As etapas do projeto, incluindo o kickoff e as sprints, seguirão o cronograma e
 <span id="sumario">
  
 <div align=center>
-<a href ="#projeto"> Projeto </a> | <a href ="#backlog&userstories"> Backlog do Produto </a> | <a href ="#dor-dod"> DoR e DoD </a> | <a href ="#manual-usuario"> Manual do Usuário </a> | <a href ="#sprints"> Sprints </a> | <a href ="#tecnologias"> Tecnologias </a> | <a href ="#instalacao"> Manual de Instalação </a> | <a href ="#equipe"> Equipe </a>
+<a href ="#projeto"> Projeto </a> | <a href ="#backlog&userstories"> Backlog do Produto </a> | <a href ="#dor-dod"> DoR e DoD </a> | <a href ="#manual-usuario"> Manual do Usuário </a> | <a href ="#sprints"> Sprints </a> | <a href ="#tecnologias"> Tecnologias </a> |
+  <a href ="#branches"> Padrão Commits </a> | <a href ="#instalacao"> Manual de Instalação </a> | <a href ="#equipe"> Equipe </a>
 </div>
  
 <br>
@@ -16,7 +17,7 @@ As etapas do projeto, incluindo o kickoff e as sprints, seguirão o cronograma e
 <span id="projeto">
  
 ## 📋 O Projeto
-> **📌 Status do Projeto: Em andamento**
+> **📌 Status do Projeto: Concluído**
  
 A empresa GSW enfrenta dificuldades no acompanhamento de tarefas, causando falhas de comunicação e atrasos nas entregas.
 
@@ -91,7 +92,7 @@ Sprint | Previsão | Status | Relatório | Vídeo do Projeto |
 |------|--------|------|---------|----------|
 |01 | 08/09/2025 - 28/09/2025 |✔️ Concluído| [Ver Relatório](https://github.com/GeneSys-fatec/API-3DSM/blob/updates-sprint1/README.md) | <a href='https://youtu.be/GnxCSIv_jP4?si=REm8HHhPtJweiITJ'>Ver Vídeo</a> |
 |02|  06/10/2025 - 26/10/2025 |✔️ Concluído| [Ver Relatório](https://github.com/GeneSys-fatec/API-3DSM/blob/updates-sprint2/README.md) | <a href='https://youtu.be/mlh4uSfiOS8'>Ver Vídeo</a> |
-|03| 03/11/2025 - 23/11/2025 |⌛ Em andamento| [Ver Relatório](https://github.com/GeneSys-fatec/API-3DSM/blob/updates-sprint3/README.md) | <a href=''>Ver Vídeo</a> |
+|03| 03/11/2025 - 23/11/2025 |✔️ Concluído| [Ver Relatório](https://github.com/GeneSys-fatec/API-3DSM/blob/updates-sprint3/README.md) | <a href='https://youtu.be/wlwesDJHjl0?si=vXZSv-bUI5WuGn-T'>Ver Vídeo</a> |
 <br>
  
 <span id="tecnologias">
@@ -102,6 +103,13 @@ As seguintes ferramentas, linguagens, bibliotecas e tecnologias foram usadas na 
  
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white) ![Java](https://img.shields.io/badge/Java-red?style=for-the-badge&logo=java&logoColor=white) ![Spring](https://img.shields.io/badge/Spring-6DB33F?style=for-the-badge&logo=spring&logoColor=white)  ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black) ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) ![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white) ![Git](https://img.shields.io/badge/GIT-E44C30?style=for-the-badge&logo=git&logoColor=white) ![Jira](https://img.shields.io/badge/jira-%230A0FFF.svg?style=for-the-badge&logo=jira&logoColor=white) ![Figma](https://img.shields.io/badge/Figma-696969?style=for-the-badge&logo=figma&logoColor=figma) ![Swagger](https://img.shields.io/badge/Swagger-696969?style=for-the-badge&logo=swagger&logoColor=figma) 
 <br>
+
+<span id="branches">
+ 
+## 📎 Padrão de Branches e Commits
+**:link: Clique no link abaixo para visualizar o padrão de branches e commits:**
+> [Padrão de Branches e Commits](https://docs.google.com/document/d/19lLXajgbmclGzw-SoN1J--g-EHtLVIyH3-gEp5h6ENU/edit?usp=sharing)
+
  
 <span id="instalacao">
 
@@ -115,51 +123,67 @@ As seguintes ferramentas, linguagens, bibliotecas e tecnologias foram usadas na 
 
 ### Como executar o projeto
 
-**1. Clone o repositório:**
+**1. Clone os repositórios**
+<br>
+* Front-end:
 ```
-git clone https://github.com/GeneSys-fatec/API-3DSM.git
-cd API-3DSM
+git clone https://github.com/GeneSys-fatec/API-3DSM-FRONTEND.git
+cd API-3DSM-FRONTEND
 ```
+* Back-end:
 
+Em outro terminal:
+```
+git clone https://github.com/GeneSys-fatec/API-3DSM-BACKEND.git
+cd API-3DSM-BACKEND
+```
 **2. Configure o front-end:**
 
-* Acesse a pasta do front-end
+ Acesse a pasta do front-end
 ```
 cd taskmngr-frontend
 ```
-* Instale as dependências
+**3. Instale as dependências do front-end**
+
+ Dentro da pasta API-3DSM-FRONTEND instale as dependências:
+
+ 
 ```
 npm install
 ```
-* Inicie o front-end
+
+ Inicie o front-end
 ```
 npm run dev
 ```
+**4. Configure o Back-end**
 
-**3. Configure o back-end:**
+ Entre na pasta API-3DSM-BACKEND.
 
-* No arquivo “application.properties”, altere a string de conexão do MongoDB Atlas, no formato:
+**5. Configure o MongoDB e o JWT**
+
+ No arquivo application.properties, configure:
+
+* String de conexão do MongoDB Atlas:
+
+```
+spring.data.mongodb.uri=mongodb+srv://<usuario>:<senha>@<cluster-url>/<database>?retryWrites=true&w=majority
+```
+
+* Chave JWT:
+ ```
+api.security.token.secret=MinhaChaveSecretaAqui
+```
+**6. Instale as dependências do back-end**
    ```
-   spring.data.mongodb.uri=mongodb+srv://<usuario>:<senha>@<cluster-url>/<database>?retryWrites=true&w=majority
+mvn clean install
    ```
-* E defina uma chave secreta JWT (string aleatória e segura), exemplo:
+**7. Inicie o back-end**
    ```
-   api.security.token.secret=MinhaChave
-   ```
-* Em um novo terminal, navegue até o diretório
-   ```
-   cd API-3DSM/taskmngr-backend/taskmngr-backend
-   ```
-* Instale as dependências
-   ```
-   mvn clean install
-   ```
-* Inicie o back-end
-   ```
-   mvn spring-boot:run
+mvn spring-boot:run
    ```
 
- **4. A aplicação estará disponível em: http://localhost:5173**
+ **8. A aplicação estará disponível em: http://localhost:5173**
 
 <span id="equipe">
  
